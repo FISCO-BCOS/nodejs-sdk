@@ -28,7 +28,7 @@ Node.js SDK为[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)
     # 安装nvm
     curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
     # 加载nvm配置
-    source ~/.$(echo $SHELL | basename )rc
+    source ~/.$(basename $SHELL)rc
     # 安装Node.js 8
     nvm install 8
     # 使用Node.js 8
@@ -92,23 +92,23 @@ bash nodes/127.0.0.1/start_all.sh
 
     端口配置位于`packages/cli/conf/config.json`文件的`nodes.port`配置项中，您需要根据您要连接FISCO BCOS节点的实际配置修改该配置项以指定要访问的端口。如果您使用了快速搭链，可以跳过此步。
 
+配置完成后，即可开始使用CLI工具，CLI工具位于`packages/cli/cli.js`，所有操作均需要在`packages/cli/`目录下执行，您需要先切换至该目录：
+
+```
+cd packages/cli
+```
+
 **开启自动补全（仅针对bash及zsh用户，可选）**
 
 为方便用户使用CLI工具，CLI工具支持在bash或zsh中进行自动补全，此功能需要手动启用，执行命令：
 
 ```bash
-rcfile=~/.$(echo $SHELL | basename )rc && ./cli.js completion >> $rcfile && source $rcfile
+rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfile
 ```
 
 便可启用自动补全。使用CLI工具时，按下`Tab`键（依据系统配置的不同，可能需要按两下）便可弹出候选命令或参数的列表并自动补全。
 
 **示例**
-
-配置完成后，即可开始使用CLI工具，CLI工具位于`packages/cli/cli.js`，所有操作均需要在`packages/cli/`目录下执行，你需要先切换至该目录：
-
-```
-cd packages/cli
-```
 
 以下给出几个使用示例：
 
@@ -126,8 +126,9 @@ cd packages/cli
 
 *以下示例中的输入、输出及参数仅供举例*
 
+**查看所连的FISCO BCOS节点版本**
+
 ```bash
-# 查看所连的FISCO BCOS节点版本
 ./cli.js getClientVersion
 ```
 
@@ -138,19 +139,20 @@ cd packages/cli
   "id": 1,
   "jsonrpc": "2.0",
   "result": {
-    "Build Time": "20190624 23:17:02",
+    "Build Time": "20190705 21:19:13",
     "Build Type": "Linux/g++/RelWithDebInfo",
     "Chain Id": "1",
-    "FISCO-BCOS Version": "2.0.0-rc3",
+    "FISCO-BCOS Version": "2.0.0",
     "Git Branch": "master",
-    "Git Commit Hash": "b22f15b34092f353e1651aedbb2a722f06802065",
+    "Git Commit Hash": "d8605a73e30148cfb9b63807fb85fa211d365014",
     "Supported Version": "2.0.0"
   }
 }
 ```
 
+**获取当前的块高**
+
 ```bash
-# 获取当前的块高
 ./cli.js getBlockNumber
 ```
 
@@ -164,8 +166,9 @@ cd packages/cli
 }
 ```
 
+**部署SDK自带的HelloWorld合约**
+
 ```bash
-# 部署SDK自带的HelloWorld合约
 ./cli.js deploy HelloWorld
 ```
 
@@ -175,8 +178,9 @@ cd packages/cli
 contract address:0xab09b29dd07e003776d22566ae5c078f2cb2279e
 ```
 
+**调用HelloWorld合约的set接口，请将合约地址改为实际地址**
+
 ```bash
-# 调用HelloWorld合约的set接口，请将合约地址改为实际地址
 ./cli.js call HelloWorld 0xab09b29dd07e003776d22566ae5c078f2cb2279e set vita
 ```
 
@@ -186,8 +190,9 @@ contract address:0xab09b29dd07e003776d22566ae5c078f2cb2279e
 transaction hash:0x539a0ecab46870fecac06963e824ff95e603d39ba1088a34e356ef1e4f80bc3a status:0x0
 ```
 
+**调用HelloWorld合约的get接口，请将合约地址改为实际地址**
+
 ```bash
-# 调用HelloWorld合约的get接口
 ./cli.js call HelloWorld 0xab09b29dd07e003776d22566ae5c078f2cb2279e get
 ```
 
