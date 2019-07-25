@@ -1,4 +1,3 @@
-# Node.js SDK
 
 ![](https://github.com/FISCO-BCOS/FISCO-BCOS/raw/master/docs/images/FISCO_BCOS_Logo.svg?sanitize=true)
 
@@ -29,7 +28,7 @@ Node.js SDK为[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)
     # 安装nvm
     curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
     # 加载nvm配置
-    source .bashrc # 或 source .zshrc等，具体视您使用的shell而定
+    source ~/.$(echo $SHELL | basename )rc
     # 安装Node.js 8
     nvm install 8
     # 使用Node.js 8
@@ -42,12 +41,12 @@ Node.js SDK为[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)
 **拉取源代码**
 
 ```bash
-git clone https://github.com/vita-dounai/nodejs-sdk.git
+git clone https://github.com/FISCO-BCOS/nodejs-sdk.git
 ```
 
 **部署**
 
-如果您的网络中使用了代理，请先为npm配置代理：
+如果您的网络中使用了代理，请先为npm配置代理。如果没有使用代理，请忽略。
 
 ```bash
 npm config set proxy <your proxy>
@@ -98,12 +97,10 @@ bash nodes/127.0.0.1/start_all.sh
 为方便用户使用CLI工具，CLI工具支持在bash或zsh中进行自动补全，此功能需要手动启用，执行命令：
 
 ```bash
-rcfile=~/.$(echo $SHELL| rev | cut -d '/' -f 1 | rev)rc && ./cli.js completion >> $rcfile && source $rcfile
+rcfile=~/.$(echo $SHELL | basename )rc && ./cli.js completion >> $rcfile && source $rcfile
 ```
 
 便可启用自动补全。使用CLI工具时，按下`Tab`键（依据系统配置的不同，可能需要按两下）便可弹出候选命令或参数的列表并自动补全。
-
-*注意：Linux用户可能需要重新登入或重启后方能使自动补全功能生效*
 
 **示例**
 
