@@ -1,0 +1,49 @@
+{
+    "name": "nodejs-sdk",
+    "version": "0.1.0",
+    "description": "Node.js sdk for FISCO BCOS",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/vita-dounai/nodejs-sdk.git"
+    },
+    "author": "catli",
+    "engineStrict": true,
+    "engines": {
+        "node": ">=8.10.0",
+        "npm": ">=5.6.0"
+    },
+    "scripts": {
+        "repoclean": "lerna clean && npm run clean-solc-0.4 && npm run clean-solc-0.5",
+        "bootstrap": "lerna bootstrap && npm run install-solc-0.4 && npm run install-solc-0.5",
+        "install-solc-0.4": "cd ./packages/api/base/solc-0.4/ && npm install && cd -",
+        "install-solc-0.5": "cd ./packages/api/base/solc-0.5/ && npm install && cd -",
+        "clean-solc-0.4": "rm -rf ./packages/api/base/solc-0.4/node_modules",
+        "clean-solc-0.5": "rm -rf ./packages/api/base/solc-0.5/node_modules"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "lerna": "^3.16.1"
+    },
+    "nyc": {
+        "exclude": [
+            "lib/**"
+        ],
+        "reporter": [
+            "text-summary",
+            "html"
+        ],
+        "all": true,
+        "check-coverage": false,
+        "statements": 5,
+        "branches": 8,
+        "functions": 7,
+        "lines": 5
+    },
+    "license": "Apache-2.0",
+    "licenses": [
+        {
+            "type": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        }
+    ]
+}
