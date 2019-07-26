@@ -82,10 +82,10 @@ bash nodes/127.0.0.1/start_all.sh
 
 - 配置证书
 
-    CLI工具需要使用证书来与FISCO BCOS节点通讯，证书文件默认放置于`packages/cli/conf/sdk/`目录。如果您使用了快速建链，则命令如下：
+    CLI工具需要使用证书来与FISCO BCOS节点通讯，证书文件默认放置于`packages/cli/conf/`目录。如果您使用了快速建链，则命令如下：
 
     ```bash
-    cp nodes/127.0.0.1/sdk/* packages/cli/conf/sdk/
+    cp nodes/127.0.0.1/sdk/* packages/cli/conf/
     ```
 
 - 配置Channel端口
