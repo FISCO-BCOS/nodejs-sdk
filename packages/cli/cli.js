@@ -151,8 +151,8 @@ function completion() {
 
 function list() {
     for (let command of interfaces) {
-        let name = chalk.magenta(command.name.padEnd(40));
-        let info = chalk.cyan(command.describe.padStart(60));
+        let name = chalk.magenta(command.name.padEnd(50));
+        let info = chalk.cyan(command.describe);
 
         console.log(`${name}${info}`);
     }
