@@ -20,9 +20,9 @@
         }
     ],
     "authentication": {
-        "key": "./sdk/node.key",
-        "cert": "./sdk/node.crt",
-        "ca": "./sdk/ca.crt"
+        "key": "./node.key",
+        "cert": "./node.crt",
+        "ca": "./ca.crt"
     },
     "groupID": 1,
     "timeout": 10000
