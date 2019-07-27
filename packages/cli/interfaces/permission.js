@@ -47,7 +47,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'listPermissionManager',
-            describe: 'Query permisson information for permisson configuration',
+            describe: 'Query permission information for permission configuration',
         },
         () => {
             return permissionService.listPermissionManager();
@@ -57,7 +57,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'revokePermissionManager',
-            describe: 'Revoke permisson for permisson configuration by address',
+            describe: 'Revoke permission for permission configuration by address',
             args: [
                 {
                     name: 'address',
@@ -78,7 +78,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'grantUserTableManager',
-            describe: 'Grant permisson for user table by table name and address',
+            describe: 'Grant permission for user table by table name and address',
             args: [
                 {
                     name: 'tableName',
@@ -107,7 +107,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'listUserTableManager',
-            describe: 'Query permisson for user table information',
+            describe: 'Query permission for user table information',
             args: [
                 {
                     name: 'tableName',
@@ -128,7 +128,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'revokeUserTableManager',
-            describe: 'Revoke permisson for user table by table name and address',
+            describe: 'Revoke permission for user table by table name and address',
             args: [
                 {
                     name: 'tableName',
@@ -157,7 +157,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'grantDeployAndCreateManager',
-            describe: 'Grant permisson for deploy contract and create user table by address',
+            describe: 'Grant permission for deploy contract and create user table by address',
             args: [
                 {
                     name: 'address',
@@ -178,7 +178,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'listDeployAndCreateManager',
-            describe: 'Query permisson information for deploy contract and create user table',
+            describe: 'Query permission information for deploy contract and create user table',
         },
         () => {
             return permissionService.listDeployAndCreateManager();
@@ -188,7 +188,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'revokeDeployAndCreateManager',
-            describe: 'Revoke permisson for deploy contract and create user table by address',
+            describe: 'Revoke permission for deploy contract and create user table by address',
             args: [
                 {
                     name: 'address',
@@ -209,7 +209,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'grantNodeManager',
-            describe: 'Grant permisson for node configuration by address',
+            describe: 'Grant permission for node configuration by address',
             args: [
                 {
                     name: 'address',
@@ -230,7 +230,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'listNodeManager',
-            describe: 'Query permisson information for node configuration',
+            describe: 'Query permission information for node configuration',
         },
         () => {
             return permissionService.listNodeManager();
@@ -240,7 +240,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'revokeNodeManager',
-            describe: 'Revoke permisson for node configuration by address',
+            describe: 'Revoke permission for node configuration by address',
             args: [
                 {
                     name: 'address',
@@ -261,7 +261,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'grantCNSManager',
-            describe: 'Grant permisson for CNS by address',
+            describe: 'Grant permission for CNS by address',
             args: [
                 {
                     name: 'address',
@@ -282,7 +282,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'listCNSManager',
-            describe: 'Query permisson information for CNS',
+            describe: 'Query permission information for CNS',
         },
         () => {
             return permissionService.listCNSManager();
@@ -292,7 +292,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'revokeCNSManager',
-            describe: 'Revoke permisson for CNS by address',
+            describe: 'Revoke permission for CNS by address',
             args: [
                 {
                     name: 'address',
