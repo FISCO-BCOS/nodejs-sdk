@@ -14,11 +14,12 @@
 
 'use strict';
 
-const utils = require('../../base/utils');
+const utils = require('../../common/utils');
+const PrecompiledError = require('../../common/exceptions').PrecompiledError;
 const constant = require('./constant');
-const precompiledConstant = require('../constant');
-const { check, string } = require('../../base/typeCheck');
-const ServiceBase = require('../../base/serviceBase').ServiceBase;
+const {TableName, handleReceipt} = require('../common');
+const { check, string } = require('../../common/typeCheck');
+const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
 const Table = require('./table').Table;
@@ -39,78 +40,70 @@ class CRUDService extends ServiceBase {
         this.web3jService = new Web3jService($config);
     }
 
-    checkTableKeyLength(table) {
+    _checkTableKeyLength(table) {
         if (table.key.length > constant.TABLE_KEY_MAX_LENGTH) {
             throw new Error(`the value of the table key exceeds the maximum limit (${constant.TABLE_KEY_MAX_LENGTH})`);
         }
     }
 
+    async _send(abi, parameters, address = constant.CRUD_PRECOMPILE_ADDRESS) {
+        let functionName = utils.spliceFunctionSignature(abi);
+        let receipt = await this.web3jService.sendRawTransaction(address, functionName, parameters);
+        return handleReceipt(receipt, abi)[0];
+    }
+
     async createTable(table) {
         check(arguments, Table);
 
-        let functionName = utils.spliceFunctionSignature(constant.TABLE_FACTORY_PRECOMPILE_ABI.createTable);
         let parameters = [table.tableName, table.key, table.valueFields];
-        let receipt = await this.web3jService.sendRawTransaction(constant.TABLE_FACTORY_PRECOMPILE_ADDRESS, functionName, parameters);
-
-        let status = receipt.output;
-        status = status.substring(status.length - 8);
-        status = ~~parseInt(status, 16);
-        return status;
+        let output = await this._send(constant.TABLE_FACTORY_PRECOMPILE_ABI.createTable, parameters, constant.TABLE_FACTORY_PRECOMPILE_ADDRESS);
+        return parseInt(output);
     }
 
     async insert(table, entry) {
         check(arguments, Table, Entry);
-        this.checkTableKeyLength(table);
+        this._checkTableKeyLength(table);
 
-        let functionName = utils.spliceFunctionSignature(constant.CRUD_PRECOMPILE_ABI.insert);
         let parameters = [table.tableName, table.key, JSON.stringify(entry.fields), table.optional];
-        let receipt = await this.web3jService.sendRawTransaction(constant.CRUD_PRECOMPILE_ADDRESS, functionName, parameters);
+        let output = await this._send(constant.CRUD_PRECOMPILE_ABI.insert, parameters);
 
-        let status = receipt.output;
-        return parseInt(status, 16);
+        return parseInt(output);
     }
 
     async update(table, entry, condition) {
         check(arguments, Table, Entry, Condition);
-        this.checkTableKeyLength(table);
+        this._checkTableKeyLength(table);
 
-        let functionName = utils.spliceFunctionSignature(constant.CRUD_PRECOMPILE_ABI.update);
         let parameters = [table.tableName, table.key, JSON.stringify(entry.fields), JSON.stringify(condition.conditions), table.optional];
-        let receipt = await this.web3jService.sendRawTransaction(constant.CRUD_PRECOMPILE_ADDRESS, functionName, parameters);
-
-        let status = receipt.output;
-        return parseInt(status, 16);
+        let output = await this._send(constant.CRUD_PRECOMPILE_ABI.update, parameters);
+        
+        return parseInt(output);
     }
 
     async select(table, condition) {
         check(arguments, Table, Condition);
-        this.checkTableKeyLength(table);
+        this._checkTableKeyLength(table);
 
-        let functionName = utils.spliceFunctionSignature(constant.CRUD_PRECOMPILE_ABI.select);
         let parameters = [table.tableName, table.key, JSON.stringify(condition.conditions), table.optional];
-        let receipt = await this.web3jService.call(constant.CRUD_PRECOMPILE_ADDRESS, functionName, parameters);
+        let output = await this._send(constant.CRUD_PRECOMPILE_ABI.select, parameters);
 
-        let result = receipt.result.output;
-        result = utils.decodeMethod(constant.CRUD_PRECOMPILE_ABI.select, result)[0];
-        return JSON.parse(result);
+        return JSON.parse(output);
     }
 
     async remove(table, condition) {
         check(arguments, Table, Condition);
-        this.checkTableKeyLength(table);
+        this._checkTableKeyLength(table);
 
-        let functionName = utils.spliceFunctionSignature(constant.CRUD_PRECOMPILE_ABI.remove);
         let parameters = [table.tableName, table.key, JSON.stringify(condition.conditions), table.optional];
-        let receipt = await this.web3jService.sendRawTransaction(constant.CRUD_PRECOMPILE_ADDRESS, functionName, parameters);
+        let output = await this._send(constant.CRUD_PRECOMPILE_ABI.remove, parameters);
 
-        let status = receipt.output;
-        return parseInt(status, 16);
+        return parseInt(output);
     }
 
     async desc(tableName) {
         check(arguments, string);
 
-        let table = new Table(precompiledConstant.SYS_TABLE, precompiledConstant.USER_TABLE_PREFIX + tableName, '');
+        let table = new Table(TableName.SYS_TABLE, TableName.USER_TABLE_PREFIX + tableName, '');
         let condition = new Condition();
         let userTable = await this.select(table, condition);
 
@@ -118,7 +111,7 @@ class CRUDService extends ServiceBase {
             let tableInfo = new Table(tableName, userTable[0].key_field, userTable[0].value_field);
             return tableInfo;
         } else {
-            throw new Error(`the table ${tableName} doesn't exist`);
+            throw new PrecompiledError(`the table ${tableName} doesn't exist`);
         }
     }
 }

@@ -112,6 +112,33 @@ function privateKeyToAddress(privateKey) {
 }
 
 /**
+ * Allocate a zero-filled buffer
+ * @param {Number} length the length of buffer
+ * @return {Buffer} buffer
+ */
+function zeros(length) {
+    return Buffer.allocUnsafe(length).fill(0);
+}
+
+function setLength(msg, length, right) {
+    let buf = zeros(length);
+    msg = toBuffer(msg);
+    if (right) {
+        if (msg.length < length) {
+            msg.copy(buf);
+            return buf;
+        }
+        return msg.slice(0, length);
+    } else {
+        if (msg.length < length) {
+            msg.copy(buf, length - msg.length);
+            return buf;
+        }
+        return msg.slice(-length);
+    }
+}
+
+/**
  * Recover public key from (v, r, s)
  * @param {String} msgHash message hash
  * @param {String} v v
@@ -120,7 +147,7 @@ function privateKeyToAddress(privateKey) {
  * @return {String} public key recovered from (v, r, s)
  */
 function ecrecover(msgHash, v, r, s) {
-    let signature = Buffer.concat([ethjsUtil.setLength(r, 32), ethjsUtil.setLength(s, 32)], 64);
+    let signature = Buffer.concat([setLength(r, 32), setLength(s, 32)], 64);
     let recovery = v - 27;
     if (recovery !== 0 && recovery !== 1) {
         throw new Error('Invalid signature v value');
