@@ -30,6 +30,7 @@ const fs = require('fs');
 const path = require('path');
 const utils = require('../api/common/utils');
 const { ContractsDir, ContractsOutputDir } = require('./constant');
+const isArray = require('isarray');
 
 const getAbi = require('./interfaces/base').getAbi;
 
@@ -37,14 +38,17 @@ const config = utils.readConfig(path.join(__dirname, './conf/config.json'));
 let interfaces = require('./interfaces/web3j')(config);
 interfaces = interfaces.concat(require('./interfaces/crud')(config));
 interfaces = interfaces.concat(require('./interfaces/permission')(config));
+interfaces = interfaces.concat(require('./interfaces/cns')(config));
 let commands = interfaces.map(value => value.name);
 
-function parseSub(subCommandInfo, argv) {
+function parseSub(subCommandInfo, argv, originArgv) {
     let command = argv.command;
     argv.arguments.splice(0, 0, command);
+    let stringArgs = {};
 
     if (subCommandInfo.args) {
-        for (let arg of subCommandInfo.args) {
+        for (let index in subCommandInfo.args) {
+            let arg = subCommandInfo.args[index];
             if (arg.options.flag) {
                 if (arg.options.flag === FLAGS.VARIADIC) {
                     command += ` [${arg.name}...]`;
@@ -55,6 +59,10 @@ function parseSub(subCommandInfo, argv) {
                 delete arg.options.flag;
             } else {
                 command += ` <${arg.name}>`;
+            }
+
+            if (arg.options.type === 'string') {
+                stringArgs[arg.name] = index;
             }
         }
     }
@@ -75,7 +83,25 @@ function parseSub(subCommandInfo, argv) {
                 }
             }
             return yargs;
-        }, needHelp ? undefined : subCommandInfo.handler);
+        }, needHelp ? undefined : (argv) => {
+            for (let argName in stringArgs) {
+                if (!isArray(argv[argName])) {
+                    if (argv[argName] !== originArgv[stringArgs[argName]]) {
+                        argv[argName] = originArgv[stringArgs[argName]];
+                    }
+                }
+                else {
+                    let startIndex = stringArgs[argName];
+                    for (let argIndex in argv[argName]) {
+                        if (argv[argName][argIndex] !== originArgv[startIndex]) {
+                            argv[argName][argIndex] = originArgv[startIndex];
+                        }
+                        startIndex += 1;
+                    }
+                }
+            }
+            subCommandInfo.handler(argv);
+        });
 
     if (needHelp) {
         parser.showHelp();
@@ -107,6 +133,16 @@ function completion() {
         }
 
         if (argv._[1] === 'deploy') {
+            if (argv._.length < 3) {
+                return ['deploy', 'deployByCNS'];
+            } else if (argv._.length < 4) {
+                return listContracts();
+            } else {
+                return [];
+            }
+        }
+
+        if (argv._[1] === 'queryCNS' || argv._[1] === 'deployByCNS') {
             if (argv._.length < 4) {
                 return listContracts();
             } else {
@@ -115,7 +151,9 @@ function completion() {
         }
 
         if (argv._[1] === 'call') {
-            if (argv._.length < 4) {
+            if (argv._.length < 3) {
+                return ['call', 'callByCNS'];
+            } else if (argv._.length < 4) {
                 return listContracts();
             } else if (argv._.length < 5) {
                 let contractName = path.basename(argv._[2], '.sol');
@@ -175,7 +213,8 @@ function main() {
         .help('h')
         .alias('h', 'help');
 
-    let argv = parser.parse(process.argv.splice(2));
+    let originArgv = process.argv.splice(2);
+    let argv = parser.parse(originArgv);
 
     switch (argv.command) {
         case 'completion':
@@ -188,7 +227,7 @@ function main() {
             let command = argv.command;
             let subCommandInfo = interfaces.find(value => value.name == command);
             if (subCommandInfo) {
-                parseSub(subCommandInfo, argv);
+                parseSub(subCommandInfo, argv, originArgv.splice(1));
             } else {
                 parser.showHelp();
             }

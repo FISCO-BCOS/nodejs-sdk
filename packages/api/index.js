@@ -18,6 +18,7 @@ module.exports.Web3jService = require('./web3j').Web3jService;
 module.exports.ConsensusService = require('./precompiled/consensus').ConsensusService;
 module.exports.SystemConfigService = require('./precompiled/systemConfig').SystemConfigService;
 module.exports.PermissionService = require('./precompiled/permission').PermissionService;
+module.exports.CNSService = require('./precompiled/cns/cnsService').CNSService;
 
 module.exports.CRUDService = require('./precompiled/crud').CRUDService;
 module.exports.Table = require('./precompiled/crud').Table;
