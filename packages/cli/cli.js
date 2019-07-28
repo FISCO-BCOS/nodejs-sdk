@@ -28,12 +28,15 @@ const FLAGS = require('./interfaces/base').FLAGS;
 const yargs = require('yargs/yargs');
 const fs = require('fs');
 const path = require('path');
+const utils = require('../api/common/utils');
 const { ContractsDir, ContractsOutputDir } = require('./constant');
 
-const getAbi = require('./interfaces/general').getAbi;
+const getAbi = require('./interfaces/base').getAbi;
 
-let interfaces = require('./interfaces/general').interfaces;
-interfaces = interfaces.concat(require('./interfaces/crud').interfaces);
+const config = utils.readConfig(path.join(__dirname, './conf/config.json'));
+let interfaces = require('./interfaces/web3j')(config);
+interfaces = interfaces.concat(require('./interfaces/crud')(config));
+interfaces = interfaces.concat(require('./interfaces/permission')(config));
 let commands = interfaces.map(value => value.name);
 
 function parseSub(subCommandInfo, argv) {
@@ -43,8 +46,7 @@ function parseSub(subCommandInfo, argv) {
     if (subCommandInfo.args) {
         for (let arg of subCommandInfo.args) {
             if (arg.options.flag) {
-                if(arg.options.flag === FLAGS.VARIADIC)
-                {
+                if (arg.options.flag === FLAGS.VARIADIC) {
                     command += ` [${arg.name}...]`;
                 } else if (arg.options.flag === FLAGS.OPTIONAL) {
                     command += ` [${arg.name}]`;
@@ -93,7 +95,7 @@ function completion() {
             return wordList;
         }
 
-        if (argv._[1] === 'completion' || argv._[1] === 'list') {
+        if (argv._[1] === 'completion') {
             return [];
         }
 

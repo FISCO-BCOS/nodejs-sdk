@@ -15,7 +15,7 @@
 'use strict';
 
 const constant = require('./constant');
-const { check, string, number } = require('./../../base/typeCheck');
+const { check, string, number } = require('./../../common/typeCheck');
 
 const ConditionOp = {
     EQ: 'eq',

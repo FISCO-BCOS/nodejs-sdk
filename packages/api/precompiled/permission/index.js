@@ -14,8 +14,4 @@
 
 'use strict';
 
-module.exports.P2pNetwork = -51102;
-module.exports.GroupPeers = -51103;
-module.exports.SealerList = -51104;
-module.exports.ObserverList = -51105;
-
+module.exports = require('./permissionService');
