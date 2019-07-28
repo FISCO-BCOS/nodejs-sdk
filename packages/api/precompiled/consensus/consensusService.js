@@ -14,11 +14,12 @@
 
 'use strict';
 
-const utils = require('../../base/utils');
-const errorCode = require('../../base/errorCode');
+const utils = require('../../common/utils');
+const PrecompiledError = require('../../common/exceptions').PrecompiledError;
 const constant = require('./constant');
-const {check, string} = require('../../base/typeCheck');
-const ServiceBase = require('../../base/serviceBase').ServiceBase;
+const { OutputCode, handleReceipt } = require('../common');
+const { check, string } = require('../../common/typeCheck');
+const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
 class ConsensusService extends ServiceBase {
@@ -31,7 +32,7 @@ class ConsensusService extends ServiceBase {
         this.web3jService = new Web3jService($config);
     }
 
-    async isValidNodeID(nodeID) {
+    async _isValidNodeID(nodeID) {
         return this.web3jService.getNodeIDList().then(result => {
             let nodeIDs = result.result;
             if (nodeIDs.includes(nodeID)) {
@@ -42,44 +43,47 @@ class ConsensusService extends ServiceBase {
         });
     }
 
+    async _send(abi, nodeID) {
+        let functionName = utils.spliceFunctionSignature(abi);
+        let parameters = [nodeID];
+        let receipt = await this.web3jService.sendRawTransaction(constant.CONSENSUS_PRECOMPILE_ADDRESS, functionName, parameters);
+        return parseInt(handleReceipt(receipt, abi)[0]);
+    }
+
     async addSealer(nodeID) {
         check(arguments, string);
 
-        let isValid = await this.isValidNodeID(nodeID);
+        let isValid = await this._isValidNodeID(nodeID);
         if (!isValid) {
-            throw new Error(errorCode.P2pNetwork);
+            throw new PrecompiledError(OutputCode.getOutputMessage(OutputCode.P2PNetwork));
         }
 
         let sealers = await this.web3jService.getSealerList();
         sealers = sealers.result;
 
         if (sealers.includes(nodeID)) {
-            throw new Error(errorCode.SealerList);
+            throw new PrecompiledError(OutputCode.getOutputMessage(OutputCode.SealerList));
         }
 
-        let functionName = utils.spliceFunctionSignature(constant.CONSENSUS_PRECOMPILE_ABI.addSealer);
-        let parameters = [nodeID];
-        return this.web3jService.sendRawTransaction(constant.CONSENSUS_PRECOMPILE_ADDRESS, functionName, parameters);
+        return this._send(constant.CONSENSUS_PRECOMPILE_ABI.addSealer, nodeID);
     }
 
     async addObserver(nodeID) {
         check(arguments, string);
 
-        let isValid = await this.isValidNodeID(nodeID);
+        let isValid = await this._isValidNodeID(nodeID);
         if (!isValid) {
-            throw new Error(errorCode.P2pNetwork);
+            throw new PrecompiledError(OutputCode.getOutputMessage(OutputCode.P2PNetwork));
         }
 
         let observers = await this.web3jService.getObserverList();
         observers = observers.result;
 
         if (observers.includes(nodeID)) {
-            throw new Error(errorCode.ObserverList);
+            throw new PrecompiledError(OutputCode.getOutputMessage(OutputCode.ObserverList));
         }
 
-        let functionName = utils.spliceFunctionSignature(constant.CONSENSUS_PRECOMPILE_ABI.addObserver);
-        let parameters = [nodeID];
-        return this.web3jService.sendRawTransaction(constant.CONSENSUS_PRECOMPILE_ADDRESS, functionName, parameters);
+        return this._send(constant.CONSENSUS_PRECOMPILE_ABI.addObserver, nodeID);
     }
 
     async removeNode(nodeID) {
@@ -89,12 +93,10 @@ class ConsensusService extends ServiceBase {
         peers = peers.result;
 
         if (!peers.includes(nodeID)) {
-            throw new Error(errorCode.GroupPeers);
+            throw new PrecompiledError(OutputCode.getOutputMessage(OutputCode.GroupPeers));
         }
 
-        let functionName = utils.spliceFunctionSignature(constant.CONSENSUS_PRECOMPILE_ABI.remove);
-        let parameters = [nodeID];
-        return this.web3jService.sendRawTransaction(constant.CONSENSUS_PRECOMPILE_ADDRESS, functionName, parameters);
+        return this._send(constant.CONSENSUS_PRECOMPILE_ABI.remove, nodeID);
     }
 }
 

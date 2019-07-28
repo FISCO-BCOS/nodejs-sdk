@@ -14,7 +14,7 @@
 
 'use strict';
 
-const { check, string } = require('../../base/typeCheck');
+const { check, string } = require('../../common/typeCheck');
 
 class Table {
     constructor(tableName, key, valueFields, optional = '') {

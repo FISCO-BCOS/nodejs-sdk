@@ -14,14 +14,14 @@
 
 'use strict';
 
-const utils = require('../base/utils');
-const {check, string, boolean} = require('../base/typeCheck');
-const channelPromise = require('../base/channelPromise');
-const web3Sync = require('../base/web3lib/web3sync');
+const utils = require('../common/utils');
+const {check, string, boolean} = require('../common/typeCheck');
+const channelPromise = require('../common/channelPromise');
+const web3Sync = require('../common/web3lib/web3sync');
 const isArray = require('isarray');
 const path = require('path');
 const fs = require('fs');
-const ServiceBase = require('../base/serviceBase').ServiceBase;
+const ServiceBase = require('../common/serviceBase').ServiceBase;
 const READ_ONLY = require('./constant').READ_ONLY;
 
 class Web3jService extends ServiceBase {

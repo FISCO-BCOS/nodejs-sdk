@@ -150,11 +150,13 @@ function Transaction(data) {
 
     ethjsUtil.defineProperties(this, fields, data);
 
+    /*
     Object.defineProperty(this, 'from', {
         enumerable: true,
         configurable: true,
         get: this.getSenderAddress.bind(this)
     });
+    */
 
     let sigV = ethjsUtil.bufferToInt(this.v);
     let chainId = Math.floor((sigV - 35) / 2);
@@ -186,13 +188,6 @@ Transaction.prototype.hash = function (includeSignature) {
     // backup original signature
     const rawCopy = this.raw.slice(0);
 
-    // modify raw for signature generation only
-    if (this._chainId > 0) {
-        includeSignature = true;
-        this.v = this._chainId;
-        this.r = 0;
-        this.s = 0;
-    }
     // generate rlp params for hash
     let txRawForHash = includeSignature ? this.raw : this.raw.slice(0, this.raw.length - 3);
     //var txRawForHash = includeSignature ? this.raw : this.raw.slice(0, 7)
@@ -252,11 +247,9 @@ Transaction.prototype.verifySignature = function () {
 
     try {
         let v = ethjsUtil.bufferToInt(this.v);
-        if (this._chainId > 0) {
-            v -= this._chainId * 2 + 8;
-        }
         this._senderPubKey = utils.ecrecover(msgHash, v, this.r, this.s);
     } catch (e) {
+        console.error(e.stack);
         return false;
     }
 

@@ -14,10 +14,11 @@
 
 'use strict';
 
-const utils = require('../../base/utils');
+const utils = require('../../common/utils');
 const constant = require('./constant');
-const { check, string } = require('../../base/typeCheck');
-const SeviceBase = require('../../base/serviceBase').ServiceBase;
+const handleReceipt = require('../common').handleReceipt;
+const { check, string } = require('../../common/typeCheck');
+const SeviceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
 class SystemConfigService extends SeviceBase {
@@ -35,7 +36,10 @@ class SystemConfigService extends SeviceBase {
 
         let functionName = utils.spliceFunctionSignature(constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey);
         let parameters = [key, value];
-        return this.web3jService.sendRawTransaction(constant.SYSTEM_CONFIG_PRECOMPILE_ADDRESS, functionName, parameters);
+        let receipt = await this.web3jService.sendRawTransaction(constant.SYSTEM_CONFIG_PRECOMPILE_ADDRESS, functionName, parameters);
+
+        let output = handleReceipt(receipt, constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey)[0];
+        return parseInt(output);
     }
 }
 

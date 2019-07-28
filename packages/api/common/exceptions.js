@@ -14,5 +14,16 @@
 
 'use strict';
 
-module.exports.SYS_TABLE = '_sys_tables_';
-module.exports.USER_TABLE_PREFIX = '_user_';
+class TransactionError extends Error {
+    constructor(msg) {
+        super(msg);
+    }
+}
+module.exports.TransactionError = TransactionError;
+
+class PrecompiledError extends Error {
+    constructor(msg) {
+        super(msg);
+    }
+}
+module.exports.PrecompiledError = PrecompiledError;
