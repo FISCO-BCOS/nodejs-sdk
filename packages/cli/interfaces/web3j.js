@@ -402,22 +402,6 @@ module.exports = function (config) {
         }
     ));
 
-    function decodeMethod(abi, output) {
-        let result = utils.decodeMethod(abi, output);
-        let ret = '';
-        for (let index in abi.outputs) {
-            if (abi.outputs[index].name) {
-                ret += abi.outputs[index].name + ':'
-            }
-            ret += result[index];
-
-            if (index != (abi.outputs.length - 1)) {
-                ret += ' '
-            }
-        }
-        return ret;
-    }
-
     interfaces.push(produceSubCommandInfo(
         {
             name: 'call',
@@ -469,18 +453,22 @@ module.exports = function (config) {
             for (let item of abi) {
                 if (item.name === functionName && item.type === 'function') {
                     if (item.inputs.length != parameters.length) {
-                        throw new Error(`[ERROR]:wrong number of parameters for function \`${item.name}\``);
+                        throw new Error(`wrong number of parameters for function \`${item.name}\``);
                     }
 
                     functionName = utils.spliceFunctionSignature(item);
 
                     if (item.constant) {
                         return web3jService.call(contractAddress, functionName, parameters).then(result => {
+                            let status = result.result.status;
+                            let ret = {
+                                status: status
+                            };
                             let output = result.result.output;
                             if (output !== '0x') {
-                                return decodeMethod(item, output);
+                                ret.output = utils.decodeMethod(item, output);
                             }
-                            return null;
+                            return ret;
                         });
                     } else {
                         return web3jService.sendRawTransaction(contractAddress, functionName, parameters).then(result => {
@@ -492,7 +480,7 @@ module.exports = function (config) {
                             };
                             let output = result.output;
                             if (output !== '0x') {
-                                ret.output = decodeMethod(output);
+                                ret.output = utils.decodeMethod(item, output);
                             }
                             return ret;
                         });

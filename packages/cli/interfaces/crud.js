@@ -16,8 +16,6 @@
 
 // TO DO: Support SQL-style grammar
 
-const utils = require('../../api/common/utils');
-const path = require('path');
 const { produceSubCommandInfo, FLAGS } = require('./base');
 const { CRUDService, Table, Condition, Entry } = require('../../api');
 

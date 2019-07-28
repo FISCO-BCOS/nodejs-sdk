@@ -14,8 +14,6 @@
 
 'use strict';
 
-const utils = require('../../api/common/utils');
-const path = require('path');
 const produceSubCommandInfo = require('./base').produceSubCommandInfo;
 const PermissionService = require('../../api').PermissionService;
 

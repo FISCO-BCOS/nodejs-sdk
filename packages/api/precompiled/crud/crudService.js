@@ -17,7 +17,7 @@
 const utils = require('../../common/utils');
 const PrecompiledError = require('../../common/exceptions').PrecompiledError;
 const constant = require('./constant');
-const {TableName, handleReceipt} = require('../common');
+const { TableName, handleReceipt } = require('../common');
 const { check, string } = require('../../common/typeCheck');
 const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
@@ -46,9 +46,16 @@ class CRUDService extends ServiceBase {
         }
     }
 
-    async _send(abi, parameters, address = constant.CRUD_PRECOMPILE_ADDRESS) {
+    async _send(abi, parameters, readOnly = false, address = constant.CRUD_PRECOMPILE_ADDRESS) {
         let functionName = utils.spliceFunctionSignature(abi);
-        let receipt = await this.web3jService.sendRawTransaction(address, functionName, parameters);
+        let receipt = null;
+
+        if (readOnly) {
+            receipt = await this.web3jService.call(address, functionName, parameters);
+            receipt = receipt.result;
+        } else {
+            receipt = await this.web3jService.sendRawTransaction(address, functionName, parameters);
+        }
         return handleReceipt(receipt, abi)[0];
     }
 
@@ -56,7 +63,7 @@ class CRUDService extends ServiceBase {
         check(arguments, Table);
 
         let parameters = [table.tableName, table.key, table.valueFields];
-        let output = await this._send(constant.TABLE_FACTORY_PRECOMPILE_ABI.createTable, parameters, constant.TABLE_FACTORY_PRECOMPILE_ADDRESS);
+        let output = await this._send(constant.TABLE_FACTORY_PRECOMPILE_ABI.createTable, parameters, false, constant.TABLE_FACTORY_PRECOMPILE_ADDRESS);
         return parseInt(output);
     }
 
@@ -76,7 +83,6 @@ class CRUDService extends ServiceBase {
 
         let parameters = [table.tableName, table.key, JSON.stringify(entry.fields), JSON.stringify(condition.conditions), table.optional];
         let output = await this._send(constant.CRUD_PRECOMPILE_ABI.update, parameters);
-        
         return parseInt(output);
     }
 
@@ -85,7 +91,7 @@ class CRUDService extends ServiceBase {
         this._checkTableKeyLength(table);
 
         let parameters = [table.tableName, table.key, JSON.stringify(condition.conditions), table.optional];
-        let output = await this._send(constant.CRUD_PRECOMPILE_ABI.select, parameters);
+        let output = await this._send(constant.CRUD_PRECOMPILE_ABI.select, parameters, true);
 
         return JSON.parse(output);
     }
@@ -107,7 +113,7 @@ class CRUDService extends ServiceBase {
         let condition = new Condition();
         let userTable = await this.select(table, condition);
 
-        if(userTable.length !== 0) {
+        if (userTable.length !== 0) {
             let tableInfo = new Table(tableName, userTable[0].key_field, userTable[0].value_field);
             return tableInfo;
         } else {
