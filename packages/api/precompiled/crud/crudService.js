@@ -83,7 +83,6 @@ class CRUDService extends ServiceBase {
 
         let parameters = [table.tableName, table.key, JSON.stringify(entry.fields), JSON.stringify(condition.conditions), table.optional];
         let output = await this._send(constant.CRUD_PRECOMPILE_ABI.update, parameters);
-
         return parseInt(output);
     }
 
