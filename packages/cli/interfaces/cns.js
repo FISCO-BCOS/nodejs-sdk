@@ -129,7 +129,7 @@ module.exports = function (config) {
     interfaces.push(produceSubCommandInfo(
         {
             name: 'callByCNS',
-            describe: 'Call a contract by a function and paramters by CNS',
+            describe: 'Call a contract by a function and parameters by CNS',
             args: [
                 {
                     name: 'contractName:contractVersion',
