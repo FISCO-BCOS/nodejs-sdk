@@ -92,19 +92,7 @@ class Web3jService extends ServiceBase {
         };
 
         return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
-    }
-
-    async getConsensusStatus() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getConsensusStatus',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+    
     }
 
     async getSyncStatus() {
