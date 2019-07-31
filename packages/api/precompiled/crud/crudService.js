@@ -31,13 +31,14 @@ module.exports.Entry = Entry;
 module.exports.Condition = Condition;
 
 class CRUDService extends ServiceBase {
-    constructor($config) {
-        super($config);
+    constructor() {
+        super();
+        this.web3jService = new Web3jService();
     }
 
-    resetConfig($config) {
-        super.resetConfig($config);
-        this.web3jService = new Web3jService($config);
+    resetConfig() {
+        super.resetConfig();
+        this.web3jService.resetConfig();
     }
 
     _checkTableKeyLength(table) {

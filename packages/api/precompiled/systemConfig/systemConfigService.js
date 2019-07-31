@@ -22,13 +22,14 @@ const SeviceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
 class SystemConfigService extends SeviceBase {
-    constructor($config) {
-        super($config);
+    constructor() {
+        super();
+        this.web3jService = new Web3jService();
     }
 
-    resetConfig($config) {
-        super.resetConfig($config);
-        this.web3jService = new Web3jService($config);
+    resetConfig() {
+        super.resetConfig();
+        this.web3jService.resetConfig();
     }
 
     async setValueByKey(key, value) {

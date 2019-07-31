@@ -23,13 +23,14 @@ const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
 class CNSService extends ServiceBase {
-    constructor($config) {
-        super($config);
+    constructor() {
+        super();
+        this.web3jService = new Web3jService();
     }
 
-    resetConfig($config) {
-        super.resetConfig($config);
-        this.web3jService = new Web3jService($config);
+    resetConfig() {
+        super.resetConfig();
+        this.web3jService.resetConfig();
     }
 
     _isValidAddress(address) {

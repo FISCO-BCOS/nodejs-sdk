@@ -1,6 +1,8 @@
 {
-    "account": "0x64fa644d2a694681bd6addd6c5e36cccd8dcdde3",
-    "privateKey": "bcec428d5205abe0f0cc8a734083908d9eb8563e31f943d760786edf42ad67dd",
+    "privateKey": {
+        "type": "pem",
+        "value": "./0x144d5ca47de35194b019b6f11a56028b964585c9.pem"
+    },
     "nodes": [
         {
             "ip": "127.0.0.1",
