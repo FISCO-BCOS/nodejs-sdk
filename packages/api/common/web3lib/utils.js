@@ -32,11 +32,11 @@ function toBuffer(data) {
     if (!Buffer.isBuffer(data)) {
         if (Array.isArray(data)) {
             data = Buffer.from(data);
-        } else if (data instanceof String) {
+        } else if (typeof data === 'string') {
             if (ethjsUtil.isHexPrefixed(data)) {
                 data = Buffer.from(ethjsUtil.padToEven(ethjsUtil.stripHexPrefix(data)), 'hex');
             } else {
-                data = Buffer.from(data);
+                data = Buffer.from(data, 'hex');
             }
         } else if (Number.isInteger(data)) {
             data = ethjsUtil.intToBuffer(data);
@@ -77,8 +77,8 @@ function sha3(data, bits) {
  */
 function privateKeyToPublicKey(privateKey) {
     if (encryptType === 0) {
-        privateKey = ethjsUtil.toBuffer(privateKey);
-        let publicKey = keccak.publicKeyCreate(privateKey, false).slice(1);
+        privateKey = toBuffer(privateKey);
+        let publicKey = secp256k1.publicKeyCreate(privateKey, false).slice(1);
         return publicKey;
     } else {
         throw new Error('Unsupported type of encryption');

@@ -14,15 +14,29 @@
 
 'use strict';
 
-const utils = require('./utils');
+const Configuration = require('../common/configuration').Configuration;
 
 class ServiceBase {
-    constructor($config) {
-        this.resetConfig($config);
+    constructor() {
+        this._config = undefined;
+
+        Object.defineProperty(this, 'config', {
+            enumerable: true,
+            configurable: false,
+            get: () => {
+                if (!this._config) {
+                    this._config = Configuration.getInstance();
+                }
+                return this._config;
+            },
+            set: (config) => {
+                this._config = config;
+            }
+        });
     }
 
-    resetConfig($config) {
-        this.config = utils.readConfig($config);
+    resetConfig() {
+        this.config = Configuration.getInstance();
     }
 }
 

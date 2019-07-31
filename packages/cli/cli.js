@@ -31,14 +31,17 @@ const path = require('path');
 const utils = require('../api/common/utils');
 const { ContractsDir, ContractsOutputDir } = require('./constant');
 const isArray = require('isarray');
-
 const getAbi = require('./interfaces/base').getAbi;
+const Configuration = require('../api/common/configuration').Configuration;
 
-const config = utils.readConfig(path.join(__dirname, './conf/config.json'));
-let interfaces = require('./interfaces/web3j')(config);
-interfaces = interfaces.concat(require('./interfaces/crud')(config));
-interfaces = interfaces.concat(require('./interfaces/permission')(config));
-interfaces = interfaces.concat(require('./interfaces/cns')(config));
+Configuration.setConfig(path.join(__dirname, './conf/config.json'));
+
+let interfaces = [];
+interfaces = interfaces.concat(require('./interfaces/account').interfaces);
+interfaces = interfaces.concat(require('./interfaces/web3j').interfaces);
+interfaces = interfaces.concat(require('./interfaces/crud').interfaces);
+interfaces = interfaces.concat(require('./interfaces/permission').interfaces);
+interfaces = interfaces.concat(require('./interfaces/cns').interfaces);
 let commands = interfaces.map(value => value.name);
 
 function parseSub(subCommandInfo, argv, originArgv) {
@@ -49,6 +52,10 @@ function parseSub(subCommandInfo, argv, originArgv) {
     if (subCommandInfo.args) {
         for (let index in subCommandInfo.args) {
             let arg = subCommandInfo.args[index];
+            if(arg.options.choices) {
+                arg.options.choices.push('?');
+            }
+
             if (arg.options.flag) {
                 if (arg.options.flag === FLAGS.VARIADIC) {
                     command += ` [${arg.name}...]`;

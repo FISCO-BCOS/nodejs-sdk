@@ -45,13 +45,21 @@ git clone https://github.com/FISCO-BCOS/nodejs-sdk.git
 ```
 
 **部署**
+<table><tr><td bgcolor=gray>
 
-如果您的网络中使用了代理，请先为npm配置代理。如果没有使用代理，请忽略。
+*如果您的网络中使用了代理，请先为npm配置代理。如果没有使用代理，请忽略。*
 
 ```bash
 npm config set proxy <your proxy>
 npm config set https-proxy <your proxy>
 ```
+
+*如果您所使用的网络不能顺利访问npm官方镜像，请使用其他镜像代替，如淘宝：*
+
+```bash
+npm config set registry https://registry.npm.taobao.org
+```
+orange</td></tr></table>
 
 ```bash
 # 部署过程中请确保能够访问外网以能够安装第三方依赖包
@@ -150,6 +158,20 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 }
 ```
 
+**显示外部账户**
+
+```bash
+./cli.js showAccount
+```
+
+输出如下：
+
+```JSON
+{
+  "account": "0x144d5ca47de35194b019b6f11a56028b964585c9"
+}
+```
+
 **获取当前的块高**
 
 ```bash
@@ -210,7 +232,7 @@ vita
 ./cli.js <command> ?
 ```
 
-其中command为一个命令名，使用`?`便可获取该命令的使用提示，如：
+其中command为一个命令名，使用`?`作为参数便可获取该命令的使用提示，如：
 
 ```bash
 ./cli.js call ?
@@ -237,17 +259,25 @@ Call a contract by a function and parameters
 
 **CLI工具配置项说明**
 
-CLI工具的配置文件位于`nodejs-sdk/packages/cli/conf/config.json`，配置文件中各属性的说明如下：
+CLI工具的配置文件位于`nodejs-sdk/packages/cli/conf/config.json`，配置文件中各字段的说明如下：
 
-- `account`: `string`，必需。CLI工具发送交易时所需要的外部账户
-- `privateKey`: `string`，必需。外部账户私钥
-- `nodes`: `list`，必需。FISCO BCOS节点列表，CLI工具在使用时会从该列表中随机挑选一个节点进行通信，要求节点数目必须 >= 1。每个节点包含两个属性：
+- `privateKey`: `object`，必需。外部账户的私钥，可以为一个256 bits的随机整数，也可以是一个pem或p12格式的私钥文件，后两者需要结合[get_account.sh](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/manual/account.html)生成的私钥文件使用。`privateKey`包含两个必需字段，一个可选字段：
+  - `type`: `string`，必需。用于指示私钥类型。`type`的值必需为下列三个值之一：
+    - `ecrandom`：随机整数
+    - `pem`：pem格式的文件
+    - `p12`：p12格式的文件
+  - `value`：`string`，必需。用于指示私钥具体的值：
+    - 如果`type`为`ecrandom`，则`value`为一个长度为256 bits 的随机整数，其值介于1 ~ 0xFFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFE BAAE DCE6 AF48 A03B BFD2 5E8C D036 4141之间。
+    - 如果`type`为`pem`，则`value`为pem文件的路径，如果是相对路径，需要以配置文件所在的目录为相对路径起始位置。
+    - 如果`type`为`p12`，则`value`为p12文件的路径，如果是相对路径，需要以配置文件所在的目录为相对路径起始位置。
+  - `password`：`string`，可选。如果`type`为`p12`，则需要此字段以解密私钥，否则会忽略该字段。
+- `nodes`: `list`，必需。FISCO BCOS节点列表，CLI工具在使用时会从该列表中随机挑选一个节点进行通信，要求节点数目必须 >= 1。每个节点包含两个字段：
   - `ip`: `string`，必需。FISCO BCOS节点的IP地址
   - `port`: `string`，必需，FISCO BCOS节点的Channel端口
-- `authentication`：`object`。必需，包含建立Channel通信时所需的认证信息，一般在建链过程中自动生成。`authentication`包含三个属性：
-  - `key`: `string`，必需。私钥文件路径，如果是相对路径，需要以`conf`目录为相对路径起始位置。
-  - `cert`: `string`，必需。证书文件路径，如果是相对路径，需要以`conf`目录为相对路径起始位置。
-  - `ca`: `string`，必需。CA根证书文件路径，如果是相对路径，需要以`conf`目录为相对路径起始位置。
+- `authentication`：`object`。必需，包含建立Channel通信时所需的认证信息，一般在建链过程中自动生成。`authentication`包含三个必需字段：
+  - `key`: `string`，必需。私钥文件路径，如果是相对路径，需要以配置文件所在的目录为相对路径起始位置。
+  - `cert`: `string`，必需。证书文件路径，如果是相对路径，需要以配置文件所在的目录为相对路径起始位置。
+  - `ca`: `string`，必需。CA根证书文件路径，如果是相对路径，需要以配置文件所在的目录为相对路径起始位置。
 - `groupID`: `number`。CLI所操作的链的群组ID
 - `timeout`: `number`。CLI工具所连节点可能会陷入停止响应的状态。为避免陷入无限等待，CLI工具的每一项操作在`timeout`之后若仍没有得到结果，则强制退出。`timeout`的单位为毫秒。
 - `solc`: `string`，可选。Node.js SDK已经自带0.4.26及0.5.10版本的Solidity编译器，如果您有特殊的编译器需求，可以设置本配置项为您的编译器的执行路径或全局命令。

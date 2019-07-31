@@ -57,269 +57,267 @@ function parseCondition(condition) {
     throw new Error('illegal condition expression');
 }
 
-module.exports = function (config) {
-    let interfaces = [];
-    let crudService = new CRUDService(config);
+let interfaces = [];
+let crudService = new CRUDService();
 
-    interfaces.push(produceSubCommandInfo(
-        {
-            name: 'create',
-            describe: 'Create table',
-            args: [
-                {
-                    name: 'tableName',
-                    options: {
-                        type: 'string',
-                        describe: 'Name of the table'
-                    }
-                },
-                {
-                    name: 'key',
-                    options: {
-                        type: 'string',
-                        describe: 'Name of primary key',
-                    }
-                },
-                {
-                    name: 'valueFields',
-                    options: {
-                        type: 'string',
-                        describe: 'Name of columns, separated by comma'
-                    }
-                },
-                {
-                    name: 'optional',
-                    options: {
-                        type: 'string',
-                        describe: 'Optional options',
-                        flag: FLAGS.OPTIONAL
-                    }
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'create',
+        describe: 'Create table',
+        args: [
+            {
+                name: 'tableName',
+                options: {
+                    type: 'string',
+                    describe: 'Name of the table'
                 }
-            ]
-        },
-        (argv) => {
-            let tableName = argv.tableName;
-            let key = argv.key;
-            let valueFields = argv.valueFields;
-            let optional = argv.optional;
-
-            let table = new Table(tableName, key, valueFields, optional);
-            return crudService.createTable(table);
-        }
-    ));
-
-    interfaces.push(produceSubCommandInfo(
-        {
-            name: 'select',
-            describe: 'Select records from a table',
-            args: [
-                {
-                    name: 'tableName',
-                    options: {
-                        type: 'string',
-                        describe: 'Name of the table'
-                    }
-                },
-                {
-                    name: 'key',
-                    options: {
-                        type: 'string',
-                        describe: 'The value of primary key'
-                    }
-                },
-                {
-                    name: 'condition',
-                    options: {
-                        type: 'string',
-                        describe: 'The condition to filter'
-                    }
+            },
+            {
+                name: 'key',
+                options: {
+                    type: 'string',
+                    describe: 'Name of primary key',
                 }
-            ]
-        },
-        (argv) => {
-            let tableName = argv.tableName;
-            let key = argv.key;
-            let condition = parseCondition(argv.condition);
-
-            return crudService.desc(tableName).then(tableInfo => {
-                let table = new Table(tableInfo.tableName, key, tableInfo.valueFields, tableInfo.optional);
-                return crudService.select(table, condition);
-            });
-        }
-    ));
-
-    interfaces.push(produceSubCommandInfo(
-        {
-            name: 'insert',
-            describe: 'Insert records into a table',
-            args: [
-                {
-                    name: 'tableName',
-                    options: {
-                        type: 'string',
-                        describe: 'Name of the table'
-                    }
-                },
-                {
-                    name: 'key',
-                    options: {
-                        type: 'string',
-                        describe: 'The value of primary key'
-                    }
-                },
-                {
-                    name: 'entry',
-                    options: {
-                        type: 'string',
-                        describe: 'The value of value fields, separated by comma'
-                    }
+            },
+            {
+                name: 'valueFields',
+                options: {
+                    type: 'string',
+                    describe: 'Name of columns, separated by comma'
                 }
-            ]
-        },
-        (argv) => {
-            let tableName = argv.tableName;
-            let key = argv.key;
-
-            return crudService.desc(tableName).then(tableInfo => {
-                let table = new Table(tableInfo.tableName, key, tableInfo.valueFields, tableInfo.optional);
-
-                let fieldNames = tableInfo.valueFields.split(',');
-                let fieldValues = argv.entry.split(',');
-
-                if (fieldNames.length !== fieldValues.length) {
-                    throw new Error(`unmatch number of fields, expected ${fieldNames.length} but got ${fieldValues.length}`);
+            },
+            {
+                name: 'optional',
+                options: {
+                    type: 'string',
+                    describe: 'Optional options',
+                    flag: FLAGS.OPTIONAL
                 }
+            }
+        ]
+    },
+    (argv) => {
+        let tableName = argv.tableName;
+        let key = argv.key;
+        let valueFields = argv.valueFields;
+        let optional = argv.optional;
 
-                let entry = new Entry();
-                for (let index in fieldNames) {
-                    entry.put(fieldNames[index], fieldValues[index]);
+        let table = new Table(tableName, key, valueFields, optional);
+        return crudService.createTable(table);
+    }
+));
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'select',
+        describe: 'Select records from a table',
+        args: [
+            {
+                name: 'tableName',
+                options: {
+                    type: 'string',
+                    describe: 'Name of the table'
                 }
-
-                return crudService.insert(table, entry);
-            });
-        }
-    ));
-
-    interfaces.push(produceSubCommandInfo(
-        {
-            name: 'update',
-            describe: 'Update records in a table',
-            args: [
-                {
-                    name: 'tableName',
-                    options: {
-                        type: 'string',
-                        describe: 'Name of the table'
-                    }
-                },
-                {
-                    name: 'key',
-                    options: {
-                        type: 'string',
-                        describe: 'The value of primary key'
-                    }
-                },
-                {
-                    name: 'entry',
-                    options: {
-                        type: 'string',
-                        describe: 'The value of value fields, separated by comma'
-                    }
-                },
-                {
-                    name: 'condition',
-                    options: {
-                        type: 'string',
-                        describe: 'The condition to filter'
-                    }
+            },
+            {
+                name: 'key',
+                options: {
+                    type: 'string',
+                    describe: 'The value of primary key'
                 }
-            ]
-        },
-        (argv) => {
-            let tableName = argv.tableName;
-            let key = argv.key;
-            let condition = parseCondition(argv.condition);
-
-            return crudService.desc(tableName).then(tableInfo => {
-                let table = new Table(tableInfo.tableName, key, tableInfo.valueFields, tableInfo.optional);
-
-                let fieldNames = tableInfo.valueFields.split(',');
-                let fieldValues = argv.entry.split(',');
-
-                if (fieldNames.length !== fieldValues.length) {
-                    throw new Error(`unmatch number of fields, expected ${fieldNames.length} but got ${fieldValues.length}`);
+            },
+            {
+                name: 'condition',
+                options: {
+                    type: 'string',
+                    describe: 'The condition to filter'
                 }
+            }
+        ]
+    },
+    (argv) => {
+        let tableName = argv.tableName;
+        let key = argv.key;
+        let condition = parseCondition(argv.condition);
 
-                let entry = new Entry();
-                for (let index in fieldNames) {
-                    entry.put(fieldNames[index], fieldValues[index]);
+        return crudService.desc(tableName).then(tableInfo => {
+            let table = new Table(tableInfo.tableName, key, tableInfo.valueFields, tableInfo.optional);
+            return crudService.select(table, condition);
+        });
+    }
+));
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'insert',
+        describe: 'Insert records into a table',
+        args: [
+            {
+                name: 'tableName',
+                options: {
+                    type: 'string',
+                    describe: 'Name of the table'
                 }
-
-                return crudService.update(table, entry, condition);
-            });
-        }
-    ));
-
-    interfaces.push(produceSubCommandInfo(
-        {
-            name: 'remove',
-            describe: 'Remove records from a table',
-            args: [
-                {
-                    name: 'tableName',
-                    options: {
-                        type: 'string',
-                        describe: 'Name of the table'
-                    }
-                },
-                {
-                    name: 'key',
-                    options: {
-                        type: 'string',
-                        describe: 'The value of primary key'
-                    }
-                },
-                {
-                    name: 'condition',
-                    options: {
-                        type: 'string',
-                        describe: 'The condition to filter'
-                    }
+            },
+            {
+                name: 'key',
+                options: {
+                    type: 'string',
+                    describe: 'The value of primary key'
                 }
-            ]
-        },
-        (argv) => {
-            let tableName = argv.tableName;
-            let key = argv.key;
-            let condition = parseCondition(argv.condition);
-
-            return crudService.desc(tableName).then(tableInfo => {
-                let table = new Table(tableInfo.tableName, key, tableInfo.valueFields, tableInfo.optional);
-                return crudService.remove(table, condition);
-            });
-        }
-    ));
-
-    interfaces.push(produceSubCommandInfo(
-        {
-            name: 'desc',
-            describe: 'Get information about a table',
-            args: [
-                {
-                    name: 'tableName',
-                    options: {
-                        type: 'string',
-                        describe: 'Name of the table'
-                    }
+            },
+            {
+                name: 'entry',
+                options: {
+                    type: 'string',
+                    describe: 'The value of value fields, separated by comma'
                 }
-            ]
-        },
-        (argv) => {
-            let tableName = argv.tableName;
+            }
+        ]
+    },
+    (argv) => {
+        let tableName = argv.tableName;
+        let key = argv.key;
 
-            return crudService.desc(tableName);
-        }
-    ));
+        return crudService.desc(tableName).then(tableInfo => {
+            let table = new Table(tableInfo.tableName, key, tableInfo.valueFields, tableInfo.optional);
 
-    return interfaces;
-};
+            let fieldNames = tableInfo.valueFields.split(',');
+            let fieldValues = argv.entry.split(',');
+
+            if (fieldNames.length !== fieldValues.length) {
+                throw new Error(`unmatch number of fields, expected ${fieldNames.length} but got ${fieldValues.length}`);
+            }
+
+            let entry = new Entry();
+            for (let index in fieldNames) {
+                entry.put(fieldNames[index], fieldValues[index]);
+            }
+
+            return crudService.insert(table, entry);
+        });
+    }
+));
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'update',
+        describe: 'Update records in a table',
+        args: [
+            {
+                name: 'tableName',
+                options: {
+                    type: 'string',
+                    describe: 'Name of the table'
+                }
+            },
+            {
+                name: 'key',
+                options: {
+                    type: 'string',
+                    describe: 'The value of primary key'
+                }
+            },
+            {
+                name: 'entry',
+                options: {
+                    type: 'string',
+                    describe: 'The value of value fields, separated by comma'
+                }
+            },
+            {
+                name: 'condition',
+                options: {
+                    type: 'string',
+                    describe: 'The condition to filter'
+                }
+            }
+        ]
+    },
+    (argv) => {
+        let tableName = argv.tableName;
+        let key = argv.key;
+        let condition = parseCondition(argv.condition);
+
+        return crudService.desc(tableName).then(tableInfo => {
+            let table = new Table(tableInfo.tableName, key, tableInfo.valueFields, tableInfo.optional);
+
+            let fieldNames = tableInfo.valueFields.split(',');
+            let fieldValues = argv.entry.split(',');
+
+            if (fieldNames.length !== fieldValues.length) {
+                throw new Error(`unmatch number of fields, expected ${fieldNames.length} but got ${fieldValues.length}`);
+            }
+
+            let entry = new Entry();
+            for (let index in fieldNames) {
+                entry.put(fieldNames[index], fieldValues[index]);
+            }
+
+            return crudService.update(table, entry, condition);
+        });
+    }
+));
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'remove',
+        describe: 'Remove records from a table',
+        args: [
+            {
+                name: 'tableName',
+                options: {
+                    type: 'string',
+                    describe: 'Name of the table'
+                }
+            },
+            {
+                name: 'key',
+                options: {
+                    type: 'string',
+                    describe: 'The value of primary key'
+                }
+            },
+            {
+                name: 'condition',
+                options: {
+                    type: 'string',
+                    describe: 'The condition to filter'
+                }
+            }
+        ]
+    },
+    (argv) => {
+        let tableName = argv.tableName;
+        let key = argv.key;
+        let condition = parseCondition(argv.condition);
+
+        return crudService.desc(tableName).then(tableInfo => {
+            let table = new Table(tableInfo.tableName, key, tableInfo.valueFields, tableInfo.optional);
+            return crudService.remove(table, condition);
+        });
+    }
+));
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'desc',
+        describe: 'Get information about a table',
+        args: [
+            {
+                name: 'tableName',
+                options: {
+                    type: 'string',
+                    describe: 'Name of the table'
+                }
+            }
+        ]
+    },
+    (argv) => {
+        let tableName = argv.tableName;
+
+        return crudService.desc(tableName);
+    }
+));
+
+module.exports.interfaces = interfaces;

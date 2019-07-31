@@ -14,6 +14,13 @@
 
 'use strict';
 
+class ConfigurationError extends Error {
+    constructor(msg) {
+        super(msg);
+    }
+}
+module.exports.ConfigurationError = ConfigurationError;
+
 class TransactionError extends Error {
     constructor(msg) {
         super(msg);

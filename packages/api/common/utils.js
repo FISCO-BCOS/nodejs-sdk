@@ -22,39 +22,6 @@ const events = require('events');
 const abi = require('ethjs-abi');
 
 /**
- * Read config file.
- * The config file is a JSON-fomatted file, it should contain following top-level fields:
- *  - `account`: string, user's account
- *  - `privateKey`: string, user's private key
- *  - `nodes`: [Object], each object in nodes list should contain following fields:
- *    - `ip`: IP address of the node
- *    - `port`: Channel port of the node
- *  - `authentication`: Object, should contain following fields:
- *    - `key`: path of private key file
- *    - `cert`: path of certificate file
- *    - `ca`: path of CA root certificate file
- *  - `groupID`: interger, which group you want to connect
- *  - `timeout`: the max waiting time before a node returns a transaction receipt back
- */
-module.exports.readConfig = function ($config) {
-    if (typeof $config === 'string') {
-        let configFileDir = path.dirname($config);
-        let config = JSON.parse(fs.readFileSync($config));
-
-        // Amend relative path
-        for (let key in config.authentication) {
-            let keyPath = config.authentication[key];
-            if (!path.isAbsolute(keyPath)) {
-                config.authentication[key] = path.join(configFileDir, config.authentication[key])
-            }
-        }
-        return config;
-    } else {
-        return $config;
-    }
-};
-
-/**
  * Select a node from node list randomly
  * @param {Array} nodes Node list
  * @return {Object} Node

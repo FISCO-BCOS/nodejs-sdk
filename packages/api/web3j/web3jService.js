@@ -15,7 +15,7 @@
 'use strict';
 
 const utils = require('../common/utils');
-const {check, string, boolean} = require('../common/typeCheck');
+const { check, string, boolean } = require('../common/typeCheck');
 const channelPromise = require('../common/channelPromise');
 const web3Sync = require('../common/web3lib/web3sync');
 const isArray = require('isarray');
@@ -23,10 +23,16 @@ const path = require('path');
 const fs = require('fs');
 const ServiceBase = require('../common/serviceBase').ServiceBase;
 const READ_ONLY = require('./constant').READ_ONLY;
+const Configuration = require('../common/configuration').Configuration;
+
 
 class Web3jService extends ServiceBase {
-    constructor($config) {
-        super($config);
+    constructor() {
+        super();
+    }
+
+    resetConfig() {
+        super.resetConfig();
     }
 
     async getBlockNumber() {
@@ -92,7 +98,6 @@ class Web3jService extends ServiceBase {
         };
 
         return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
-    
     }
 
     async getSyncStatus() {
