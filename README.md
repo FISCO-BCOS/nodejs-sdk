@@ -45,6 +45,7 @@ git clone https://github.com/FISCO-BCOS/nodejs-sdk.git
 ```
 
 **部署**
+
 <table><tr><td bgcolor=gray>
 
 *如果您的网络中使用了代理，请先为npm配置代理。如果没有使用代理，请忽略。*
@@ -59,7 +60,8 @@ npm config set https-proxy <your proxy>
 ```bash
 npm config set registry https://registry.npm.taobao.org
 ```
-orange</td></tr></table>
+
+</td></tr></table>
 
 ```bash
 # 部署过程中请确保能够访问外网以能够安装第三方依赖包
