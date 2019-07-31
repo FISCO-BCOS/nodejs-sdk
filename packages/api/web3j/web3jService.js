@@ -98,7 +98,6 @@ class Web3jService extends ServiceBase {
         };
 
         return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
-
     }
 
     async getSyncStatus() {
