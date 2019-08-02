@@ -98,19 +98,29 @@ function createNewSocket(ip, port, authentication) {
         let socketID = Object.getOwnPropertyDescriptor(tlsSocket, 'socketID').value;
         if (!buffers.has(socketID)) {
             // First time to read data from this socket
-            let length = response.readUIntBE(0, 4);
-            if (tlsSocket.bytesRead < length) {
+            let expectedLength = null;
+            if (tlsSocket.bytesRead >= 4) {
+                expectedLength = response.readUIntBE(0, 4);
+            }
+
+            if (!expectedLength || tlsSocket.bytesRead < expectedLength) {
                 buffers.set(socketID, {
-                    expectedLength: length,
+                    expectedLength: expectedLength,
                     buffer: response
                 });
             } else {
                 parseResponse(response);
             }
+
         } else {
             // Multiple reading
-            buffers.get(socketID).buffer = Buffer.concat([buffers.get(socketID).buffer, response]);
-            if (tlsSocket.bytesRead >= buffers.get(socketID).expectedLength) {
+            let cache = buffers.get(socketID);
+            cache.buffer = Buffer.concat([cache.buffer, response]);
+            if (!cache.expectedLength && tlsSocket.bytesRead >= 4) {
+                cache.expectedLength = cache.buffer.readUIntBE(0, 4);
+            }
+
+            if (cache.expectedLength && tlsSocket.bytesRead >= cache.expectedLength) {
                 parseResponse(buffers.get(socketID).buffer);
             }
         }
