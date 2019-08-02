@@ -45,12 +45,12 @@ function parseResponse(response) {
                 emitter.emit('gotresult', result);
             } else {
                 if (!result.result) {
-                    throw new NetworkError(`unknown message receieved, seq=${seq}, data=${data}`);
+                    throw new NetworkError(`unknown message receieved, seq=${seq}, data=${response.toString()}`);
                 }
             }
         }
     } else {
-        throw new NetworkError(`unknown owner message receieved, seq=${seq}, data=${data}`);
+        throw new NetworkError(`unknown owner message receieved, seq=${seq}, data=${response.toString()}`);
     }
 }
 
