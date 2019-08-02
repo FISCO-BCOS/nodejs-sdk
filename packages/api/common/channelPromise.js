@@ -19,9 +19,40 @@ const fs = require('fs');
 const net = require('net');
 const uuidv4 = require('uuid/v4');
 const events = require('events');
-const chalk = require('chalk');
+const { NetworkError } = require('./exceptions').NetworkError;
 
 let emitters = new Map();
+let buffers = new Map();
+
+/**
+ * Parse response returned by node
+ * @param {Buffer} response Node's response
+ */
+
+function parseResponse(response) {
+    let seq = response.slice(6, 38).toString();
+    let result = JSON.parse(response.slice(42).toString());
+    let emitter = emitters.get(seq).emitter;
+
+    if (emitter) {
+        let readOnly = Object.getOwnPropertyDescriptor(emitter, 'readOnly').value;
+        if (readOnly) {
+            if (result.error || result.result) {
+                emitter.emit('gotresult', result);
+            }
+        } else {
+            if (result.error || result.status || (result.result && result.result.status)) {
+                emitter.emit('gotresult', result);
+            } else {
+                if (!result.result) {
+                    throw new NetworkError(`unknown message receieved, seq=${seq}, data=${data}`);
+                }
+            }
+        }
+    } else {
+        throw new NetworkError(`unknown owner message receieved, seq=${seq}, data=${data}`);
+    }
+}
 
 /**
  * Create a new TLS socket
@@ -64,31 +95,24 @@ function createNewSocket(ip, port, authentication) {
             response = Buffer.from(data, 'ascii');
         }
 
-        let seq = response.slice(6, 38).toString();
-        let result = JSON.parse(response.slice(42).toString());
-        let emitter = emitters.get(seq).emitter;
-
-        if (emitter) {
-            let readOnly = Object.getOwnPropertyDescriptor(emitter, 'readOnly').value;
-            if (readOnly) {
-                if (result.error || result.result) {
-                    emitter.emit('gotresult', result);
-                    clearTimeout(emitters.get(seq).timer);
-                    emitters.delete(seq);
-                }
+        let socketID = Object.getOwnPropertyDescriptor(tlsSocket, 'socketID').value;
+        if (!buffers.has(socketID)) {
+            // First time to read data from this socket
+            let length = response.readUIntBE(0, 4);
+            if (tlsSocket.bytesRead < length) {
+                buffers.set(socketID, {
+                    expectedLength: length,
+                    buffer: response
+                });
             } else {
-                if (result.error || result.status || (result.result && result.result.status)) {
-                    emitter.emit('gotresult', result);
-                    clearTimeout(emitters.get(seq).timer);
-                    emitters.delete(seq);
-                } else {
-                    if (!result.result) {
-                        console.error(chalk.red(`Unknown message receieved, seq=${seq}, data=${data}`));
-                    }
-                }
+                parseResponse(response);
             }
         } else {
-            console.error(chalk.red(`Unknown owner message receieved, seq=${seq}, data=${data}`));
+            // Multiple reading
+            buffers.get(socketID).buffer = Buffer.concat([buffers.get(socketID).buffer, response]);
+            if (tlsSocket.bytesRead >= buffers.get(socketID).expectedLength) {
+                parseResponse(buffers.get(socketID).buffer);
+            }
         }
     });
 
@@ -121,6 +145,18 @@ function packageData(data) {
 }
 
 /**
+ * Clear context when a message got response or timeout
+ * @param {Socket} socket The socket who sends the message
+ */
+function clearContext(socket) {
+    let uuid = Object.getOwnPropertyDescriptor(socket, 'socketID').value;
+    clearTimeout(emitters.get(uuid).timer);
+    emitters.delete(uuid);
+    buffers.delete(uuid);
+    socket.destroy();
+}
+
+/**
  * Return channel promise for a request
  * @param {Object} node A JSON object which contains IP and port configuration of channel server
  * @param {Object} authentication A JSON object contains certificate file path, private key file path and CA file path
@@ -135,6 +171,11 @@ function channelPromise(node, authentication, data, timeout, readOnly = false) {
 
     let dataPackage = packageData(JSON.stringify(data));
     let uuid = dataPackage.uuid;
+
+    Object.defineProperty(tlsSocket, 'socketID', {
+        value: uuid
+    });
+
     let packagedData = dataPackage.packagedData;
     let channelPromise = new Promise(async (resolve, reject) => {
         let eventEmitter = new events.EventEmitter();
@@ -146,17 +187,19 @@ function channelPromise(node, authentication, data, timeout, readOnly = false) {
         });
 
         eventEmitter.on('gotresult', (result) => {
-            tlsSocket.destroy();
+            clearContext(tlsSocket);
             if (result.error) {
                 reject(result);
             } else {
                 resolve(result);
             }
+            return; // This `return` is not necessary, but it may can avoid future trap
         });
 
         eventEmitter.on('timeout', () => {
+            clearContext(tlsSocket);
             reject({ 'error': 'timeout' });
-            tlsSocket.destroy();
+            return; // This `return` is not necessary, but it may can avoid future trap
         });
 
         emitters.set(uuid, {

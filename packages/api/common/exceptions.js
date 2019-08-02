@@ -34,3 +34,10 @@ class PrecompiledError extends Error {
     }
 }
 module.exports.PrecompiledError = PrecompiledError;
+
+class NetworkError extends Error {
+    constructor(msg) {
+        super(msg);
+    }
+}
+module.exports.NetworkError = NetworkError;
