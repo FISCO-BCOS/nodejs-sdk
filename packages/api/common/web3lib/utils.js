@@ -19,7 +19,7 @@ const cryptoJSSha3 = require('crypto-js/sha3');
 const keccak = require('keccak');
 const assert = require('assert');
 const rlp = require('rlp');
-const coder = require('web3/lib/solidity/coder');
+const coder = require('web3-eth-abi');
 const ethjsUtil = require('ethjs-util');
 const encryptType = require('./config').EncryptType;
 
@@ -191,7 +191,7 @@ function rlphash(data) {
  * @return {Buffer} params' code
  */
 function encodeParams(types, params) {
-    let ret = coder.encodeParams(types, params);
+    let ret = coder.encodeParameters(types, params);
     return ret;
 }
 
@@ -202,7 +202,7 @@ function encodeParams(types, params) {
  * @return {Array} params
  */
 function decodeParams(types, bytes) {
-    let ret = coder.decodeParams(types, bytes);
+    let ret = coder.decodeParameters(types, bytes);
     return ret;
 }
 
@@ -234,7 +234,7 @@ function encodeFunctionName(fcn) {
 function encodeTxData(fcn, types, params) {
     let txDataCode = encodeFunctionName(fcn);
     let paramsCode = encodeParams(types, params);
-    txDataCode += paramsCode;
+    txDataCode += ethjsUtil.stripHexPrefix(paramsCode);
     return txDataCode;
 }
 
