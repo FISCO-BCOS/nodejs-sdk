@@ -17,6 +17,7 @@
 class ConfigurationError extends Error {
     constructor(msg) {
         super(msg);
+        this.name = 'ConfigurationError';
     }
 }
 module.exports.ConfigurationError = ConfigurationError;
@@ -24,6 +25,7 @@ module.exports.ConfigurationError = ConfigurationError;
 class TransactionError extends Error {
     constructor(msg) {
         super(msg);
+        this.name = 'TransactionError';
     }
 }
 module.exports.TransactionError = TransactionError;
@@ -31,6 +33,7 @@ module.exports.TransactionError = TransactionError;
 class PrecompiledError extends Error {
     constructor(msg) {
         super(msg);
+        this.name = 'PrecompiledError';
     }
 }
 module.exports.PrecompiledError = PrecompiledError;
@@ -38,6 +41,15 @@ module.exports.PrecompiledError = PrecompiledError;
 class NetworkError extends Error {
     constructor(msg) {
         super(msg);
+        this.name = 'NetworkError';
     }
 }
 module.exports.NetworkError = NetworkError;
+
+class CompileError extends Error {
+    constructor(msg) {
+        super(msg);
+        this.name = 'CompileError';
+    }
+}
+module.exports.CompileError = CompileError;
