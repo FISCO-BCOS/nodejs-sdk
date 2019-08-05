@@ -390,13 +390,15 @@ interfaces.push(produceSubCommandInfo(
 
         return web3jService.deploy(contractPath, outputDir).then(result => {
             let contractAddress = result.contractAddress;
-            let addressPath = path.join(outputDir, `.${path.basename(contractName, '.sol')}.address`);
+            if (result.status === '0x0') {
+                let addressPath = path.join(outputDir, `.${path.basename(contractName, '.sol')}.address`);
 
-            try {
-                fs.appendFileSync(addressPath, contractAddress + '\n');
-            } catch (error) { }
+                try {
+                    fs.appendFileSync(addressPath, contractAddress + '\n');
+                } catch (error) { }
+            }
 
-            return { contractAddress: contractAddress };
+            return { contractAddress: contractAddress, status: result.status };
         });
 
     }
@@ -553,8 +555,6 @@ interfaces.push(produceSubCommandInfo(
         return consensusService.removeNode(nodeID);
     }
 ));
-
-
 
 interfaces.push(produceSubCommandInfo(
     {
