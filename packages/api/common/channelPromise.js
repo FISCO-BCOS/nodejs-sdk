@@ -160,7 +160,6 @@ function packageData(data) {
  */
 function clearContext(socket) {
     let uuid = Object.getOwnPropertyDescriptor(socket, 'socketID').value;
-    //console.log(emitters)
     clearTimeout(emitters.get(uuid).timer);
     emitters.delete(uuid);
     buffers.delete(uuid);
