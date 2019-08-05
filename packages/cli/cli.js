@@ -69,7 +69,7 @@ function parseSub(subCommandInfo, argv, originArgv) {
             }
 
             if (arg.options.type === 'string') {
-                stringArgs[arg.name] = index;
+                stringArgs[arg.name] = parseInt(index);
             }
         }
     }
