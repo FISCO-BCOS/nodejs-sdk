@@ -204,8 +204,8 @@ interfaces.push(produceSubCommandInfo(
 
             abi = abi[functionIndex];
             let parameters = argv.parameters;
-            if (abi.inputs.length != parameters.length) {
-                throw new Error(`wrong number of parameters for function \`${abi.name}\``);
+            if (abi.inputs.length !== parameters.length) {
+                throw new Error(`wrong number of parameters for function \`${abi.name}\`, expected ${abi.inputs.length} but got ${parameters.length}`);
             }
 
             functionName = utils.spliceFunctionSignature(abi);
