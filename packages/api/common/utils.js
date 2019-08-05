@@ -38,6 +38,41 @@ function checkContractLength(bin) {
     throw new CompileError(`contract bin size overflow, limit=0x40000(256K), size=${bin.length}`);
 }
 
+function checkContractError(errors) {
+    // Standard error types of solcjs
+    var solcErrors = [
+        'JSONError',
+        'IOError',
+        'ParserError',
+        'DocstringParsingError',
+        'SyntaxError',
+        'DeclarationError',
+        'TypeError',
+        'UnimplementedFeatureError',
+        'InternalCompilerError',
+        'Exception',
+        'CompilerError',
+        'FatalError'
+    ];
+
+    if (!errors) {
+        return;
+    } else {
+        let errorMsgs = [];
+        for (let error of errors) {
+            let [lineNo, level, msg] = error.split(': ');
+            if (solcErrors.includes(level)) {
+                errorMsgs.push(error);
+            }
+        }
+
+        if(errorMsgs.length !== 0) {
+            throw new CompileError(errorMsgs);
+        }
+        return;
+    }
+}
+
 function compileWithSolcJS(contractPath, outputDir) {
     let contractName = path.basename(contractPath, '.sol');
 
@@ -87,9 +122,7 @@ function compileWithSolcJS(contractPath, outputDir) {
             }
         };
         output = JSON.parse(solc.compile(JSON.stringify(input), readCallback));
-        if (output.errors) {
-            throw new CompileError(JSON.stringify(output.errors));
-        }
+        checkContractError(output.errors);
 
         let abi = output.contracts[contractName][contractName].abi;
         let bin = output.contracts[contractName][contractName].evm.bytecode.object;
@@ -103,9 +136,7 @@ function compileWithSolcJS(contractPath, outputDir) {
         };
 
         output = solc.compile(input, 1, readCallback);
-        if (output.errors) {
-            throw new CompileError(JSON.stringify(output.errors));
-        }
+        checkContractError(output.errors);
 
         let abi = output.contracts[`${contractName}:${contractName}`].interface;
         let bin = output.contracts[`${contractName}:${contractName}`].bytecode;
