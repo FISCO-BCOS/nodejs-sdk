@@ -20,6 +20,7 @@ const childProcess = require('child_process');
 const assert = require('assert');
 const events = require('events');
 const abi = require('ethjs-abi');
+const CompileError = require('./exceptions').CompileError;
 
 /**
  * Select a node from node list randomly
@@ -30,11 +31,11 @@ module.exports.selectNode = function (nodes) {
     return nodes[Math.floor(Math.random() * nodes.length)];
 };
 
-class CompileError extends Error {
-    constructor(message) {
-        super(message);
-        this.name = "CompileError";
+function checkContractLength(bin) {
+    if (bin.length && bin.length <= 0x40000) {
+        return;
     }
+    throw new CompileError(`contract bin size overflow, limit=0x40000(256K), size=${bin.length}`);
 }
 
 function compileWithSolcJS(contractPath, outputDir) {
@@ -49,11 +50,13 @@ function compileWithSolcJS(contractPath, outputDir) {
         return { contents: fs.readFileSync(importContractPath).toString() };
     };
     let writeToFile = (abi, bin) => {
-        if(typeof abi !== 'string') {
+        checkContractLength(bin);
+
+        if (typeof abi !== 'string') {
             abi = JSON.stringify(abi);
         }
 
-        if(typeof bin !== 'string') {
+        if (typeof bin !== 'string') {
             bin = JSON.stringify(bin);
         }
 
@@ -136,7 +139,12 @@ function compileWithBin(outputDir, contractPath, solc) {
             }
         });
 
-    return execPromise;
+    return execPromise.then(result => {
+        let contractName = path.basename(contractPath, '.sol');
+        let bin = fs.readFileSync(path.join(outputDir, contractName + '.bin'));
+        checkContractLength(bin);
+        return result;
+    });
 }
 
 /**
