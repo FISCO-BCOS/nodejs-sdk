@@ -452,8 +452,8 @@ interfaces.push(produceSubCommandInfo(
 
         for (let item of abi) {
             if (item.name === functionName && item.type === 'function') {
-                if (item.inputs.length != parameters.length) {
-                    throw new Error(`wrong number of parameters for function \`${item.name}\``);
+                if (item.inputs.length !== parameters.length) {
+                    throw new Error(`wrong number of parameters for function \`${item.name}\`, expected ${item.inputs.length} but got ${parameters.length}`);
                 }
 
                 functionName = utils.spliceFunctionSignature(item);
