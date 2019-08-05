@@ -23,7 +23,7 @@ const { NetworkError } = require('./exceptions').NetworkError;
 
 let emitters = new Map();
 let buffers = new Map();
-
+let sockets = new Map();
 /**
  * Parse response returned by node
  * @param {Buffer} response Node's response
@@ -160,10 +160,10 @@ function packageData(data) {
  */
 function clearContext(socket) {
     let uuid = Object.getOwnPropertyDescriptor(socket, 'socketID').value;
+    //console.log(emitters)
     clearTimeout(emitters.get(uuid).timer);
     emitters.delete(uuid);
     buffers.delete(uuid);
-    socket.destroy();
 }
 
 /**
@@ -177,15 +177,22 @@ function clearContext(socket) {
 function channelPromise(node, authentication, data, timeout, readOnly = false) {
     let ip = node.ip;
     let port = node.port;
-    let tlsSocket = createNewSocket(ip, port, authentication);
+
+    let connectionID = `${ip}${port}`;
+    if (!sockets.has(connectionID)) {
+        let newSocket = createNewSocket(ip, port, authentication);
+        Object.defineProperty(newSocket, 'socketID', {
+            writable: true
+        });
+        newSocket.unref();
+        sockets.set(connectionID, newSocket);
+    }
+    let tlsSocket = sockets.get(connectionID);
 
     let dataPackage = packageData(JSON.stringify(data));
     let uuid = dataPackage.uuid;
 
-    Object.defineProperty(tlsSocket, 'socketID', {
-        value: uuid
-    });
-
+    tlsSocket.socketID = uuid;
     let packagedData = dataPackage.packagedData;
     let channelPromise = new Promise(async (resolve, reject) => {
         let eventEmitter = new events.EventEmitter();
