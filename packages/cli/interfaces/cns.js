@@ -56,7 +56,7 @@ interfaces.push(produceSubCommandInfo(
                 name: 'contractVersion',
                 options: {
                     type: 'string',
-                    describe: 'The version of a contract. The maximum length of the version hex string is 40'
+                    describe: 'The version of a contract'
                 }
             }
         ]
@@ -109,7 +109,7 @@ interfaces.push(produceSubCommandInfo(
                 name: 'contractVersion',
                 options: {
                     type: 'string',
-                    describe: 'The version of a contract. The maximum length of the version hex string is 40',
+                    describe: 'The version of a contract',
                     flag: FLAGS.OPTIONAL
                 }
             }
