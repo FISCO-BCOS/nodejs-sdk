@@ -37,7 +37,7 @@ function parseResponse(response) {
     if (emitter) {
         let readOnly = Object.getOwnPropertyDescriptor(emitter, 'readOnly').value;
         if (readOnly) {
-            if (result.error || result.result) {
+            if (result.error || result.result !== undefined ) {
                 emitter.emit('gotresult', result);
             }
         } else {
