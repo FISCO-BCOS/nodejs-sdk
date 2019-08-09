@@ -20,7 +20,19 @@ Node.js SDK为[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)
 ## 部署Node.js SDK
 
 **环境要求**
-- Node.js及npm: Node.js >= 8.10.0, npm >= 5.6.0 
+- 基本开发环境
+  - Python 2
+  - g++
+  - make
+  - Git
+  - Git bash（仅针对Windows用户）
+  - MSBuild（仅针对Windows用户）
+
+  ***请注意，如果您使用的是Windows，则如无特殊说明，本文所提到的命令均需要在Git bash中执行***
+
+- Node.js 开发环境
+  - Node.js >= 8.10.0
+  - npm >= 5.6.0
   
   如果您没有部署过Node.js环境，推荐使用[nvm](https://github.com/nvm-sh/nvm/blob/master/README.md)快速部署，使用nvm同时也能够避免潜在的导致Node.js SDK部署失败的权限问题。以部署Node.js 8为例，部署步骤如下：
   
@@ -34,9 +46,14 @@ Node.js SDK为[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)
     # 使用Node.js 8
     nvm use 8
     ```
+  
+  如果您使用Windows并且没有部署过MSBuild构建环境，推荐在Windows PowerShell（管理员）中执行如下命令部署：
+
+    ```bash
+    npm install --global --production windows-build-tools
+    ```
 
 - FISCO BCOS节点：请参考[FISCO BCOS安装](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/installation.html#fisco-bcos)搭建
-
 
 **拉取源代码**
 
