@@ -198,32 +198,111 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 
 输出如下：
 
-```bash
-contract address:0xab09b29dd07e003776d22566ae5c078f2cb2279e
+```JSON
+{
+  "contractAddress": "0x940b13378a8908ddd4d10a565c1feb22036c4c9e",
+  "status": "0x0"
+}
 ```
 
 **调用HelloWorld合约的set接口，请将合约地址改为实际地址**
 
 ```bash
-./cli.js call HelloWorld 0xab09b29dd07e003776d22566ae5c078f2cb2279e set vita
+./cli.js call HelloWorld 0x940b13378a8908ddd4d10a565c1feb22036c4c9e set vita
 ```
 
 输出如下：
 
-```bash
-transaction hash:0x539a0ecab46870fecac06963e824ff95e603d39ba1088a34e356ef1e4f80bc3a status:0x0
+```JSON
+{
+  "transactionHash": "0x1e535cda124ef4c1fd3f92cae275b9adf7eaa5aff3fdf265d2fe397a6c920057",
+  "status": "0x0"
+}
 ```
 
 **调用HelloWorld合约的get接口，请将合约地址改为实际地址**
 
 ```bash
-./cli.js call HelloWorld 0xab09b29dd07e003776d22566ae5c078f2cb2279e get
+./cli.js call HelloWorld 0x940b13378a8908ddd4d10a565c1feb22036c4c9e get
+```
+
+输出如下：
+
+```JSON
+{
+  "status": "0x0",
+  "output": {
+    "0": "vita"
+  }
+}
+```
+
+**通过CRUD接口创建表**
+
+```bash
+# 创建一个名为test的表，每条记录的主键名为fruit，另外还包括两个分别名为num和purpose的字段
+./cli.js create test fruit num,purpose
 ```
 
 输出如下：
 
 ```bash
-vita
+# 返回状态码，0表示创建成功
+0
+```
+
+**通过CRUD接口插入记录**
+
+```bash
+# 向名为test的表中插入一条记录，该记录的主键的值为pineapple，num字段的值为4，purpose字段的值为pie
+./cli.js insert test pineapple 4,pie
+```
+
+输出如下：
+
+```bash
+# 返回成功插入的记录数
+1
+```
+
+**通过CRUD接口查询记录**
+
+```bash
+# 从名为test的表中选出主键的值为pineapple、purpose字段的值为pie的记录
+./cli.js select test pineapple purpose=pie
+```
+
+```bash
+# 返回记录列表
+[ { fruit: 'pineapple', num: '4', purpose: 'pie' } ]
+```
+
+**通过CRUD接口更新记录**
+
+```bash
+# 更新在名为test的表中、主键的值为pineapple、purpose字段的值为pie的记录，将num和purpose字段的值分别更新为4和hot pie
+./cli.js update test pineapple "4,hot pie" purpose=pie
+```
+
+输出如下：
+
+```bash
+# 返回成功更新的记录数
+1
+```
+
+**通过CRUD接口删除记录**
+
+```bash
+# 删除在名为test的表中、主键的值为pineapple、num字段的值为4的记录
+./cli.js remove test pineapple num=4
+```
+
+输出如下：
+
+```bash
+# 返回成功删除的记录数
+1
 ```
 
 **CLI帮助**

@@ -56,7 +56,7 @@ interfaces.push(produceSubCommandInfo(
                 name: 'contractVersion',
                 options: {
                     type: 'string',
-                    describe: 'The version of a contract. The maximum length of the version hex string is 40'
+                    describe: 'The version of a contract'
                 }
             }
         ]
@@ -109,7 +109,7 @@ interfaces.push(produceSubCommandInfo(
                 name: 'contractVersion',
                 options: {
                     type: 'string',
-                    describe: 'The version of a contract. The maximum length of the version hex string is 40',
+                    describe: 'The version of a contract',
                     flag: FLAGS.OPTIONAL
                 }
             }
@@ -204,8 +204,8 @@ interfaces.push(produceSubCommandInfo(
 
             abi = abi[functionIndex];
             let parameters = argv.parameters;
-            if (abi.inputs.length != parameters.length) {
-                throw new Error(`wrong number of parameters for function \`${abi.name}\``);
+            if (abi.inputs.length !== parameters.length) {
+                throw new Error(`wrong number of parameters for function \`${abi.name}\`, expected ${abi.inputs.length} but got ${parameters.length}`);
             }
 
             functionName = utils.spliceFunctionSignature(abi);
