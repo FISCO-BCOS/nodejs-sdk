@@ -16,52 +16,63 @@ Node.js SDK为[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)
 - 提供调用预编译（Precompiled）合约的Node.js API
 - 使用[Channel协议](https://fisco-bcos-documentation.readthedocs.io/zh_CN/release-2.0/docs/design/protocol_description.html#channelmessage)与FISCO BCOS节点通信，双向认证更安全
 - 提供CLI（Command-Line Interface）工具供用户在命令行中方便快捷地调用管理区块链的Node.js API
+- 支持Windows、Linux及MacOS操作系统
 
 ## 部署Node.js SDK
 
-**环境要求**
-- 基本开发环境
-  - Python 2
-  - g++
-  - make
-  - Git
-  - Git bash（仅针对Windows用户）
-  - MSBuild（仅针对Windows用户）
+### 环境要求
 
-  ***请注意，如果您使用的是Windows，则如无特殊说明，本文所提到的命令均需要在Git bash中执行***
-
-- Node.js 开发环境
+- Node.js开发环境
   - Node.js >= 8.10.0
   - npm >= 5.6.0
   
-  如果您没有部署过Node.js环境，推荐使用[nvm](https://github.com/nvm-sh/nvm/blob/master/README.md)快速部署，使用nvm同时也能够避免潜在的导致Node.js SDK部署失败的权限问题。以部署Node.js 8为例，部署步骤如下：
-  
-    ```bash
-    # 安装nvm
-    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
-    # 加载nvm配置
-    source ~/.$(basename $SHELL)rc
-    # 安装Node.js 8
-    nvm install 8
-    # 使用Node.js 8
-    nvm use 8
-    ```
-  
-  如果您使用Windows并且没有部署过MSBuild构建环境，推荐在Windows PowerShell（管理员）中执行如下命令部署：
+  如果您没有部署过Node.js环境，可以参考下列部署方式：
+  - 如果您使用Linux或MacOS：
 
-    ```bash
-    npm install --global --production windows-build-tools
-    ```
+    推荐使用[nvm](https://github.com/nvm-sh/nvm/blob/master/README.md)快速部署，使用nvm同时也能够避免潜在的导致Node.js SDK部署失败的权限问题。以部署Node.js 8为例，部署步骤如下：
+
+      ```bash
+      # 安装nvm
+      curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+      # 加载nvm配置
+      source ~/.$(basename $SHELL)rc
+      # 安装Node.js 8
+      nvm install 8
+      # 使用Node.js 8
+      nvm use 8
+      ```
+
+  - 如果您使用Windows：
+
+    请前往[Node.js官网](https://nodejs.org/en/download/)下载Windows下的安装包进行安装。
+
+- 基本开发组件
+  - Python 2（Windows、Linux及MacOS需要）
+  - g++（Linux及MacOS需要）
+  - make（Linux及MacOS需要）
+  - Git（Windows、Linux及MacOS需要）
+  - Git bash（仅Windows需要）
+  - MSBuild构建环境（仅Windows需要）
+
+  如果您使用Windows且没有部署过MSBuild构建环境，推荐在Windows PowerShell（管理员）中执行以下命令部署：
+
+  ```bash
+  npm install --global --production windows-build-tools
+  ```
+
+  该命令可能会下载约1GB的依赖项，整个过程可能会持续数十分钟，请耐心等待。
+
+  **请注意，如果您使用Windows，则如无特殊说明，本文之后所提到的命令均需要在Git bash中执行**
 
 - FISCO BCOS节点：请参考[FISCO BCOS安装](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/installation.html#fisco-bcos)搭建
 
-**拉取源代码**
+### 拉取源代码
 
 ```bash
 git clone https://github.com/FISCO-BCOS/nodejs-sdk.git
 ```
 
-**部署**
+### 部署
 
 <table><tr><td bgcolor=gray>
 
@@ -92,7 +103,7 @@ npm run bootstrap
 
 Node.js SDK自带一个CLI工具供用户在命令行中方便快捷地调用管理区块链的Node.js API，同时CLI工具也能够方便地被应用到脚本中。CLI工具在Node.js SDK提供的API的基础上开发而成，是一个展示如何使用Node.js API进行二次开发的范例。
 
-**快速建链（可选）**
+### 快速建链（可选）
 
 若您的系统中已经搭建了FISCO BCOS链，请跳过本节。
 
@@ -125,7 +136,7 @@ bash nodes/127.0.0.1/start_all.sh
 cd packages/cli
 ```
 
-**开启自动补全（仅针对bash及zsh用户，可选）**
+### 开启自动补全（仅针对bash及zsh用户，可选）
 
 为方便用户使用CLI工具，CLI工具支持在bash或zsh中进行自动补全，此功能需要手动启用，执行命令：
 
@@ -135,17 +146,17 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 
 便可启用自动补全。使用CLI工具时，按下`Tab`键（依据系统配置的不同，可能需要按两下）便可弹出候选命令或参数的列表并自动补全。
 
-**示例**
+### 使用示例
 
 以下给出几个使用示例：
 
-**查看CLI工具的帮助**
+#### 查看CLI工具的帮助
 
 ```bash
 ./cli.js --help
 ```
 
-**查看CLI工具能够调用的命令及对应的功能**
+#### 查看CLI工具能够调用的命令及对应的功能
 
 ```bash
 ./cli.js list
@@ -153,7 +164,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 
 *以下示例中的输入、输出及参数仅供举例*
 
-**查看所连的FISCO BCOS节点版本**
+#### 查看所连的FISCO BCOS节点版本
 
 ```bash
 ./cli.js getClientVersion
@@ -177,7 +188,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 }
 ```
 
-**显示外部账户**
+#### 显示外部账户
 
 ```bash
 ./cli.js showAccount
@@ -191,7 +202,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 }
 ```
 
-**获取当前的块高**
+#### 获取当前的块高
 
 ```bash
 ./cli.js getBlockNumber
@@ -207,7 +218,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 }
 ```
 
-**部署SDK自带的HelloWorld合约**
+#### 部署SDK自带的HelloWorld合约
 
 ```bash
 ./cli.js deploy HelloWorld
@@ -222,7 +233,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 }
 ```
 
-**调用HelloWorld合约的set接口，请将合约地址改为实际地址**
+#### 调用HelloWorld合约的set接口，请将合约地址改为实际地址
 
 ```bash
 ./cli.js call HelloWorld 0x940b13378a8908ddd4d10a565c1feb22036c4c9e set vita
@@ -237,7 +248,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 }
 ```
 
-**调用HelloWorld合约的get接口，请将合约地址改为实际地址**
+#### 调用HelloWorld合约的get接口，请将合约地址改为实际地址
 
 ```bash
 ./cli.js call HelloWorld 0x940b13378a8908ddd4d10a565c1feb22036c4c9e get
@@ -254,7 +265,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 }
 ```
 
-**通过CRUD接口创建表**
+#### 通过CRUD接口创建表
 
 ```bash
 # 创建一个名为test的表，每条记录的主键名为fruit，另外还包括两个分别名为num和purpose的字段
@@ -268,7 +279,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 0
 ```
 
-**通过CRUD接口插入记录**
+#### 通过CRUD接口插入记录
 
 ```bash
 # 向名为test的表中插入一条记录，该记录的主键的值为pineapple，num字段的值为4，purpose字段的值为pie
@@ -282,7 +293,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 1
 ```
 
-**通过CRUD接口查询记录**
+#### 通过CRUD接口查询记录
 
 ```bash
 # 从名为test的表中选出主键的值为pineapple、purpose字段的值为pie的记录
@@ -294,7 +305,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 [ { fruit: 'pineapple', num: '4', purpose: 'pie' } ]
 ```
 
-**通过CRUD接口更新记录**
+#### 通过CRUD接口更新记录
 
 ```bash
 # 更新在名为test的表中、主键的值为pineapple、purpose字段的值为pie的记录，将num和purpose字段的值分别更新为4和hot pie
@@ -308,7 +319,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 1
 ```
 
-**通过CRUD接口删除记录**
+#### 通过CRUD接口删除记录
 
 ```bash
 # 删除在名为test的表中、主键的值为pineapple、num字段的值为4的记录
@@ -322,7 +333,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 1
 ```
 
-**CLI帮助**
+#### CLI帮助
 
 如果您想知道某一个命令该如何使用，可以使用如下的命令：
 
@@ -355,7 +366,7 @@ Call a contract by a function and parameters
   --version  显示版本号                                                   [布尔]
 ```
 
-**CLI工具配置项说明**
+## CLI工具配置项说明
 
 CLI工具的配置文件位于`nodejs-sdk/packages/cli/conf/config.json`，配置文件中各字段的说明如下：
 
