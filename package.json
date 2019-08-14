@@ -15,8 +15,8 @@
     "scripts": {
         "repoclean": "lerna clean && npm run clean-solc-0.4 && npm run clean-solc-0.5",
         "bootstrap": "lerna bootstrap && npm run install-solc-0.4 && npm run install-solc-0.5",
-        "install-solc-0.4": "cd ./packages/api/common/solc-0.4/ && npm install && cd -",
-        "install-solc-0.5": "cd ./packages/api/common/solc-0.5/ && npm install && cd -",
+        "install-solc-0.4": "cd ./packages/api/common/solc-0.4/ && npm install",
+        "install-solc-0.5": "cd ./packages/api/common/solc-0.5/ && npm install",
         "clean-solc-0.4": "rm -rf ./packages/api/common/solc-0.4/node_modules",
         "clean-solc-0.5": "rm -rf ./packages/api/common/solc-0.5/node_modules"
     },
