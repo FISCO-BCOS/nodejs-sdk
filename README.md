@@ -105,7 +105,7 @@ bash build_chain.sh -l "127.0.0.1:4" -p 30300,20200,8545 -i
 bash nodes/127.0.0.1/start_all.sh
 ```
 
-**配置证书及Channel端口**
+**配置证书、节点IP及Channel端口**
 
 - 配置证书
 
@@ -115,25 +115,9 @@ bash nodes/127.0.0.1/start_all.sh
     cp nodes/127.0.0.1/sdk/* packages/cli/conf/
     ```
 
-- 配置Channel端口
+- 配置节点IP及Channel端口
 
-    端口配置位于`packages/cli/conf/config.json`文件的`nodes.port`配置项中。您需要根据您要连接FISCO BCOS节点的实际配置修改该配置项以指定要访问的端口。如果您使用了快速搭链，可以跳过此步。
-
-在节点目录下的 config.ini 文件中获取 channel_listen_port, 这里为 20200
-```
-[rpc]
-    listen_ip=0.0.0.0
-    channel_listen_port=20200
-    jsonrpc_listen_port=8545
-```
-  
-修改 packages/cli/conf/config.json 中的 ip 和 port, 这里 port 修改为 20200
-```
-        {
-            "ip": "127.0.0.1",
-            "port": "20200"
-        }
-```
+    节点IP及端口配置位于`packages/cli/conf/config.json`文件的`nodes`配置项中。您需要根据您要连接FISCO BCOS节点的实际配置修改该配置项的`ip`及`port`配置，其中`ip`为所连节点的IP地址，`port`为节点目录下的 config.ini 文件中的`channel_listen_port`配置项的值。如果您使用了快速搭链，可以跳过此步。
 
 配置完成后，即可开始使用CLI工具，CLI工具位于`packages/cli/cli.js`，所有操作均需要在`packages/cli/`目录下执行，您需要先切换至该目录：
 
