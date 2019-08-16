@@ -1,6 +1,6 @@
 {
     "name": "nodejs-sdk",
-    "version": "0.1.0",
+    "version": "0.9.0",
     "description": "Node.js sdk for FISCO BCOS",
     "repository": {
         "type": "git",
