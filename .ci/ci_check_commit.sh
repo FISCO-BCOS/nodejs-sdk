@@ -30,7 +30,9 @@ scan_code()
 {
     # Redirect output to stderr.
     exec 1>&2
-    for file in $(git diff-index --name-status HEAD^ | grep -v .ci | awk '{print $2}'); do
+    file_not_need_scan=".ci\|packages/cli/conf/config.json"
+
+    for file in $(git diff-index --name-status HEAD^ | grep -v ${file_not_need_scan} | awk '{print $2}'); do
         execute_cmd "${scan_code_script} $file -f json -o /tmp/report.json"
         trigger_rules=$(jq -r '.' /tmp/report.json | grep 'trigger_rules' | awk '{print $2}' | sed 's/,//g')
         echo "trigger_rules is ${trigger_rules}"
