@@ -108,7 +108,7 @@ interfaces.push(produceSubCommandInfo(
 	    return {status: "success"};
 	} else {
 	    return {status: "fail"};
-	}
+          }
     }
 ));
 
