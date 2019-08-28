@@ -22,7 +22,7 @@ matrix:
           cache:
           before_install:
           script: |
-            bash .ci/ci_check_commit.sh
+            bash .ci/code_security_audit.sh
 
         - language: node_js
           os: linux
