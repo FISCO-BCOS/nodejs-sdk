@@ -85,6 +85,8 @@ function createNewSocket(ip, port, authentication) {
     tlsSocket.on('error', function (error) {
         throw new Error(error);
     });
+    
+    let socketID = `${ip}:${port}`;
 
     tlsSocket.on('data', function (data) {
         let response = null;
@@ -95,7 +97,6 @@ function createNewSocket(ip, port, authentication) {
             response = Buffer.from(data, 'ascii');
         }
 
-        let socketID = Object.getOwnPropertyDescriptor(tlsSocket, 'socketID').value;
         if (!buffers.has(socketID)) {
             // First time to read data from this socket
             let expectedLength = null;
@@ -110,8 +111,8 @@ function createNewSocket(ip, port, authentication) {
                 });
             } else {
                 parseResponse(response);
+                buffers.delete(socketID);
             }
-
         } else {
             // Multiple reading
             let cache = buffers.get(socketID);
@@ -122,6 +123,7 @@ function createNewSocket(ip, port, authentication) {
 
             if (cache.expectedLength && tlsSocket.bytesRead >= cache.expectedLength) {
                 parseResponse(buffers.get(socketID).buffer);
+                buffers.delete(socketID);
             }
         }
     });
@@ -158,8 +160,7 @@ function packageData(data) {
  * Clear context when a message got response or timeout
  * @param {Socket} socket The socket who sends the message
  */
-function clearContext(socket) {
-    let uuid = Object.getOwnPropertyDescriptor(socket, 'socketID').value;
+function clearContext(uuid) {
     clearTimeout(emitters.get(uuid).timer);
     emitters.delete(uuid);
     buffers.delete(uuid);
@@ -180,9 +181,6 @@ function channelPromise(node, authentication, data, timeout, readOnly = false) {
     let connectionID = `${ip}${port}`;
     if (!sockets.has(connectionID)) {
         let newSocket = createNewSocket(ip, port, authentication);
-        Object.defineProperty(newSocket, 'socketID', {
-            writable: true
-        });
         newSocket.unref();
         sockets.set(connectionID, newSocket);
     }
@@ -203,7 +201,7 @@ function channelPromise(node, authentication, data, timeout, readOnly = false) {
         });
 
         eventEmitter.on('gotresult', (result) => {
-            clearContext(tlsSocket);
+            clearContext(uuid);
             if (result.error) {
                 reject(result);
             } else {
@@ -213,7 +211,7 @@ function channelPromise(node, authentication, data, timeout, readOnly = false) {
         });
 
         eventEmitter.on('timeout', () => {
-            clearContext(tlsSocket);
+            clearContext(uuid);
             reject({ 'error': 'timeout' });
             return; // This `return` is not necessary, but it may can avoid future trap
         });
