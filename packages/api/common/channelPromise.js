@@ -24,6 +24,7 @@ const { NetworkError } = require('./exceptions').NetworkError;
 let emitters = new Map();
 let buffers = new Map();
 let sockets = new Map();
+let lastBytesRead = new Map();
 /**
  * Parse response returned by node
  * @param {Buffer} response Node's response
@@ -87,6 +88,8 @@ function createNewSocket(ip, port, authentication) {
     });
     
     let socketID = `${ip}:${port}`;
+    
+    lastBytesRead.set(socketID, 0);
 
     tlsSocket.on('data', function (data) {
         let response = null;
@@ -100,16 +103,17 @@ function createNewSocket(ip, port, authentication) {
         if (!buffers.has(socketID)) {
             // First time to read data from this socket
             let expectedLength = null;
-            if (tlsSocket.bytesRead >= 4) {
+            if (tlsSocket.bytesRead - lastBytesRead.get(socketID) >= 4) {
                 expectedLength = response.readUIntBE(0, 4);
             }
 
-            if (!expectedLength || tlsSocket.bytesRead < expectedLength) {
+            if (!expectedLength || tlsSocket.bytesRead < lastBytesRead.get(socketID) + expectedLength) {
                 buffers.set(socketID, {
                     expectedLength: expectedLength,
                     buffer: response
                 });
             } else {
+                lastBytesRead.set(socketID, lastBytesRead.get(socketID) + expectedLength);
                 parseResponse(response);
                 buffers.delete(socketID);
             }
@@ -117,11 +121,12 @@ function createNewSocket(ip, port, authentication) {
             // Multiple reading
             let cache = buffers.get(socketID);
             cache.buffer = Buffer.concat([cache.buffer, response]);
-            if (!cache.expectedLength && tlsSocket.bytesRead >= 4) {
+            if (!cache.expectedLength && tlsSocket.bytesRead - lastBytesRead.get(socketID) >= 4) {
                 cache.expectedLength = cache.buffer.readUIntBE(0, 4);
             }
 
-            if (cache.expectedLength && tlsSocket.bytesRead >= cache.expectedLength) {
+            if (cache.expectedLength && tlsSocket.bytesRead - lastBytesRead.get(socketID) >= cache.expectedLength) {
+                lastBytesRead.set(socketID, lastBytesRead.get(socketID) + cache.expectedLength);
                 parseResponse(buffers.get(socketID).buffer);
                 buffers.delete(socketID);
             }
