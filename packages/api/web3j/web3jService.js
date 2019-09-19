@@ -378,6 +378,15 @@ class Web3jService extends ServiceBase {
         return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
     }
 
+    async rawTransaction(to, func, params, blockLimit) {
+        if (!isArray(params)) {
+            params = params ? [params] : [];
+        }
+
+        let signTx = web3Sync.getSignTx(this.config.groupID, this.config.account, this.config.privateKey, to, func, params, blockLimit);
+        return signTx;
+    }
+
     async sendRawTransaction(...args) {
         let node = utils.selectNode(this.config.nodes);
         if (args.length !== 3) {
@@ -392,14 +401,9 @@ class Web3jService extends ServiceBase {
             let to = args[0];
             let func = args[1];
             let params = args[2];
-
-            if (!isArray(params)) {
-                params = params ? [params] : [];
-            }
-
             let blockNumberResult = await this.getBlockNumber();
             let blockNumber = parseInt(blockNumberResult.result, '16');
-            let signTx = web3Sync.getSignTx(this.config.groupID, this.config.account, this.config.privateKey, to, func, params, blockNumber + 500);
+            let signTx = await this.rawTransaction(to, func, params, blockNumber + 500);
             return this.sendRawTransaction(signTx);
         }
     }
