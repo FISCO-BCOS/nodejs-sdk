@@ -26,7 +26,7 @@ function genRandomID() {
     let uuid = uuidv4();
     uuid = uuid.replace(/-/g, '');
 
-    return parseInt(uuid, 16);
+    return uuid;
 }
 
 /**
