@@ -25,15 +25,20 @@ let emitters = new Map();
 let buffers = new Map();
 let sockets = new Map();
 let lastBytesRead = new Map();
+
 /**
  * Parse response returned by node
  * @param {Buffer} response Node's response
  */
-
 function parseResponse(response) {
     let seq = response.slice(6, 38).toString();
     let result = JSON.parse(response.slice(42).toString());
-    let emitter = emitters.get(seq).emitter;
+    let emitter = emitters.get(seq);
+    if(!emitter) {
+        // Stale message received
+        return;
+    }
+    emitter = emitter.emitter;
 
     if (emitter) {
         let readOnly = Object.getOwnPropertyDescriptor(emitter, 'readOnly').value;
