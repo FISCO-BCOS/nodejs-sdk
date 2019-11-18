@@ -9,3 +9,4 @@ sed -i.bak 's?/path/to/CA/certificate?../../../nodes/127.0.0.1/sdk/ca.crt?' pack
 rm packages/cli/conf/config.json.bak
 cd packages/cli 
 ./cli.js getClientVersion
+./cli.js deploy HelloWorld
