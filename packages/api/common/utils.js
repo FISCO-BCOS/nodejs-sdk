@@ -66,7 +66,7 @@ function checkContractError(errors) {
             }
         }
 
-        if(errorMsgs.length !== 0) {
+        if (errorMsgs.length !== 0) {
             throw new CompileError(errorMsgs);
         }
         return;
@@ -124,6 +124,14 @@ function compileWithSolcJS(contractPath, outputDir) {
         output = JSON.parse(solc.compile(JSON.stringify(input), readCallback));
         checkContractError(output.errors);
 
+        if (!output.contracts[contractName][contractName]) {
+            let existKeys = [];
+            for (let key in output.contracts[contractName]) {
+                existKeys.push(key);
+            }
+            throw new CompileError(`No contract found with name ${contractName}, only contracts named [${existKeys.join(', ')}] found.`);
+        }
+
         let abi = output.contracts[contractName][contractName].abi;
         let bin = output.contracts[contractName][contractName].evm.bytecode.object;
         writeToFile(abi, bin);
@@ -137,6 +145,15 @@ function compileWithSolcJS(contractPath, outputDir) {
 
         output = solc.compile(input, 1, readCallback);
         checkContractError(output.errors);
+
+        let qulifiedContractName = `${contractName}:${contractName}`;
+        if (output.contracts[qulifiedContractName] === undefined) {
+            let existKeys = [];
+            for (let key in output.contracts) {
+                existKeys.push(key.split(':')[1]);
+            }
+            throw new CompileError(`No contract found with name ${contractName}, only contracts named [${existKeys.join(', ')}] found.`);
+        }
 
         let abi = output.contracts[`${contractName}:${contractName}`].interface;
         let bin = output.contracts[`${contractName}:${contractName}`].bytecode;
