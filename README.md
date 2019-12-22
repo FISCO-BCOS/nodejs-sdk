@@ -13,6 +13,7 @@ Node.js SDK为[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)
 ## 关键特性
 
 - 提供调用FISCO BCOS [JSON-RPC](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/api.html)的Node.js API
+- 支持国密
 - 提供部署及调用Solidity合约（支持Solidity 0.4.x 及Solidity 0.5.x）的Node.js API
 - 提供调用预编译（Precompiled）合约的Node.js API
 - 使用[Channel协议](https://fisco-bcos-documentation.readthedocs.io/zh_CN/release-2.0/docs/design/protocol_description.html#channelmessage)与FISCO BCOS节点通信，双向认证更安全
@@ -367,6 +368,7 @@ Call a contract by a function and parameters
 
 CLI工具的配置文件位于`nodejs-sdk/packages/cli/conf/config.json`，配置文件中各字段的说明如下：
 
+- `encryptType`: `string`, 必需。指定交易签名、合约部署时所使用的加密算法。`ECDSA`表示使用ECDSA(secp256k1)加密算法，`SM_CRYPTO`表示使用国密算法。
 - `privateKey`: `object`，必需。外部账户的私钥，可以为一个256 bits的随机整数，也可以是一个pem或p12格式的私钥文件，后两者需要结合[get_account.sh](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/manual/account.html)生成的私钥文件使用。`privateKey`包含两个必需字段，一个可选字段：
   - `type`: `string`，必需。用于指示私钥类型。`type`的值必需为下列三个值之一：
     - `ecrandom`：随机整数
