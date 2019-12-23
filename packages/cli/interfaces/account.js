@@ -14,7 +14,7 @@
 
 'use strict';
 
-const assert = require('assert')
+const web3Utils = require('../../api/common/web3lib/utils');
 const produceSubCommandInfo = require('./base').produceSubCommandInfo;
 const Configuration = require('../../api/common/configuration').Configuration;
 
@@ -27,8 +27,8 @@ interfaces.push(produceSubCommandInfo(
     },
     () => {
         let config = Configuration.getInstance();
-        assert(config.account, 'you need to set configuration first');
-        return Promise.resolve({ account: config.account });
+        let account = web3Utils.privateKeyToAddress(config.privateKey).toString('hex');
+        return Promise.resolve({ account: account });
     }));
 
 module.exports.interfaces = interfaces;

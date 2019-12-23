@@ -21,6 +21,7 @@ const { TableName, handleReceipt } = require('../common');
 const { check, string } = require('../../common/typeCheck');
 const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
+const semver = require('semver');
 
 const Table = require('./table').Table;
 const Entry = require('./entry').Entry;
@@ -110,7 +111,14 @@ class CRUDService extends ServiceBase {
     async desc(tableName) {
         check(arguments, string);
 
-        let table = new Table(TableName.SYS_TABLE, TableName.USER_TABLE_PREFIX + tableName, '');
+        let version = await this.web3jService.getClientVersion();
+        version = version.result['Supported Version'];
+        let userTablePrefix = '_user_';
+        if (semver.gte(version, '2.2.0')) {
+            userTablePrefix = 'u_';
+        }
+
+        let table = new Table(TableName.SYS_TABLE, userTablePrefix + tableName, '');
         let condition = new Condition();
         let userTable = await this.select(table, condition);
 

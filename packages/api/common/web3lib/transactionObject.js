@@ -15,7 +15,6 @@
 'use strict';
 
 let utils = require('./utils');
-const encryptType = require('./config').EncryptType;
 const ethjsUtil = require('ethereumjs-util');
 const BN = ethjsUtil.BN;
 
@@ -25,46 +24,62 @@ const BN = ethjsUtil.BN;
  */
 function Transaction(data) {
     data = data || {};
-    let fields = null;
+    let fields = [{
+        name: 'randomid',
+        length: 32,
+        allowLess: true,
+        default: Buffer.from([])
+    }, {
+        name: 'gasPrice',
+        length: 32,
+        allowLess: true,
+        default: Buffer.from([])
+    }, {
+        name: 'gasLimit',
+        alias: 'gas',
+        length: 32,
+        allowLess: true,
+        default: Buffer.from([])
+    }, {
+        name: 'blockLimit',
+        length: 32,
+        allowLess: true,
+        default: Buffer.from([])
+    }, {
+        name: 'to',
+        allowZero: true,
+        length: 20,
+        default: Buffer.from([])
+    }, {
+        name: 'value',
+        length: 32,
+        allowLess: true,
+        default: Buffer.from([])
+    }, {
+        name: 'data',
+        alias: 'input',
+        allowZero: true,
+        default: Buffer.from([])
+    }, {
+        name: 'chainId',
+        length: 32,
+        allowLess: true,
+        default: Buffer.from([])
+    }, {
+        name: 'groupId',
+        length: 32,
+        allowLess: true,
+        default: Buffer.from([])
+    }, {
+        name: 'extraData',
+        allowZero: true,
+        default: Buffer.from([])
+    }];
 
-    if (encryptType === 1) {
-        fields = [{
-            name: 'randomid',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'gasPrice',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'gasLimit',
-            alias: 'gas',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'blockLimit',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'to',
-            allowZero: true,
-            length: 20,
-            default: Buffer.from([])
-        }, {
-            name: 'value',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'data',
-            alias: 'input',
-            allowZero: true,
-            default: Buffer.from([])
-        }, {
+    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
+    let encryptType = Configuration.getInstance().encryptType;
+    if (encryptType === SM_CRYPTO) {
+        fields = fields.concat([{
             name: 'pub',
             length: 64,
             allowLess: true,
@@ -79,59 +94,9 @@ function Transaction(data) {
             length: 32,
             allowLess: true,
             default: Buffer.from([])
-        }];
-    } else {
-        fields = [{
-            name: 'randomid',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'gasPrice',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'gasLimit',
-            alias: 'gas',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'blockLimit',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'to',
-            allowZero: true,
-            length: 20,
-            default: Buffer.from([])
-        }, {
-            name: 'value',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'data',
-            alias: 'input',
-            allowZero: true,
-            default: Buffer.from([])
-        }, {
-            name: 'chainId',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'groupId',
-            length: 32,
-            allowLess: true,
-            default: Buffer.from([])
-        }, {
-            name: 'extraData',
-            allowZero: true,
-            default: Buffer.from([])
-        }, {
+        }]);
+    } else if (encryptType === ECDSA) {
+        fields = fields.concat([{
             name: 'v',
             length: 1,
             default: Buffer.from([0x1c])
@@ -145,27 +110,10 @@ function Transaction(data) {
             length: 32,
             allowLess: true,
             default: Buffer.from([])
-        }];
+        }]);
     }
 
     ethjsUtil.defineProperties(this, fields, data);
-
-    /*
-    Object.defineProperty(this, 'from', {
-        enumerable: true,
-        configurable: true,
-        get: this.getSenderAddress.bind(this)
-    });
-    */
-
-    let sigV = ethjsUtil.bufferToInt(this.v);
-    let chainId = Math.floor((sigV - 35) / 2);
-    if (chainId < 0) {
-        chainId = 0;
-    }
-
-    this._chainId = chainId || data.chainId || 0;
-    this._homestead = true;
 }
 
 /**
