@@ -83,6 +83,50 @@ function checkContractError(errors) {
     }
 }
 
+// Used by compileWithSolcJS only
+function writeToFile(contractName, outputDir, abi, bin) {
+    checkContractLength(bin);
+
+    if (typeof abi !== 'string') {
+        abi = JSON.stringify(abi);
+    }
+
+    if (typeof bin !== 'string') {
+        bin = JSON.stringify(bin);
+    }
+
+    let abiFileName = contractName + '.abi';
+    let binFileName = contractName + '.bin';
+
+    fs.writeFileSync(path.join(outputDir, abiFileName), abi);
+    fs.writeFileSync(path.join(outputDir, binFileName), bin);
+}
+
+// Used by compileWithSolcJS only
+function compileWithSolc0_4(solc, contractName, contractContent, readCallback, outputDir) {
+    let input = {
+        sources: {
+            [contractName]: contractContent
+        }
+    };
+
+    let output = solc.compile(input, 1, readCallback);
+    checkContractError(output.errors);
+
+    let qulifiedContractName = `${contractName}:${contractName}`;
+    if (output.contracts[qulifiedContractName] === undefined) {
+        let existKeys = [];
+        for (let key in output.contracts) {
+            existKeys.push(key.split(':')[1]);
+        }
+        throw new CompileError(`No contract found with name ${contractName}, only contracts named [${existKeys.join(', ')}] found.`);
+    }
+
+    let abi = output.contracts[`${contractName}:${contractName}`].interface;
+    let bin = output.contracts[`${contractName}:${contractName}`].bytecode;
+    writeToFile(contractName, outputDir, abi, bin);
+}
+
 function compileWithSolcJS(contractPath, outputDir) {
     let contractName = path.basename(contractPath, '.sol');
 
@@ -99,80 +143,56 @@ function compileWithSolcJS(contractPath, outputDir) {
         let importContractPath = path.join(path.dirname(contractPath), importContractName);
         return { contents: fs.readFileSync(importContractPath).toString() };
     };
-    let writeToFile = (abi, bin) => {
-        checkContractLength(bin);
 
-        if (typeof abi !== 'string') {
-            abi = JSON.stringify(abi);
-        }
-
-        if (typeof bin !== 'string') {
-            bin = JSON.stringify(bin);
-        }
-
-        let abiFileName = contractName + '.abi';
-        let binFileName = contractName + '.bin';
-
-        fs.writeFileSync(path.join(outputDir, abiFileName), abi);
-        fs.writeFileSync(path.join(outputDir, binFileName), bin);
-    };
-
-    let solc = null;
-    let output = null;
-    if (semver.satisfies(solc0_5Ver, requiredSolcVerRange)) {
-        solc = require('./solc-0.5');
-        let input = {
-            language: "Solidity",
-            sources: {
-                [contractName]: {
-                    content: contractContent
-                }
-            },
-            settings: {
-                outputSelection: {
-                    '*': {
-                        '*': ['abi', 'evm.bytecode']
+    const { Configuration, ECDSA, SM_CRYPTO } = require('../common/configuration');
+    let encryptType = Configuration.getInstance().encryptType;
+    if (encryptType === ECDSA) {
+        if (semver.satisfies(solc0_5Ver, requiredSolcVerRange)) {
+            let solc = require('./solc-0.5');
+            let input = {
+                language: "Solidity",
+                sources: {
+                    [contractName]: {
+                        content: contractContent
+                    }
+                },
+                settings: {
+                    outputSelection: {
+                        '*': {
+                            '*': ['abi', 'evm.bytecode']
+                        }
                     }
                 }
-            }
-        };
-        output = JSON.parse(solc.compile(JSON.stringify(input), readCallback));
-        checkContractError(output.errors);
+            };
+            let output = JSON.parse(solc.compile(JSON.stringify(input), readCallback));
+            checkContractError(output.errors);
 
-        if (!output.contracts[contractName][contractName]) {
-            let existKeys = [];
-            for (let key in output.contracts[contractName]) {
-                existKeys.push(key);
+            if (!output.contracts[contractName][contractName]) {
+                let existKeys = [];
+                for (let key in output.contracts[contractName]) {
+                    existKeys.push(key);
+                }
+                throw new CompileError(`No contract found with name ${contractName}, only contracts named [${existKeys.join(', ')}] found.`);
             }
-            throw new CompileError(`No contract found with name ${contractName}, only contracts named [${existKeys.join(', ')}] found.`);
+
+            let abi = output.contracts[contractName][contractName].abi;
+            let bin = output.contracts[contractName][contractName].evm.bytecode.object;
+            writeToFile(contractName, outputDir, abi, bin);
+        } else if (semver.satisfies(solc0_4Ver, requiredSolcVerRange)) {
+            let solc = require('./solc-0.4');
+            compileWithSolc0_4(solc, contractName, contractContent, readCallback, outputDir);
+        } else {
+            throw new CompileError("Solc version can't be satisfied.");
         }
+    } else if (encryptType === SM_CRYPTO) {
+        if (semver.satisfies('0.4.25', requiredSolcVerRange)) {
+            let wrapper = require('./solc-0.4/node_modules/solc/wrapper');
+            let solc = wrapper(require('./soljson-v0.4.25-gm'));
 
-        let abi = output.contracts[contractName][contractName].abi;
-        let bin = output.contracts[contractName][contractName].evm.bytecode.object;
-        writeToFile(abi, bin);
-    } else if (semver.satisfies(solc0_4Ver, requiredSolcVerRange)) {
-        solc = require('./solc-0.4');
-        let input = {
-            sources: {
-                [contractName]: contractContent
-            }
-        };
-
-        output = solc.compile(input, 1, readCallback);
-        checkContractError(output.errors);
-
-        let qulifiedContractName = `${contractName}:${contractName}`;
-        if (output.contracts[qulifiedContractName] === undefined) {
-            let existKeys = [];
-            for (let key in output.contracts) {
-                existKeys.push(key.split(':')[1]);
-            }
-            throw new CompileError(`No contract found with name ${contractName}, only contracts named [${existKeys.join(', ')}] found.`);
+            compileWithSolc0_4(solc, contractName, contractContent, readCallback, outputDir);
+        } else {
+            throw new CompileError("Solc version can't be satisfied.");
         }
-
-        let abi = output.contracts[`${contractName}:${contractName}`].interface;
-        let bin = output.contracts[`${contractName}:${contractName}`].bytecode;
-        writeToFile(abi, bin);
     } else {
         throw new CompileError("Solc version can't be satisfied.");
     }

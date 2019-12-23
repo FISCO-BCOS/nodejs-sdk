@@ -1,7 +1,8 @@
 {
+    "encryptType": "ECDSA",
     "privateKey": {
         "type": "pem",
-        "value": "./0x144d5ca47de35194b019b6f11a56028b964585c9.pem"
+        "value": "./ecdsa.pem"
     },
     "nodes": [
         {
