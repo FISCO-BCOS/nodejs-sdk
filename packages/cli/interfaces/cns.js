@@ -23,10 +23,6 @@ const OutputCode = require('../../api/precompiled/common').OutputCode;
 const { ContractsDir, ContractsOutputDir } = require('../constant');
 
 function checkVersion(version) {
-    if (version.length > 40) {
-        return OutputCode.getOutputMessage(OutputCode.VersionExceeds);
-    }
-
     if (!version.match(/^[A-Za-z0-9.]+$/)) {
         return "contract version should only contains 'A-Z' or 'a-z' or '0-9' or dot mark";
     }
@@ -63,12 +59,19 @@ interfaces.push(produceSubCommandInfo(
     },
     (argv) => {
         return permissionService.listCNSManager().then(cnsManagers => {
-            if (cnsManagers.length !== 0 && cnsManagers.findIndex(value => value.address === config.account) < 0) {
+            const Configuration = require('../../api/common/configuration').Configuration;
+            if (cnsManagers.length !== 0 && cnsManagers.findIndex(value => value.address === Configuration.getInstance().account) < 0) {
                 throw new Error(OutputCode.getOutputMessage(OutputCode.PermissionDenied));
             }
 
             let contractName = path.basename(argv.contractName, '.sol');
             let contractVersion = argv.contractVersion;
+            if (contractVersion) {
+                let checkResult = checkVersion(contractVersion);
+                if (checkResult !== '') {
+                    throw new Error(checkResult);
+                }
+            }
 
             return cnsService.queryCnsByNameAndVersion(contractName, contractVersion).then(queryResult => {
                 if (queryResult.length !== 0) {
@@ -119,6 +122,10 @@ interfaces.push(produceSubCommandInfo(
         let contractName = argv.contractName;
         if (argv.contractVersion) {
             let contractVersion = argv.contractVersion;
+            let checkResult = checkVersion(contractVersion);
+            if (checkResult !== '') {
+                throw new Error(checkResult);
+            }
             return cnsService.queryCnsByNameAndVersion(contractName, contractVersion);
         } else {
             return cnsService.queryCnsByName(contractName);
@@ -185,10 +192,10 @@ interfaces.push(produceSubCommandInfo(
         }
 
         return cnsService.getAddressByContractNameAndVersion(contractNameAndVersion).then(addressInfo => {
-            let address = addressInfo[0].address;
+            let address = addressInfo.address;
             let abi = null;
             try {
-                abi = JSON.parse(addressInfo[0].abi);
+                abi = JSON.parse(addressInfo.abi);
                 if (!abi) {
                     throw new Error();
                 }

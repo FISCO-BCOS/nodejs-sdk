@@ -14,8 +14,7 @@
 
 'use strict';
 
-const constant = require('./constant');
-const { check, string, number } = require('./../../common/typeCheck');
+const { check, Str, Neg } = require('./../../common/typeCheck');
 
 const ConditionOp = {
     EQ: 'eq',
@@ -33,7 +32,7 @@ class Condition {
     }
 
     eq(key, value) {
-        check(arguments, string, string);
+        check(arguments, Str, Str);
 
         this.conditions[key] = {
             [ConditionOp.EQ]: value
@@ -41,7 +40,7 @@ class Condition {
     }
 
     ne(key, value) {
-        check(arguments, string, string);
+        check(arguments, Str, Str);
 
         this.conditions[key] = {
             [ConditionOp.NE]: value
@@ -49,7 +48,7 @@ class Condition {
     }
 
     gt(key, value) {
-        check(arguments, string, string);
+        check(arguments, Str, Str);
 
         this.conditions[key] = {
             [ConditionOp.GT]: value
@@ -57,7 +56,7 @@ class Condition {
     }
 
     ge(key, value) {
-        check(arguments, string, string);
+        check(arguments, Str, Str);
 
         this.conditions[key] = {
             [ConditionOp.GE]: value
@@ -65,7 +64,7 @@ class Condition {
     }
 
     lt(key, value) {
-        check(arguments, string, string);
+        check(arguments, Str, Str);
 
         this.conditions[key] = {
             [ConditionOp.LT]: value
@@ -73,7 +72,7 @@ class Condition {
     }
 
     le(key, value) {
-        check(arguments, string, string);
+        check(arguments, Str, Str);
 
         this.conditions[key] = {
             [ConditionOp.LE]: value
@@ -82,12 +81,12 @@ class Condition {
 
     limit(...args) {
         if (args.length === 1) {
-            check(arguments, number);
+            check(arguments, Neg);
 
             let count = args[0];
             this.limit(0, count);
         } else {
-            check(arguments, number, number);
+            check(arguments, Neg, Neg);
 
             let offset = args[0];
             let count = args[1];

@@ -20,6 +20,7 @@ const utils = require('../../api/common/utils');
 const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
 const { Web3jService, ConsensusService, SystemConfigService } = require('../../api');
 const { ContractsDir, ContractsOutputDir } = require('../constant');
+const { check, Str, Addr, Any } = require('../../api/common/typeCheck');
 
 let interfaces = [];
 const web3jService = new Web3jService();
@@ -32,7 +33,10 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query the number of most recent block'
     },
     () => {
-        return web3jService.getBlockNumber();
+        return web3jService.getBlockNumber().then(result => {
+            result.result = parseInt(result.result, '16').toString();
+            return result;
+        });
     }
 ));
 
@@ -42,7 +46,10 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query the pbft view of node',
     },
     () => {
-        return web3jService.getPbftView();
+        return web3jService.getPbftView().then(result => {
+            result.result = parseInt(result.result, '16').toString();
+            return result;
+        });
     }
 ));
 
@@ -308,7 +315,10 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query pending transactions size'
     },
     () => {
-        return web3jService.getPendingTxSize();
+        return web3jService.getPendingTxSize().then(result => {
+            result.result = parseInt(result.result).toString();
+            return result;
+        });
     }
 ));
 
@@ -318,7 +328,12 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query total transaction count'
     },
     () => {
-        return web3jService.getTotalTransactionCount();
+        return web3jService.getTotalTransactionCount().then(result => {
+            result.result.blockNumber = parseInt(result.result.blockNumber).toString();
+            result.result.failedTxSum = parseInt(result.result.failedTxSum).toString();
+            result.result.txSum = parseInt(result.result.txSum).toString();
+            return result;
+        });
     }
 ));
 
@@ -389,16 +404,18 @@ interfaces.push(produceSubCommandInfo(
         let outputDir = ContractsOutputDir;
 
         return web3jService.deploy(contractPath, outputDir).then(result => {
-            let contractAddress = result.contractAddress;
             if (result.status === '0x0') {
+                let contractAddress = result.contractAddress;
                 let addressPath = path.join(outputDir, `.${path.basename(contractName, '.sol')}.address`);
 
                 try {
                     fs.appendFileSync(addressPath, contractAddress + '\n');
                 } catch (error) { }
+
+                return { status: result.status, contractAddress: contractAddress, transactionHash: result.transactionHash };
             }
 
-            return { contractAddress: contractAddress, status: result.status };
+            return { status: result.status, transactionHash: result.transactionHash };
         });
 
     }
@@ -444,7 +461,9 @@ interfaces.push(produceSubCommandInfo(
         let contractName = argv.contractName;
         let contractAddress = argv.contractAddress;
         let functionName = argv.function;
-        let parameters = argv.parameters;;
+        let parameters = argv.parameters;
+
+        check([contractName, contractAddress, functionName, parameters], Str, Addr, Str, Any);
 
         let abi = getAbi(contractName);
 
