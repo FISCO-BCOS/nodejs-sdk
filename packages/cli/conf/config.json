@@ -10,9 +10,9 @@
         }
     ],
     "authentication": {
-        "key": "/path/to/sdk/key",
-        "cert": "/path/to/sdk/certificate",
-        "ca": "/path/to/CA/certificate"
+        "key": "./sdk.key",
+        "cert": "./sdk.crt",
+        "ca": "./ca.crt"
     },
     "groupID": 1,
     "timeout": 10000
