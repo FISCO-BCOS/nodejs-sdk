@@ -21,6 +21,16 @@ const assert = require('assert');
 const events = require('events');
 const abi = require('ethjs-abi');
 const CompileError = require('./exceptions').CompileError;
+const semver = require('semver');
+let solc0_4Ver = undefined;
+let solc0_5Ver = undefined;
+
+try {
+    solc0_4Ver = require('./solc-0.4/node_modules/solc/package.json').version;
+    solc0_5Ver = require('./solc-0.5/node_modules/solc/package.json').version;
+} catch (e) {
+    throw CompileError('Solc is not installed yet.');
+}
 
 /**
  * Select a node from node list randomly
@@ -77,8 +87,13 @@ function compileWithSolcJS(contractPath, outputDir) {
     let contractName = path.basename(contractPath, '.sol');
 
     let contractContent = fs.readFileSync(contractPath).toString();
-    let verReg = /pragma\s+solidity\s+\^(.*)\s*;/;
-    let ver = verReg.exec(contractContent)[1] || null;
+    let solcVerReg = /pragma\s+solidity\s+(.*)\s*;/;
+    let requiredSolcVer = solcVerReg.exec(contractContent)[1] || null;
+
+    if (requiredSolcVer === null) {
+        throw new CompileError("Solc version can't be determined.");
+    }
+    let requiredSolcVerRange = semver.validRange(requiredSolcVer);
 
     let readCallback = (importContractName) => {
         let importContractPath = path.join(path.dirname(contractPath), importContractName);
@@ -104,7 +119,7 @@ function compileWithSolcJS(contractPath, outputDir) {
 
     let solc = null;
     let output = null;
-    if (ver && ver.startsWith('0.5')) {
+    if (semver.satisfies(solc0_5Ver, requiredSolcVerRange)) {
         solc = require('./solc-0.5');
         let input = {
             language: "Solidity",
@@ -135,7 +150,7 @@ function compileWithSolcJS(contractPath, outputDir) {
         let abi = output.contracts[contractName][contractName].abi;
         let bin = output.contracts[contractName][contractName].evm.bytecode.object;
         writeToFile(abi, bin);
-    } else {
+    } else if (semver.satisfies(solc0_4Ver, requiredSolcVerRange)) {
         solc = require('./solc-0.4');
         let input = {
             sources: {
@@ -158,6 +173,8 @@ function compileWithSolcJS(contractPath, outputDir) {
         let abi = output.contracts[`${contractName}:${contractName}`].interface;
         let bin = output.contracts[`${contractName}:${contractName}`].bytecode;
         writeToFile(abi, bin);
+    } else {
+        throw new CompileError("Solc version can't be satisfied.");
     }
 
     return Promise.resolve();
