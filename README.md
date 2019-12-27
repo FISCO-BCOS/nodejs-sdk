@@ -112,17 +112,25 @@ Node.js SDK自带一个CLI工具供用户在命令行中方便快捷地调用管
 ```bash
 # 获取建链脚本
 curl -LO https://github.com/FISCO-BCOS/FISCO-BCOS/releases/download/`curl -s https://api.github.com/repos/FISCO-BCOS/FISCO-BCOS/releases | grep "\"v2\.[0-9]\.[0-9]\"" | sort -u | tail -n 1 | cut -d \" -f 4`/build_chain.sh && chmod u+x build_chain.sh
-# 在本地建一个4节点的FISCO BCOS链
+# 在本地建一个4节点的FISCO BCOS链（如果需要搭建国密FISCO BCOS链，需要在命令中加入`-g`选项）
 bash build_chain.sh -l "127.0.0.1:4" -p 30300,20200,8545 -i
 # 启动FISCO BCOS链
 bash nodes/127.0.0.1/start_all.sh
 ```
 
-**配置证书、节点IP及Channel端口**
+**配置加密算法类型、私钥、证书、节点IP及Channel端口**
+
+- 加密算法类型
+
+    修改配置文件，加密算法类型配置位于`packages/cli/conf/config.json`文件的`encryptType`配置项中。如果您需要SDK连接国密FISCO BCOS节点，请将该配置项设置为`"SM_CRYPTO"`，否则请将该设置项设置为`"ECDSA"`。
+
+- 私钥
+
+    修改配置文件，加密算法类型配置位于`packages/cli/conf/config.json`文件的`privateKey`配置项中。您可以直接指定一个随机数（随机数的要求见"CLI工具配置项说明"一节）作为私钥，但更一般地，您也可以指定在该配置项中指定私钥文件以让SDK加载私钥。国密私钥文件可以使用[get_gm_account.sh](https://raw.githubusercontent.com/FISCO-BCOS/console/master/tools/get_gm_account.sh)脚本生成，非国密私钥文件可以使用[get_account.sh](https://raw.githubusercontent.com/FISCO-BCOS/console/master/tools/get_account.sh)生成。请确保所使用的私钥文件的类型与`encryptType`配置项中指定的加密算法类型一致。
 
 - 配置证书
 
-    修改配置文件，证书配置位于`packages/cli/conf/config.json`文件的`authentication`配置项中。你需要根据您实际使用的证书文件的路径修改该配置项的`key`、`cert`及`ca`配置，其中`key`为SDK私钥文件的路径，`cert`为SDK证书文件的路径，`ca`为链根证书文件的路径，这些文件可以由[建链脚本](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/manual/build_chain.html)或[企业级部署工具](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/enterprise_tools/index.html)自动生成，具体的生成方式及文件位置请参阅上述工具的说明文档。
+    修改配置文件，证书配置位于`packages/cli/conf/config.json`文件的`authentication`配置项中。您需要根据您实际使用的证书文件的路径修改该配置项的`key`、`cert`及`ca`配置，其中`key`为SDK私钥文件的路径，`cert`为SDK证书文件的路径，`ca`为链根证书文件的路径，这些文件可以由[建链脚本](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/manual/build_chain.html)或[企业级部署工具](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/enterprise_tools/index.html)自动生成，具体的生成方式及文件位置请参阅上述工具的说明文档。
 
 - 配置节点IP及Channel端口
 
