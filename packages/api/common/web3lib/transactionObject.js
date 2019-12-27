@@ -114,15 +114,6 @@ function Transaction(data) {
     }
 
     ethjsUtil.defineProperties(this, fields, data);
-
-    let sigV = ethjsUtil.bufferToInt(this.v);
-    let chainId = Math.floor((sigV - 35) / 2);
-    if (chainId < 0) {
-        chainId = 0;
-    }
-
-    this._chainId = chainId || data.chainId || 0;
-    this._homestead = true;
 }
 
 /**

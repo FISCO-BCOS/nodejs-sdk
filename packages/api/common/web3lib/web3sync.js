@@ -17,6 +17,7 @@
 const uuidv4 = require('uuid/v4');
 const utils = require('./utils');
 const Transaction = require('./transactionObject').Transaction;
+const Configuration = require('../configuration').Configuration;
 
 /**
  * Generate a random number via UUID
@@ -89,7 +90,7 @@ function getSignTx(groupId, account, privateKey, to, func, params, blockLimit) {
         gas: 1000000,
         randomid: genRandomID(),
         blockLimit: blockLimit,
-        chainId: 1,
+        chainId: Configuration.getInstance().chainID,
         groupId: groupId,
         extraData: '0x0'
     };
@@ -116,7 +117,7 @@ function getSignDeployTx(groupId, account, privateKey, bin, blockLimit) {
         gas: 1000000,
         randomid: genRandomID(),
         blockLimit: blockLimit,
-        chainId: 1,
+        chainId: Configuration.getInstance().chainID,
         groupId: groupId,
         extraData: '0x0'
     };

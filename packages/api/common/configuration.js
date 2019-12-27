@@ -123,6 +123,11 @@ class Configuration {
         }
         this.groupID = config.groupID;
 
+        if (!config.chainID || !Number.isInteger(config.chainID)) {
+            throw new ConfigurationError('invalid `chainID` property');
+        }
+        this.chainID = config.chainID;
+
         if (!config.timeout || !Number.isInteger(config.timeout)) {
             throw new ConfigurationError('invalid `timeout` property');
         }
