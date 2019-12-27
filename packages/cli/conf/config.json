@@ -15,5 +15,6 @@
         "ca": "./ca.crt"
     },
     "groupID": 1,
+    "chainID": 1,
     "timeout": 10000
 }

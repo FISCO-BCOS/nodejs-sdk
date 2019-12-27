@@ -149,23 +149,6 @@ function Transaction(data) {
     }
 
     ethjsUtil.defineProperties(this, fields, data);
-
-    /*
-    Object.defineProperty(this, 'from', {
-        enumerable: true,
-        configurable: true,
-        get: this.getSenderAddress.bind(this)
-    });
-    */
-
-    let sigV = ethjsUtil.bufferToInt(this.v);
-    let chainId = Math.floor((sigV - 35) / 2);
-    if (chainId < 0) {
-        chainId = 0;
-    }
-
-    this._chainId = chainId || data.chainId || 0;
-    this._homestead = true;
 }
 
 /**
