@@ -168,6 +168,13 @@ class CRUDService extends ServiceBase {
             userTablePrefix = 'u_';
         }
 
+        let version = await this.web3jService.getClientVersion();
+        version = version.result['Supported Version'];
+        let userTablePrefix = '_user_';
+        if (semver.gte(version, '2.2.0')) {
+            userTablePrefix = 'u_';
+        }
+      
         let table = new Table(TableName.SYS_TABLE, userTablePrefix + tableName, '');
         let condition = new Condition();
         let userTable = await this.select(table, condition);

@@ -100,6 +100,7 @@ function writeToFile(contractName, outputDir, abi, bin) {
     let abiFileName = contractName + '.abi';
     let binFileName = contractName + '.bin';
 
+
     fs.writeFileSync(path.join(outputDir, abiFileName), abi);
     fs.writeFileSync(path.join(outputDir, binFileName), bin);
 }
