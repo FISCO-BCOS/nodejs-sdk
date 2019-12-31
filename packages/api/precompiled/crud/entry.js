@@ -14,7 +14,7 @@
 
 'use strict';
 
-const {check, string} = require('../../common/typeCheck');
+const {check, Str} = require('../../common/typeCheck');
 
 class Entry {
     constructor() {
@@ -22,12 +22,12 @@ class Entry {
     }
 
     put(key, value) {
-        check(arguments, string, string);
+        check(arguments, Str, Str);
         this.fields[key] = value;
     }
 
     get(key) {
-        check(arguments, string);
+        check(arguments, Str);
         return this.fields.get(key);
     }
 }

@@ -17,8 +17,8 @@
 const utils = require('../../common/utils');
 const PrecompiledError = require('../../common/exceptions').PrecompiledError;
 const constant = require('./constant');
-const { TableName, handleReceipt } = require('../common');
-const { check, string } = require('../../common/typeCheck');
+const { TableName, handleReceipt, OutputCode } = require('../common');
+const { check, Str } = require('../../common/typeCheck');
 const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 const semver = require('semver');
@@ -58,6 +58,7 @@ class CRUDService extends ServiceBase {
         } else {
             receipt = await this.web3jService.sendRawTransaction(address, functionName, parameters);
         }
+
         return handleReceipt(receipt, abi)[0];
     }
 
@@ -66,7 +67,19 @@ class CRUDService extends ServiceBase {
 
         let parameters = [table.tableName, table.key, table.valueFields];
         let output = await this._send(constant.TABLE_FACTORY_PRECOMPILE_ABI.createTable, parameters, false, constant.TABLE_FACTORY_PRECOMPILE_ADDRESS);
-        return parseInt(output);
+
+        let status = parseInt(output);
+        if (status === 0) {
+            return {
+                code: OutputCode.Success,
+                msg: OutputCode.getOutputMessage(OutputCode.Success)
+            };
+        } else {
+            return {
+                code: status,
+                msg: OutputCode.getOutputMessage(status)
+            };
+        }
     }
 
     async insert(table, entry) {
@@ -76,7 +89,19 @@ class CRUDService extends ServiceBase {
         let parameters = [table.tableName, table.key, JSON.stringify(entry.fields), table.optional];
         let output = await this._send(constant.CRUD_PRECOMPILE_ABI.insert, parameters);
 
-        return parseInt(output);
+        let status = parseInt(output);
+        if (status > 0) {
+            return {
+                code: OutputCode.Success,
+                msg: OutputCode.getOutputMessage(OutputCode.Success),
+                affected: status
+            };
+        } else {
+            return {
+                code: status,
+                msg: OutputCode.getOutputMessage(status)
+            };
+        }
     }
 
     async update(table, entry, condition) {
@@ -85,7 +110,20 @@ class CRUDService extends ServiceBase {
 
         let parameters = [table.tableName, table.key, JSON.stringify(entry.fields), JSON.stringify(condition.conditions), table.optional];
         let output = await this._send(constant.CRUD_PRECOMPILE_ABI.update, parameters);
-        return parseInt(output);
+
+        let status = parseInt(output);
+        if (status >= 0) {
+            return {
+                code: OutputCode.Success,
+                msg: OutputCode.getOutputMessage(OutputCode.Success),
+                affected: status
+            };
+        } else {
+            return {
+                code: status,
+                msg: OutputCode.getOutputMessage(status)
+            };
+        }
     }
 
     async select(table, condition) {
@@ -105,11 +143,23 @@ class CRUDService extends ServiceBase {
         let parameters = [table.tableName, table.key, JSON.stringify(condition.conditions), table.optional];
         let output = await this._send(constant.CRUD_PRECOMPILE_ABI.remove, parameters);
 
-        return parseInt(output);
+        let status = parseInt(output);
+        if (status >= 0) {
+            return {
+                code: OutputCode.Success,
+                msg: OutputCode.getOutputMessage(OutputCode.Success),
+                affected: status
+            };
+        } else {
+            return {
+                code: status,
+                msg: OutputCode.getOutputMessage(status)
+            };
+        }
     }
 
     async desc(tableName) {
-        check(arguments, string);
+        check(arguments, Str);
 
         let version = await this.web3jService.getClientVersion();
         version = version.result['Supported Version'];

@@ -17,7 +17,7 @@
 const utils = require('../../common/utils');
 const constant = require('./constant');
 const PrecompiledError = require('../../common/exceptions').PrecompiledError;
-const { check, string } = require('../../common/typeCheck');
+const { check, Str } = require('../../common/typeCheck');
 const handleReceipt = require('../common').handleReceipt;
 const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
@@ -56,7 +56,7 @@ class CNSService extends ServiceBase {
     }
 
     async registerCns(name, version, address, abi) {
-        check(arguments, string, string, string, string);
+        check(arguments, Str, Str, Str, Str);
 
         let parameters = [name, version, address, abi];
         let output = await this._send(constant.CNS_PRECOMPILE_ABI.insert, parameters);
@@ -64,7 +64,7 @@ class CNSService extends ServiceBase {
     }
 
     async getAddressByContractNameAndVersion(contractNameAndVersion) {
-        check(arguments, string);
+        check(arguments, Str);
 
         if (!this._isValidCnsName(contractNameAndVersion)) {
             throw new PrecompiledError('invalid contract name and version');
@@ -89,7 +89,7 @@ class CNSService extends ServiceBase {
     }
 
     async queryCnsByName(name) {
-        check(arguments, string);
+        check(arguments, Str);
 
         let parameters = [name];
         let contractAddressInfo = await this._send(constant.CNS_PRECOMPILE_ABI.selectByName, parameters, true);
@@ -97,7 +97,7 @@ class CNSService extends ServiceBase {
     }
 
     async queryCnsByNameAndVersion(name, version) {
-        check(arguments, string, string);
+        check(arguments, Str, Str);
 
         let parameters = [name, version];
         let contractAddressInfo = await this._send(constant.CNS_PRECOMPILE_ABI.selectByNameAndVersion, parameters, true);

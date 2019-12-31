@@ -32,7 +32,10 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query the number of most recent block'
     },
     () => {
-        return web3jService.getBlockNumber();
+        return web3jService.getBlockNumber().then(result => {
+            result.result = parseInt(result.result, '16').toString();
+            return result;
+        });
     }
 ));
 
@@ -42,7 +45,10 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query the pbft view of node',
     },
     () => {
-        return web3jService.getPbftView();
+        return web3jService.getPbftView().then(result => {
+            result.result = parseInt(result.result, '16').toString();
+            return result;
+        });
     }
 ));
 
@@ -308,7 +314,10 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query pending transactions size'
     },
     () => {
-        return web3jService.getPendingTxSize();
+        return web3jService.getPendingTxSize().then(result => {
+            result.result = parseInt(result.result).toString();
+            return result;
+        });
     }
 ));
 
@@ -318,7 +327,12 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query total transaction count'
     },
     () => {
-        return web3jService.getTotalTransactionCount();
+        return web3jService.getTotalTransactionCount().then(result => {
+            result.result.blockNumber = parseInt(result.result.blockNumber).toString();
+            result.result.failedTxSum = parseInt(result.result.failedTxSum).toString();
+            result.result.txSum = parseInt(result.result.txSum).toString();
+            return result;
+        });
     }
 ));
 
@@ -398,7 +412,7 @@ interfaces.push(produceSubCommandInfo(
                 } catch (error) { }
             }
 
-            return { contractAddress: contractAddress, status: result.status };
+            return { status: result.status, contractAddress: contractAddress, transactionHash: result.transactionHash };
         });
 
     }

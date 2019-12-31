@@ -121,16 +121,31 @@ class Configuration {
         if (!config.groupID || !Number.isInteger(config.groupID)) {
             throw new ConfigurationError('invalid `groupID` property');
         }
+
+        if (config.groupID < 1 || config.groupID > 32767) {
+            throw new ConfigurationError('invalid `groupID` property, `groupID` should be within the scope of [1, 32767]');
+        }
+
         this.groupID = config.groupID;
 
         if (!config.chainID || !Number.isInteger(config.chainID)) {
             throw new ConfigurationError('invalid `chainID` property');
         }
+
+        if (config.chainID < 0 || config.chainID > Number.MAX_SAFE_INTEGER) {
+            throw new ConfigurationError(`invalid \`chainID\` property, \`chainID\` should be within the scope of [0, ${Number.MAX_SAFE_INTEGER}]`);
+        }
+
         this.chainID = config.chainID;
 
         if (!config.timeout || !Number.isInteger(config.timeout)) {
             throw new ConfigurationError('invalid `timeout` property');
         }
+
+        if (config.timeout < 0 || config.timeout > Number.MAX_SAFE_INTEGER) {
+            throw new ConfigurationError(`invalid \`timeout\` property, \`timeout\` should be within the scope of [0, ${Number.MAX_SAFE_INTEGER}]`);
+        }
+
         this.timeout = config.timeout;
 
         if (config.solc && typeof config.solc !== 'string') {

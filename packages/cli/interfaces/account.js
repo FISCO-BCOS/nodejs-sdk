@@ -27,7 +27,7 @@ interfaces.push(produceSubCommandInfo(
     },
     () => {
         let config = Configuration.getInstance();
-        let account = web3Utils.privateKeyToAddress(config.privateKey).toString('hex');
+        let account = '0x' + web3Utils.privateKeyToAddress(config.privateKey).toString('hex');
         return Promise.resolve({ account: account });
     }));
 
