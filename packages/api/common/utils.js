@@ -22,6 +22,8 @@ const events = require('events');
 const abi = require('ethjs-abi');
 const CompileError = require('./exceptions').CompileError;
 const semver = require('semver');
+const BN = require('bn.js');
+
 let solc0_4Ver = undefined;
 let solc0_5Ver = undefined;
 
@@ -250,7 +252,13 @@ module.exports.compile = async function (contractPath, outputDir, solc = undefin
 };
 
 module.exports.decodeMethod = function (methodAbi, bytes) {
-    return abi.decodeMethod(methodAbi, bytes);
+    let result = abi.decodeMethod(methodAbi, bytes);
+    for(let index in result) {
+        if(BN.isBN(result[index])) {
+            result[index] = result[index].toString(10);
+        }
+    }
+    return result;
 };
 
 module.exports.spliceFunctionSignature = function (abi) {

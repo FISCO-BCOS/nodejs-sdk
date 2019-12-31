@@ -16,8 +16,8 @@
 
 const utils = require('../../common/utils');
 const constant = require('./constant');
-const handleReceipt = require('../common').handleReceipt;
-const { check, string } = require('../../common/typeCheck');
+const { handleReceipt, OutputCode } = require('../common');
+const { check, Str, StrNeg } = require('../../common/typeCheck');
 const SeviceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
@@ -33,14 +33,27 @@ class SystemConfigService extends SeviceBase {
     }
 
     async setValueByKey(key, value) {
-        check(arguments, string, string);
+        check(arguments, Str, StrNeg);
 
         let functionName = utils.spliceFunctionSignature(constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey);
         let parameters = [key, value];
         let receipt = await this.web3jService.sendRawTransaction(constant.SYSTEM_CONFIG_PRECOMPILE_ADDRESS, functionName, parameters);
 
-        let output = handleReceipt(receipt, constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey)[0];
-        return parseInt(output);
+        let result = handleReceipt(receipt, constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey)[0];
+
+        let status = parseInt(result);
+
+        if (status === 1) {
+            return {
+                code: OutputCode.Success,
+                msg: OutputCode.getOutputMessage(OutputCode.Success)
+            };
+        } else {
+            return {
+                code: status,
+                msg: OutputCode.getOutputMessage(status)
+            };
+        }
     }
 }
 

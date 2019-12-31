@@ -103,13 +103,7 @@ interfaces.push(produceSubCommandInfo(
         let optional = argv.optional;
 
         let table = new Table(tableName, key, valueFields, optional);
-        return crudService.createTable(table).then(status => {
-            if (status === 0) {
-                return { status: "success", code: status };
-            } else {
-                return { status: "fail", code: status };
-            }
-        });
+        return crudService.createTable(table);
     }
 ));
 

@@ -16,8 +16,8 @@
 
 const utils = require('../../common/utils');
 const constant = require('./constant');
-const { TableName, handleReceipt } = require('../common');
-const { check, string } = require('../../common/typeCheck');
+const { TableName, handleReceipt, OutputCode } = require('../common');
+const { check, Str, Addr } = require('../../common/typeCheck');
 const SeviceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 const CRUDService = require('../crud').CRUDService;
@@ -38,10 +38,23 @@ class PermissionService extends SeviceBase {
     async _grant(tableName, address) {
         let functionName = utils.spliceFunctionSignature(constant.PERMISSION_PRECOMPILE_ABI.insert);
         let parameters = [tableName, address];
-        
+
         let receipt = await this.web3jService.sendRawTransaction(constant.PERMISSION_PRECOMPILE_ADDRESS, functionName, parameters);
         let result = handleReceipt(receipt, constant.PERMISSION_PRECOMPILE_ABI.insert)[0];
-        return parseInt(result);
+
+        let status = parseInt(result);
+
+        if (status === 1) {
+            return {
+                code: OutputCode.Success,
+                msg: OutputCode.getOutputMessage(OutputCode.Success)
+            };
+        } else {
+            return {
+                code : status,
+                msg: OutputCode.getOutputMessage(status)
+            };
+        }
     }
 
     async _revoke(tableName, address) {
@@ -50,7 +63,19 @@ class PermissionService extends SeviceBase {
 
         let receipt = await this.web3jService.sendRawTransaction(constant.PERMISSION_PRECOMPILE_ADDRESS, functionName, parameters);
         let result = handleReceipt(receipt, constant.PERMISSION_PRECOMPILE_ABI.remove)[0];
-        return parseInt(result);
+
+        let status = parseInt(result);
+        if (status === 1) {
+            return {
+                code: OutputCode.Success,
+                msg: OutputCode.getOutputMessage(OutputCode.Success)
+            };
+        } else {
+            return {
+                code : status,
+                msg: OutputCode.getOutputMessage(status)
+            };
+        }
     }
 
     async _list(tableName) {
@@ -64,7 +89,7 @@ class PermissionService extends SeviceBase {
     }
 
     async grantUserTableManager(tableName, address) {
-        check(arguments, string, string);
+        check(arguments, Str, Addr);
 
         // Ensure that the table exists
         await this.crudService.desc(tableName);
@@ -72,25 +97,25 @@ class PermissionService extends SeviceBase {
     }
 
     async revokeUserTableManager(tableName, address) {
-        check(arguments, string, string);
+        check(arguments, Str, Addr);
 
         return this._revoke(tableName, address);
     }
 
     async listUserTableManager(tableName) {
-        check(arguments, string);
+        check(arguments, Str);
 
         return this._list(tableName);
     }
 
     async grantDeployAndCreateManager(address) {
-        check(arguments, string);
+        check(arguments, Addr);
 
         return this._grant(TableName.SYS_TABLE, address);
     }
 
     async revokeDeployAndCreateManager(address) {
-        check(arguments, string);
+        check(arguments, Addr);
 
         return this._revoke(TableName.SYS_TABLE, address);
     }
@@ -100,13 +125,13 @@ class PermissionService extends SeviceBase {
     }
 
     async grantPermissionManager(address) {
-        check(arguments, string);
+        check(arguments, Addr);
 
         return this._grant(TableName.SYS_TABLE_ACCESS, address);
     }
 
     async revokePermissionManager(address) {
-        check(arguments, string);
+        check(arguments, Addr);
 
         return this._revoke(TableName.SYS_TABLE_ACCESS, address);
     }
@@ -116,13 +141,13 @@ class PermissionService extends SeviceBase {
     }
 
     async grantNodeManager(address) {
-        check(arguments, string);
+        check(arguments, Addr);
 
         return this._grant(TableName.SYS_CONSENSUS, address);
     }
 
     async revokeNodeManager(address) {
-        check(arguments, string);
+        check(arguments, Addr);
 
         return this._revoke(TableName.SYS_CONSENSUS, address);
     }
@@ -132,13 +157,13 @@ class PermissionService extends SeviceBase {
     }
 
     async grantCNSManager(address) {
-        check(arguments, string);
+        check(arguments, Addr);
 
         return this._grant(TableName.SYS_CNS, address);
     }
 
     async revokeCNSManager(address) {
-        check(arguments, string);
+        check(arguments, Addr);
 
         return this._revoke(TableName.SYS_CNS, address);
     }
@@ -148,13 +173,13 @@ class PermissionService extends SeviceBase {
     }
 
     async grantSysConfigManager(address) {
-        check(arguments, string);
+        check(arguments, Addr);
 
         return this._grant(TableName.SYS_CONFIG, address);
     }
 
     async revokeSysConfigManager(address) {
-        check(arguments, string);
+        check(arguments, Addr);
 
         return this._revoke(TableName.SYS_CONFIG, address);
     }
