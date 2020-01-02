@@ -20,6 +20,7 @@ const utils = require('../../api/common/utils');
 const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
 const { Web3jService, ConsensusService, SystemConfigService } = require('../../api');
 const { ContractsDir, ContractsOutputDir } = require('../constant');
+const { check, Str, Addr, Any } = require('../../api/common/typeCheck');
 
 let interfaces = [];
 const web3jService = new Web3jService();
@@ -460,7 +461,9 @@ interfaces.push(produceSubCommandInfo(
         let contractName = argv.contractName;
         let contractAddress = argv.contractAddress;
         let functionName = argv.function;
-        let parameters = argv.parameters;;
+        let parameters = argv.parameters;
+
+        check([contractName, contractAddress, functionName, parameters], Str, Addr, Str, Any);
 
         let abi = getAbi(contractName);
 

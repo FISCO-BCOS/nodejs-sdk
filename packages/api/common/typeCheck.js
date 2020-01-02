@@ -7,6 +7,8 @@ module.exports.Obj = 2;
 module.exports.Bool = 3;
 module.exports.StrNeg = 4;
 module.exports.Addr = 5;
+module.exports.ArrayList = 6;
+module.exports.Any = 7;
 
 _types = {
     [module.exports.Neg]: 'negative integer',
@@ -14,7 +16,9 @@ _types = {
     [module.exports.Obj]: 'object',
     [module.exports.Bool]: 'boolean',
     [module.exports.StrNeg]: 'negative integer',
-    [module.exports.Addr]: 'address'
+    [module.exports.Addr]: 'address',
+    [module.exports.ArrayList]: 'array',
+    [module.exports.Any]: 'any'
 };
 
 /**
@@ -71,6 +75,14 @@ module.exports.check = function (args, ...types) {
                         throw new SyntaxError(`invalid address of argument at position ${parseInt(index) + 1}, the argument should be at a length of 20 bytes`);
                     }
 
+                    break;
+                case exports.ArrayList:
+                    if (!isArray(args[index])) {
+                        throw new SyntaxError(`invalid argument at position ${parseInt(index) + 1}, expected instance of ${_types[types[index]]} but got \`${args[index]}\``);
+                    }
+
+                    break;
+                case exports.Any:
                     break;
                 default:
                     if (typeof args[index] !== _types[types[index]]) {

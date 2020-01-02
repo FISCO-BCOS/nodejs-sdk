@@ -15,7 +15,7 @@
 'use strict';
 
 const utils = require('../common/utils');
-const { check, Str, Bool, StrNeg } = require('../common/typeCheck');
+const { check, Str, Bool, StrNeg, Addr, ArrayList, Any } = require('../common/typeCheck');
 const channelPromise = require('../common/channelPromise');
 const web3Sync = require('../common/web3lib/web3sync');
 const isArray = require('isarray');
@@ -321,7 +321,7 @@ class Web3jService extends ServiceBase {
     }
 
     async getCode(address) {
-        check(arguments, Str);
+        check(arguments, Addr);
 
         let node = utils.selectNode(this.config.nodes);
 
@@ -368,6 +368,8 @@ class Web3jService extends ServiceBase {
     async sendRawTransaction(...args) {
         let node = utils.selectNode(this.config.nodes);
         if (args.length !== 3) {
+            check(arguments, Str);
+
             let requestData = {
                 'jsonrpc': '2.0',
                 'method': 'sendRawTransaction',
@@ -376,6 +378,8 @@ class Web3jService extends ServiceBase {
             };
             return channelPromise(node, this.config.authentication, requestData, this.config.timeout);
         } else {
+            check(arguments, Addr, Str, Any);
+
             let to = args[0];
             let func = args[1];
             let params = args[2];
@@ -387,6 +391,8 @@ class Web3jService extends ServiceBase {
     }
 
     async deploy(contractPath, outputDir) {
+        check(arguments, Str, Str);
+
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir);
         }
@@ -410,6 +416,8 @@ class Web3jService extends ServiceBase {
     }
 
     async call(to, func, params) {
+        check(arguments, Addr, Str, Any);
+
         if (!isArray(params)) {
             params = params ? [params] : [];
         }
