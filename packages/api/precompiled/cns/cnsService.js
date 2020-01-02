@@ -85,7 +85,10 @@ class CNSService extends ServiceBase {
             throw new PrecompiledError('the contract version does not exist');
         }
 
-        return JSON.parse(contractAddressInfo);
+        contractAddressInfo = JSON.parse(contractAddressInfo);
+        contractAddressInfo = contractAddressInfo[contractAddressInfo.length - 1];
+
+        return contractAddressInfo;
     }
 
     async queryCnsByName(name) {
