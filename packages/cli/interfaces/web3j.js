@@ -403,16 +403,18 @@ interfaces.push(produceSubCommandInfo(
         let outputDir = ContractsOutputDir;
 
         return web3jService.deploy(contractPath, outputDir).then(result => {
-            let contractAddress = result.contractAddress;
             if (result.status === '0x0') {
+                let contractAddress = result.contractAddress;
                 let addressPath = path.join(outputDir, `.${path.basename(contractName, '.sol')}.address`);
 
                 try {
                     fs.appendFileSync(addressPath, contractAddress + '\n');
                 } catch (error) { }
+
+                return { status: result.status, contractAddress: contractAddress, transactionHash: result.transactionHash };
             }
 
-            return { status: result.status, contractAddress: contractAddress, transactionHash: result.transactionHash };
+            return { status: result.status, transactionHash: result.transactionHash };
         });
 
     }
