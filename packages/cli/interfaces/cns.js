@@ -23,10 +23,6 @@ const OutputCode = require('../../api/precompiled/common').OutputCode;
 const { ContractsDir, ContractsOutputDir } = require('../constant');
 
 function checkVersion(version) {
-    if (version.length > 40) {
-        return OutputCode.getOutputMessage(OutputCode.VersionExceeds);
-    }
-
     if (!version.match(/^[A-Za-z0-9.]+$/)) {
         return "contract version should only contains 'A-Z' or 'a-z' or '0-9' or dot mark";
     }
@@ -63,7 +59,8 @@ interfaces.push(produceSubCommandInfo(
     },
     (argv) => {
         return permissionService.listCNSManager().then(cnsManagers => {
-            if (cnsManagers.length !== 0 && cnsManagers.findIndex(value => value.address === config.account) < 0) {
+            const Configuration = require('../../api/common/configuration').Configuration;
+            if (cnsManagers.length !== 0 && cnsManagers.findIndex(value => value.address === Configuration.getInstance().account) < 0) {
                 throw new Error(OutputCode.getOutputMessage(OutputCode.PermissionDenied));
             }
 
