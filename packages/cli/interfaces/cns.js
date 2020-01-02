@@ -182,10 +182,10 @@ interfaces.push(produceSubCommandInfo(
         }
 
         return cnsService.getAddressByContractNameAndVersion(contractNameAndVersion).then(addressInfo => {
-            let address = addressInfo[0].address;
+            let address = addressInfo.address;
             let abi = null;
             try {
-                abi = JSON.parse(addressInfo[0].abi);
+                abi = JSON.parse(addressInfo.abi);
                 if (!abi) {
                     throw new Error();
                 }
