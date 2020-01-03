@@ -65,6 +65,10 @@ class CRUDService extends ServiceBase {
     async createTable(table) {
         check(arguments, Table);
 
+        if(table.tableName.length > 48) {
+            throw new PrecompiledError('The table name length is greater than 48.');
+        }
+
         let parameters = [table.tableName, table.key, table.valueFields];
         let output = await this._send(constant.TABLE_FACTORY_PRECOMPILE_ABI.createTable, parameters, false, constant.TABLE_FACTORY_PRECOMPILE_ADDRESS);
 
