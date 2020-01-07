@@ -417,7 +417,7 @@ class Web3jService extends ServiceBase {
      * @param {*} params 函数参数
      * @param {*} blockLimit 块限制
      */
-    rawTransactionUsingCustomCredentials(account, privateKey, to, func, params, blockLimit) {
+    async rawTransactionUsingCustomCredentials(account, privateKey, to, func, params, blockLimit) {
         if (!isArray(params)) {
             params = params ? [params] : [];
         }
@@ -430,7 +430,7 @@ class Web3jService extends ServiceBase {
      * @param {*} account 自定义公钥
      * @param {*} privateKey 自定义私钥
      */
-    sendRawTransactionUsingCustomCredentials(account, privateKey, ...args) {
+    async sendRawTransactionUsingCustomCredentials(account, privateKey, ...args) {
         let node = utils.selectNode(this.config.nodes);
         if (args.length !== 3) {
             let requestData = {
