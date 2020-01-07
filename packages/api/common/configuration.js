@@ -16,14 +16,14 @@ const PRIVATE_KEY_PREFIX = '308184020100301006072a8648ce3d020106052b8104000a046d
  */
 module.exports.parsePrivateKey = function parsePrivateKey(pem) {
     const hex = pemFile.decode(pem).toString('hex');
-    return this.decodePem(hex);
+    return decodePem(hex);
 }
 
 /**
  * 从 16 进制字符串形式的 PEM 证书解析私钥内容。
  * @param {string} pem 证书
  */
-module.exports.decodePem = function decodePem(pem) {
+function decodePem(pem) {
     let privateKey = null;
     if (pem.startsWith(EC_PRIVATE_KEY_PREFIX)) {
         // -----BEGIN EC PRIVATE KEY-----
@@ -36,6 +36,7 @@ module.exports.decodePem = function decodePem(pem) {
     }
     return privateKey;
 }
+module.exports.decodePem = decodePem;
 
 class Configuration {
     static setConfig($config) {
