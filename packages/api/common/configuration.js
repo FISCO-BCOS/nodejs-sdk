@@ -63,7 +63,11 @@ class Configuration {
 
         if (typeof config === 'string') {
             configDir = path.dirname(config);
-            config = JSON.parse(fs.readFileSync(config));
+            try {
+                config = JSON.parse(fs.readFileSync(config));
+            } catch (_) {
+                throw new ConfigurationError('read configuration file failed, expected an existing JSON-formatted file');
+            }
         }
 
         if (!config.authentication || typeof config.authentication !== 'object') {
