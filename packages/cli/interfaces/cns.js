@@ -66,6 +66,12 @@ interfaces.push(produceSubCommandInfo(
 
             let contractName = path.basename(argv.contractName, '.sol');
             let contractVersion = argv.contractVersion;
+            if (contractVersion) {
+                let checkResult = checkVersion(contractVersion);
+                if (checkResult !== '') {
+                    throw new Error(checkResult);
+                }
+            }
 
             return cnsService.queryCnsByNameAndVersion(contractName, contractVersion).then(queryResult => {
                 if (queryResult.length !== 0) {
@@ -116,6 +122,10 @@ interfaces.push(produceSubCommandInfo(
         let contractName = argv.contractName;
         if (argv.contractVersion) {
             let contractVersion = argv.contractVersion;
+            let checkResult = checkVersion(contractVersion);
+            if (checkResult !== '') {
+                throw new Error(checkResult);
+            }
             return cnsService.queryCnsByNameAndVersion(contractName, contractVersion);
         } else {
             return cnsService.queryCnsByName(contractName);

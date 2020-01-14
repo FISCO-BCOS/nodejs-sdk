@@ -63,10 +63,11 @@ class Configuration {
 
         if (typeof config === 'string') {
             configDir = path.dirname(config);
+            let configContent = fs.readFileSync(config);
             try {
-                config = JSON.parse(fs.readFileSync(config));
+                config = JSON.parse(configContent);
             } catch (_) {
-                throw new ConfigurationError('read configuration file failed, expected an existing JSON-formatted file');
+                throw new ConfigurationError('read configuration file failed, expected a well JSON-formatted file');
             }
         }
 

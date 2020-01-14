@@ -48,6 +48,17 @@ class CRUDService extends ServiceBase {
         }
     }
 
+    _checkName(name) {
+        if (name === '' || name === '_') {
+            return false;
+        }
+        if (!name.match(/^[A-Za-z0-9\$_@]+$/)) {
+            return false;
+        }
+
+        return true;
+    }
+
     async _send(abi, parameters, readOnly = false, address = constant.CRUD_PRECOMPILE_ADDRESS) {
         let functionName = utils.spliceFunctionSignature(abi);
         let receipt = null;
@@ -65,13 +76,43 @@ class CRUDService extends ServiceBase {
     async createTable(table) {
         check(arguments, Table);
 
-        if(table.tableName.length > 48) {
-            throw new PrecompiledError('The table name length is greater than 48.');
+        if (table.tableName.length > constant.SYS_TABLE_KEY_MAX_LENGTH) {
+            throw new PrecompiledError(`the table name length is greater than ${constant.SYS_TABLE_KEY_MAX_LENGTH}`);
         }
 
-        let parameters = [table.tableName, table.key, table.valueFields];
-        let output = await this._send(constant.TABLE_FACTORY_PRECOMPILE_ABI.createTable, parameters, false, constant.TABLE_FACTORY_PRECOMPILE_ADDRESS);
+        if (table.key.length > constant.SYS_TABLE_KEY_FIELD_NAME_MAX_LENGTH) {
+            throw new PrecompiledError(`the table primary key name length is greater than ${constant.SYS_TABLE_KEY_FIELD_NAME_MAX_LENGTH}`);
+        }
 
+        if (!this._checkName(table.key)) {
+            throw new PrecompiledError(`invalid name of key`);
+        }
+
+        if (table.valueFields.length > constant.SYS_TABLE_VALUE_FIELD_MAX_LENGTH) {
+            throw new PrecompiledError(`the table total field name length is greater than ${constant.SYS_TABLE_VALUE_FIELD_MAX_LENGTH}`);
+        }
+
+        let valueFields = table.valueFields.split(',');
+        let collection = [];
+        for (let valueField of valueFields) {
+            valueField = valueField.trim();
+            if (valueField.length > constant.USER_TABLE_FIELD_NAME_MAX_LENGTH) {
+                throw new PrecompiledError(`the table field name length is greater than ${constant.USER_TABLE_FIELD_NAME_MAX_LENGTH}`);
+            }
+
+            if (!this._checkName(valueField)) {
+                throw new PrecompiledError(`invalid name of value field`);
+            }
+
+            if (collection.includes(valueField)) {
+                throw new PrecompiledError(`multiple fields with the same name \'${valueField}\' is not allowed`);
+            }
+
+            collection.push(valueField);
+        }
+
+        let parameters = [table.tableName, table.key, collection.join(',')];
+        let output = await this._send(constant.TABLE_FACTORY_PRECOMPILE_ABI.createTable, parameters, false, constant.TABLE_FACTORY_PRECOMPILE_ADDRESS);
         let status = parseInt(output);
         if (status === 0) {
             return {
