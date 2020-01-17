@@ -28,3 +28,7 @@ module.exports.CRUD_PRECOMPILE_ABI = {
 };
 
 module.exports.TABLE_KEY_MAX_LENGTH = 255;
+module.exports.SYS_TABLE_KEY_FIELD_NAME_MAX_LENGTH = 64;
+module.exports.SYS_TABLE_KEY_MAX_LENGTH = 48;
+module.exports.USER_TABLE_FIELD_NAME_MAX_LENGTH = 64;
+module.exports.SYS_TABLE_VALUE_FIELD_MAX_LENGTH = 1024;

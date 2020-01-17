@@ -30,6 +30,13 @@ matrix:
           sudo: required
 
         - language: node_js
+          os: linux
+          dist: xenial
+          sudo: required
+          script: |
+            bash .ci/ci_check_gm.sh
+
+        - language: node_js
           os: osx
           osx_image: xcode11.3
 

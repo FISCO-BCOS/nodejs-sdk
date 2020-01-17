@@ -21,7 +21,7 @@ const assert = require('assert');
 const rlp = require('rlp');
 const coder = require('web3-eth-abi');
 const ethjsUtil = require('ethjs-util');
-const encryptType = require('./config').EncryptType;
+const smCrypto = require('./sm_crypto/SM2Sign');
 
 /**
  * Convert data to Buffer
@@ -58,12 +58,19 @@ function toBuffer(data) {
  * @return {Buffer} hash of data
  */
 function sha3(data, bits) {
-    if (encryptType === 0) {
+    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
+    let encryptType = Configuration.getInstance().encryptType;
+    if (encryptType === ECDSA) {
         data = toBuffer(data);
         if (!bits) {
             bits = 256;
         }
         let digestData = keccak('keccak' + bits).update(data).digest();
+        return digestData;
+    } else if (encryptType === SM_CRYPTO) {
+        data = Buffer.from(data);
+        let digestData = smCrypto.sm3Digest(data);
+        digestData = Buffer.from(digestData, 'hex');
         return digestData;
     } else {
         throw new Error('Unsupported type of encryption');
@@ -76,9 +83,14 @@ function sha3(data, bits) {
  * @return {Buffer} public key
  */
 function privateKeyToPublicKey(privateKey) {
-    if (encryptType === 0) {
+    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
+    let encryptType = Configuration.getInstance().encryptType;
+    if (encryptType === ECDSA) {
         privateKey = toBuffer(privateKey);
         let publicKey = secp256k1.publicKeyCreate(privateKey, false).slice(1);
+        return publicKey;
+    } else if (encryptType === SM_CRYPTO) {
+        let publicKey = smCrypto.priToPub(privateKey);
         return publicKey;
     } else {
         throw new Error('Unsupported type of encryption');
@@ -92,7 +104,9 @@ function privateKeyToPublicKey(privateKey) {
  * @return {Buffer} address
  */
 function publicKeyToAddress(publicKey, sanitize = false) {
-    if (encryptType === 0) {
+    const { Configuration, ECDSA } = require('../configuration');
+    let encryptType = Configuration.getInstance().encryptType;
+    if (encryptType === ECDSA) {
         if (sanitize && (publicKey.length !== 64)) {
             publicKey = secp256k1.publicKeyConvert(publicKey, false).slice(1);
         }
@@ -164,11 +178,23 @@ function ecrecover(msgHash, v, r, s) {
  */
 function ecsign(msgHash, privateKey) {
     let ret = {};
-    if (encryptType === 0) {
+    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
+    let encryptType = Configuration.getInstance().encryptType;
+    if (encryptType === ECDSA) {
         let sig = secp256k1.sign(msgHash, privateKey);
         ret.r = sig.signature.slice(0, 32);
         ret.s = sig.signature.slice(32, 64);
         ret.v = sig.recovery + 27;
+    } else if (encryptType === SM_CRYPTO) {
+        privateKey = privateKey.toString('hex');
+        let sign = smCrypto.signRS(privateKey, msgHash);
+        ret.r = sign.r;
+        ret.s = sign.s;
+        let publicKey = sign.pub.toString('hex');
+        if (publicKey.length !== 128) {
+            publicKey = publicKey.padStart(128, '0');
+        }
+        ret.pub = Buffer.from(publicKey, 'hex');
     } else {
         throw new Error('Unsupported type of encryption');
     }
@@ -213,12 +239,16 @@ function decodeParams(types, bytes) {
  */
 function encodeFunctionName(fcn) {
     let digest = null;
-    if (encryptType === 1) {
+    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
+    let encryptType = Configuration.getInstance().encryptType;
+    if (encryptType === SM_CRYPTO) {
         digest = sha3(fcn, 256).toString('hex');
-    } else {
+    } else if (encryptType === ECDSA) {
         digest = cryptoJSSha3(fcn, {
             outputLength: 256
         }).toString();
+    } else {
+        throw new Error('Unsupported type of encryption');
     }
     let ret = '0x' + digest.slice(0, 8);
     return ret;

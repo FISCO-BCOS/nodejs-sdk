@@ -1,4 +1,3 @@
-const web3Utils = require('./web3lib/utils');
 const isArray = require('isarray');
 const path = require('path');
 const fs = require('fs');
@@ -9,30 +8,30 @@ const ConfigurationError = require('./exceptions').ConfigurationError;
 
 const EC_PRIVATE_KEY_PREFIX = '30740201010420';
 const PRIVATE_KEY_PREFIX = '308184020100301006072a8648ce3d020106052b8104000a046d306b0201010420';
+const PRIVATE_KEY_PREFIX_SM = '308187020100301306072a8648ce3d020106082a811ccf5501822d046d306b0201010420';
 
-/**
- * 从 Buffer 形式的 PEM 证书解析私钥内容。
- * @param {Buffer} pem 证书
- */
-module.exports.parsePrivateKey = function parsePrivateKey(pem) {
-    const hex = pemFile.decode(pem).toString('hex');
-    return decodePem(hex);
-}
+const ECDSA = 0;
+const SM_CRYPTO = 1;
 
-/**
- * 从 16 进制字符串形式的 PEM 证书解析私钥内容。
- * @param {string} pem 证书
- */
-function decodePem(pem) {
+function decodePem(pem, encryptType) {
     let privateKey = null;
-    if (pem.startsWith(EC_PRIVATE_KEY_PREFIX)) {
-        // -----BEGIN EC PRIVATE KEY-----
-        privateKey = pem.substring(EC_PRIVATE_KEY_PREFIX.length, EC_PRIVATE_KEY_PREFIX.length + 64);
-    } else if (pem.startsWith(PRIVATE_KEY_PREFIX)) {
-        // -----BEGIN PRIVATE KEY-----
-        privateKey = pem.substring(PRIVATE_KEY_PREFIX.length, PRIVATE_KEY_PREFIX.length + 64);
-    } else {
-        throw new ConfigurationError('expected `EC PRIVATE KEY` or `PRIVATE KEY`');
+    if (encryptType === ECDSA) {
+        if (pem.startsWith(EC_PRIVATE_KEY_PREFIX)) {
+            // -----BEGIN EC PRIVATE KEY-----
+            privateKey = pem.substring(EC_PRIVATE_KEY_PREFIX.length, EC_PRIVATE_KEY_PREFIX.length + 64);
+        } else if (pem.startsWith(PRIVATE_KEY_PREFIX)) {
+            // -----BEGIN PRIVATE KEY-----
+            privateKey = pem.substring(PRIVATE_KEY_PREFIX.length, PRIVATE_KEY_PREFIX.length + 64);
+        } else {
+            throw new ConfigurationError('expected `EC PRIVATE KEY` or `PRIVATE KEY`');
+        }
+    } else if (encryptType === SM_CRYPTO) {
+        if (pem.startsWith(PRIVATE_KEY_PREFIX_SM)) {
+            // -----BEGIN PRIVATE KEY-----
+            privateKey = pem.substring(PRIVATE_KEY_PREFIX_SM.length, PRIVATE_KEY_PREFIX_SM.length + 64);
+        } else {
+            throw new ConfigurationError('expected `EC PRIVATE KEY` or `PRIVATE KEY`');
+        }
     }
     return privateKey;
 }
@@ -64,7 +63,12 @@ class Configuration {
 
         if (typeof config === 'string') {
             configDir = path.dirname(config);
-            config = JSON.parse(fs.readFileSync(config));
+            let configContent = fs.readFileSync(config);
+            try {
+                config = JSON.parse(configContent);
+            } catch (_) {
+                throw new ConfigurationError('read configuration file failed, expected a well JSON-formatted file');
+            }
         }
 
         if (!config.authentication || typeof config.authentication !== 'object') {
@@ -83,6 +87,24 @@ class Configuration {
             }
 
             this.authentication = auth;
+        }
+
+        if (!config.encryptType) {
+            throw new ConfigurationError('invalid `encryptType` property');
+        } else {
+            let encryptType = config.encryptType;
+
+            if (typeof encryptType !== 'string') {
+                throw new ConfigurationError('invalid type of `encryptType` property, `string` expected');
+            } else {
+                if (encryptType === 'ECDSA') {
+                    this.encryptType = ECDSA;
+                } else if (encryptType === 'SM_CRYPTO') {
+                    this.encryptType = SM_CRYPTO;
+                } else {
+                    throw new ConfigurationError('invalid value of `encryptType` property, expect `ECDSA` or `SM_CRYPTO`');
+                }
+            }
         }
 
         if (!config.nodes || !isArray(config.nodes) || config.nodes.length < 1) {
@@ -104,16 +126,31 @@ class Configuration {
         if (!config.groupID || !Number.isInteger(config.groupID)) {
             throw new ConfigurationError('invalid `groupID` property');
         }
+
+        if (config.groupID < 1 || config.groupID > 32767) {
+            throw new ConfigurationError('invalid `groupID` property, `groupID` should be within the scope of [1, 32767]');
+        }
+
         this.groupID = config.groupID;
 
         if (!config.chainID || !Number.isInteger(config.chainID)) {
             throw new ConfigurationError('invalid `chainID` property');
         }
+
+        if (config.chainID < 0 || config.chainID > Number.MAX_SAFE_INTEGER) {
+            throw new ConfigurationError(`invalid \`chainID\` property, \`chainID\` should be within the scope of [0, ${Number.MAX_SAFE_INTEGER}]`);
+        }
+
         this.chainID = config.chainID;
 
         if (!config.timeout || !Number.isInteger(config.timeout)) {
             throw new ConfigurationError('invalid `timeout` property');
         }
+
+        if (config.timeout < 0 || config.timeout > Number.MAX_SAFE_INTEGER) {
+            throw new ConfigurationError(`invalid \`timeout\` property, \`timeout\` should be within the scope of [0, ${Number.MAX_SAFE_INTEGER}]`);
+        }
+
         this.timeout = config.timeout;
 
         if (config.solc && typeof config.solc !== 'string') {
@@ -144,7 +181,7 @@ class Configuration {
                         let encodedPem = fs.readFileSync(pemFilePath);
                         let decodedPem = pemFile.decode(encodedPem).toString('hex');
 
-                        this.privateKey = decodePem(decodedPem);
+                        this.privateKey = decodePem(decodedPem, this.encryptType);
                         break;
                     }
                 case 'ecrandom':
@@ -179,15 +216,16 @@ class Configuration {
                         let encodedPem = forge.pem.encode(msg);
                         let decodedPem = pemFile.decode(encodedPem).toString('hex');
 
-                        this.privateKey = decodePem(decodedPem);
+                        this.privateKey = decodePem(decodedPem, this.encryptType);
                         break;
                     }
                 default:
                     throw new ConfigurationError('should not go here');
             }
-            this.account = '0x' + web3Utils.privateKeyToAddress(this.privateKey).toString('hex');
         }
     }
 }
 
 module.exports.Configuration = Configuration;
+module.exports.ECDSA = ECDSA;
+module.exports.SM_CRYPTO = SM_CRYPTO;

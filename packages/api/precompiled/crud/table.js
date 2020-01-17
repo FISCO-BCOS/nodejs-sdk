@@ -14,12 +14,12 @@
 
 'use strict';
 
-const { check, string } = require('../../common/typeCheck');
+const { check, Str } = require('../../common/typeCheck');
 
 class Table {
     constructor(tableName, key, valueFields, optional = '') {
-        check(Array.prototype.slice.call(arguments, 0, 3), string, string, string);
-        check(optional, string);
+        check(Array.prototype.slice.call(arguments, 0, 3), Str, Str, Str);
+        check(optional, Str);
 
         this.tableName = tableName;
         this.key = key;
@@ -28,22 +28,22 @@ class Table {
     }
 
     setTableName(name) {
-        check(arguments, string);
+        check(arguments, Str);
         this.tableName = name;
     }
 
     setValueFields(valueFields) {
-        check(arguments, string);
+        check(arguments, Str);
         this.valueFields = valueFields;
     }
 
     setOptional(optional) {
-        check(arguments, string);
+        check(arguments, Str);
         this.optional = optional;
     }
 
     setKey(value) {
-        check(arguments, string);
+        check(arguments, Str);
         this.key = value;
     }
 }

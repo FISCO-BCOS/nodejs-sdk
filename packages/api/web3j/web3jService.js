@@ -15,7 +15,7 @@
 'use strict';
 
 const utils = require('../common/utils');
-const { check, string, boolean } = require('../common/typeCheck');
+const { check, Str, Bool, StrNeg, Addr, Any } = require('../common/typeCheck');
 const channelPromise = require('../common/channelPromise');
 const web3Sync = require('../common/web3lib/web3sync');
 const isArray = require('isarray');
@@ -23,8 +23,6 @@ const path = require('path');
 const fs = require('fs');
 const ServiceBase = require('../common/serviceBase').ServiceBase;
 const READ_ONLY = require('./constant').READ_ONLY;
-const Configuration = require('../common/configuration').Configuration;
-
 
 class Web3jService extends ServiceBase {
     constructor() {
@@ -179,7 +177,7 @@ class Web3jService extends ServiceBase {
     }
 
     async getBlockByHash(blockHash, includeTransactions) {
-        check(arguments, string, boolean);
+        check(arguments, Str, Bool);
 
         let node = utils.selectNode(this.config.nodes);
 
@@ -194,11 +192,7 @@ class Web3jService extends ServiceBase {
     }
 
     async getBlockByNumber(blockNumber, includeTransactions) {
-        check(arguments, string, boolean);
-
-        if (parseInt(blockNumber, 10) === NaN && parseInt(blockNumber, 16) === NaN) {
-            throw new Error(`invalid block number`);
-        }
+        check(arguments, StrNeg, Bool);
 
         let node = utils.selectNode(this.config.nodes);
 
@@ -213,11 +207,7 @@ class Web3jService extends ServiceBase {
     }
 
     async getBlockHashByNumber(blockNumber) {
-        check(arguments, string);
-
-        if (parseInt(blockNumber, 10) === NaN && parseInt(blockNumber, 16) === NaN) {
-            throw new Error(`invalid block number`);
-        }
+        check(arguments, StrNeg);
 
         let node = utils.selectNode(this.config.nodes);
 
@@ -232,7 +222,7 @@ class Web3jService extends ServiceBase {
     }
 
     async getTransactionByHash(transactionHash) {
-        check(arguments, string);
+        check(arguments, Str);
 
         let node = utils.selectNode(this.config.nodes);
 
@@ -247,11 +237,7 @@ class Web3jService extends ServiceBase {
     }
 
     async getTransactionByBlockHashAndIndex(blockHash, transactionIndex) {
-        check(arguments, string, string);
-
-        if (parseInt(transactionIndex, 10) === NaN && parseInt(transactionIndex, 16) === NaN) {
-            throw new Error(`invalid transaction index`);
-        }
+        check(arguments, Str, StrNeg);
 
         let node = utils.selectNode(this.config.nodes);
 
@@ -266,15 +252,7 @@ class Web3jService extends ServiceBase {
     }
 
     async getTransactionByBlockNumberAndIndex(blockNumber, transactionIndex) {
-        check(arguments, string, string);
-
-        if (parseInt(blockNumber, 10) === NaN && parseInt(blockNumber, 16) === NaN) {
-            throw new Error(`invalid block number`);
-        }
-
-        if (parseInt(transactionIndex, 10) === NaN && parseInt(transactionIndex, 16) === NaN) {
-            throw new Error(`invalid transaction index`);
-        }
+        check(arguments, StrNeg, StrNeg);
 
         let node = utils.selectNode(this.config.nodes);
 
@@ -328,7 +306,7 @@ class Web3jService extends ServiceBase {
     }
 
     async getTransactionReceipt(txHash) {
-        check(arguments, string);
+        check(arguments, Str);
 
         let node = utils.selectNode(this.config.nodes);
 
@@ -343,7 +321,7 @@ class Web3jService extends ServiceBase {
     }
 
     async getCode(address) {
-        check(arguments, string);
+        check(arguments, Addr);
 
         let node = utils.selectNode(this.config.nodes);
 
@@ -361,7 +339,7 @@ class Web3jService extends ServiceBase {
     }
 
     async getSystemConfigByKey(key) {
-        check(arguments, string);
+        check(arguments, Str);
 
         let node = utils.selectNode(this.config.nodes);
 
@@ -390,6 +368,8 @@ class Web3jService extends ServiceBase {
     async sendRawTransaction(...args) {
         let node = utils.selectNode(this.config.nodes);
         if (args.length !== 3) {
+            check(arguments, Str);
+
             let requestData = {
                 'jsonrpc': '2.0',
                 'method': 'sendRawTransaction',
@@ -398,6 +378,8 @@ class Web3jService extends ServiceBase {
             };
             return channelPromise(node, this.config.authentication, requestData, this.config.timeout);
         } else {
+            check(arguments, Addr, Str, Any);
+
             let to = args[0];
             let func = args[1];
             let params = args[2];
@@ -452,6 +434,8 @@ class Web3jService extends ServiceBase {
     }
 
     async deploy(contractPath, outputDir) {
+        check(arguments, Str, Str);
+
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir);
         }
@@ -475,6 +459,8 @@ class Web3jService extends ServiceBase {
     }
 
     async call(to, func, params) {
+        check(arguments, Addr, Str, Any);
+
         if (!isArray(params)) {
             params = params ? [params] : [];
         }

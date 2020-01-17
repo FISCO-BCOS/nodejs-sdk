@@ -18,7 +18,7 @@ const utils = require('../../common/utils');
 const PrecompiledError = require('../../common/exceptions').PrecompiledError;
 const constant = require('./constant');
 const { OutputCode, handleReceipt } = require('../common');
-const { check, string } = require('../../common/typeCheck');
+const { check, Str } = require('../../common/typeCheck');
 const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
@@ -48,53 +48,81 @@ class ConsensusService extends ServiceBase {
         let functionName = utils.spliceFunctionSignature(abi);
         let parameters = [nodeID];
         let receipt = await this.web3jService.sendRawTransaction(constant.CONSENSUS_PRECOMPILE_ADDRESS, functionName, parameters);
-        return parseInt(handleReceipt(receipt, abi)[0]);
+
+        let status = parseInt(handleReceipt(receipt, abi)[0]);
+
+        if (status === 1) {
+            return {
+                code: OutputCode.Success,
+                msg: OutputCode.getOutputMessage(OutputCode.Success)
+            };
+        } else {
+            return {
+                code: status,
+                msg: OutputCode.getOutputMessage(status)
+            };
+        }
     }
 
     async addSealer(nodeID) {
-        check(arguments, string);
+        check(arguments, Str);
 
         let isValid = await this._isValidNodeID(nodeID);
         if (!isValid) {
-            throw new PrecompiledError(OutputCode.getOutputMessage(OutputCode.P2PNetwork));
+            return {
+                code: OutputCode.P2PNetwork,
+                msg: OutputCode.getOutputMessage(OutputCode.P2PNetwork)
+            };
         }
 
         let sealers = await this.web3jService.getSealerList();
         sealers = sealers.result;
 
         if (sealers.includes(nodeID)) {
-            throw new PrecompiledError(OutputCode.getOutputMessage(OutputCode.SealerList));
+            return {
+                code: OutputCode.SealerList,
+                msg: OutputCode.getOutputMessage(OutputCode.SealerList)
+            };
         }
 
         return this._send(constant.CONSENSUS_PRECOMPILE_ABI.addSealer, nodeID);
     }
 
     async addObserver(nodeID) {
-        check(arguments, string);
+        check(arguments, Str);
 
         let isValid = await this._isValidNodeID(nodeID);
         if (!isValid) {
-            throw new PrecompiledError(OutputCode.getOutputMessage(OutputCode.P2PNetwork));
+            return {
+                code: OutputCode.P2PNetwork,
+                msg: OutputCode.getOutputMessage(OutputCode.P2PNetwork)
+            };
         }
 
         let observers = await this.web3jService.getObserverList();
         observers = observers.result;
 
         if (observers.includes(nodeID)) {
-            throw new PrecompiledError(OutputCode.getOutputMessage(OutputCode.ObserverList));
+            return {
+                code: OutputCode.ObserverList,
+                msg: OutputCode.getOutputMessage(OutputCode.ObserverList)
+            };
         }
 
         return this._send(constant.CONSENSUS_PRECOMPILE_ABI.addObserver, nodeID);
     }
 
     async removeNode(nodeID) {
-        check(arguments, string);
+        check(arguments, Str);
 
         let peers = await this.web3jService.getGroupPeers();
         peers = peers.result;
 
         if (!peers.includes(nodeID)) {
-            throw new PrecompiledError(OutputCode.getOutputMessage(OutputCode.GroupPeers));
+            return {
+                code: OutputCode.GroupPeers,
+                msg: OutputCode.getOutputMessage(OutputCode.GroupPeers)
+            };
         }
 
         return this._send(constant.CONSENSUS_PRECOMPILE_ABI.remove, nodeID);
