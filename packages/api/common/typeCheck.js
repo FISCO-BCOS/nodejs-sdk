@@ -39,7 +39,7 @@ module.exports.check = function (args, ...types) {
             assert(types[index] in _types);
 
             switch (types[index]) {
-                case exports.Neg:
+                case exports.Neg: {
                     if (typeof args[index] != 'number' || Number.isInteger(args[index])) {
                         throw new SyntaxError(`invalid argument at position ${parseInt(index) + 1}, expected instance of ${_types[types[index]]} but got \`${args[index]}\``);
                     }
@@ -49,7 +49,8 @@ module.exports.check = function (args, ...types) {
                     }
 
                     break;
-                case exports.StrNeg:
+                }
+                case exports.StrNeg: {
                     let intReg = /^(0x)?\d+$/;
                     if (!intReg.test(args[index])) {
                         throw new SyntaxError(`invalid argument at position ${parseInt(index) + 1}, expected instance of ${_types[types[index]]} but got \`${args[index]}\``);
@@ -62,7 +63,8 @@ module.exports.check = function (args, ...types) {
                     }
 
                     break;
-                case exports.Addr:
+                }
+                case exports.Addr: {
                     if (typeof args[index] != 'string') {
                         throw new SyntaxError(`invalid argument at position ${parseInt(index) + 1}, expected instance of ${_types[types[index]]} but got \`${args[index]}\``);
                     }
@@ -76,19 +78,22 @@ module.exports.check = function (args, ...types) {
                     }
 
                     break;
-                case exports.ArrayList:
+                }
+                case exports.ArrayList: {
                     if (!isArray(args[index])) {
                         throw new SyntaxError(`invalid argument at position ${parseInt(index) + 1}, expected instance of ${_types[types[index]]} but got \`${args[index]}\``);
                     }
 
                     break;
+                }
                 case exports.Any:
                     break;
-                default:
+                default: {
                     if (typeof args[index] !== _types[types[index]]) {
                         throw new SyntaxError(`invalid argument at position ${parseInt(index) + 1}, expected instance of ${_types[types[index]]} but got \`${args[index]}\``);
                     }
                     break;
+                }
             }
         } else if (typeof types[index] === 'function') {
             if (!(args[index] instanceof types[index])) {

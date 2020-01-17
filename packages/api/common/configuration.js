@@ -1,4 +1,3 @@
-const web3Utils = require('./web3lib/utils');
 const isArray = require('isarray');
 const path = require('path');
 const fs = require('fs');

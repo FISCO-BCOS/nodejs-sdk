@@ -58,7 +58,7 @@ function toBuffer(data) {
  * @return {Buffer} hash of data
  */
 function sha3(data, bits) {
-    const {Configuration, ECDSA, SM_CRYPTO} = require('../configuration');
+    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
     let encryptType = Configuration.getInstance().encryptType;
     if (encryptType === ECDSA) {
         data = toBuffer(data);
@@ -83,7 +83,7 @@ function sha3(data, bits) {
  * @return {Buffer} public key
  */
 function privateKeyToPublicKey(privateKey) {
-    const {Configuration, ECDSA, SM_CRYPTO} = require('../configuration');
+    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
     let encryptType = Configuration.getInstance().encryptType;
     if (encryptType === ECDSA) {
         privateKey = toBuffer(privateKey);
@@ -104,7 +104,7 @@ function privateKeyToPublicKey(privateKey) {
  * @return {Buffer} address
  */
 function publicKeyToAddress(publicKey, sanitize = false) {
-    const {Configuration, ECDSA, SM_CRYPTO} = require('../configuration');
+    const { Configuration, ECDSA } = require('../configuration');
     let encryptType = Configuration.getInstance().encryptType;
     if (encryptType === ECDSA) {
         if (sanitize && (publicKey.length !== 64)) {
@@ -178,7 +178,7 @@ function ecrecover(msgHash, v, r, s) {
  */
 function ecsign(msgHash, privateKey) {
     let ret = {};
-    const {Configuration, ECDSA, SM_CRYPTO} = require('../configuration');
+    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
     let encryptType = Configuration.getInstance().encryptType;
     if (encryptType === ECDSA) {
         let sig = secp256k1.sign(msgHash, privateKey);
@@ -239,7 +239,7 @@ function decodeParams(types, bytes) {
  */
 function encodeFunctionName(fcn) {
     let digest = null;
-    const {Configuration, ECDSA, SM_CRYPTO} = require('../configuration');
+    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
     let encryptType = Configuration.getInstance().encryptType;
     if (encryptType === SM_CRYPTO) {
         digest = sha3(fcn, 256).toString('hex');

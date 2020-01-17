@@ -15,7 +15,7 @@
 'use strict';
 
 const utils = require('../common/utils');
-const { check, Str, Bool, StrNeg, Addr, ArrayList, Any } = require('../common/typeCheck');
+const { check, Str, Bool, StrNeg, Addr, Any } = require('../common/typeCheck');
 const channelPromise = require('../common/channelPromise');
 const web3Sync = require('../common/web3lib/web3sync');
 const isArray = require('isarray');
