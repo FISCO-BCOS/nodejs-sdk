@@ -390,6 +390,49 @@ class Web3jService extends ServiceBase {
         }
     }
 
+    /**
+     * 使用自定义公钥和私钥组装交易数据（签名）。
+     * @param {*} account 自定义公钥
+     * @param {*} privateKey 自定义私钥
+     * @param {*} to 交易对方的公钥
+     * @param {*} func 函数名称
+     * @param {*} params 函数参数
+     * @param {*} blockLimit 块限制
+     */
+    async rawTransactionUsingCustomCredentials(account, privateKey, to, func, params, blockLimit) {
+        if (!isArray(params)) {
+            params = params ? [params] : [];
+        }
+
+        return web3Sync.getSignTx(this.config.groupID, account, privateKey, to, func, params, blockLimit);
+    }
+
+    /**
+     * 使用自定义公钥和私钥发送交易。
+     * @param {*} account 自定义公钥
+     * @param {*} privateKey 自定义私钥
+     */
+    async sendRawTransactionUsingCustomCredentials(account, privateKey, ...args) {
+        let node = utils.selectNode(this.config.nodes);
+        if (args.length !== 3) {
+            let requestData = {
+                'jsonrpc': '2.0',
+                'method': 'sendRawTransaction',
+                'params': [this.config.groupID, args[0]],
+                'id': 1
+            };
+            return channelPromise(node, this.config.authentication, requestData, this.config.timeout);
+        } else {
+            let to = args[0];
+            let func = args[1];
+            let params = args[2];
+            let blockNumberResult = await this.getBlockNumber();
+            let blockNumber = parseInt(blockNumberResult.result, '16');
+            let signTx = this.rawTransactionUsingCustomCredentials(account, privateKey, to, func, params, blockNumber + 500);
+            return this.sendRawTransaction(account, privateKey, signTx);
+        }
+    }
+
     async deploy(contractPath, outputDir) {
         check(arguments, Str, Str);
 

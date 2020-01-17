@@ -35,6 +35,7 @@ function decodePem(pem, encryptType) {
     }
     return privateKey;
 }
+module.exports.decodePem = decodePem;
 
 class Configuration {
     static setConfig($config) {
