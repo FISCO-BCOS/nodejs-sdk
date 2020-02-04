@@ -84,7 +84,7 @@ module.exports.FLAGS = {
     VARIADIC: 0x2
 };
 
-module.exports.getAbi = function (contractName) {
+module.exports.getAbi = function (contractName, functionName) {
     if (contractName.endsWith('.sol')) {
         contractName = path.basename(contractName, '.sol');
     }
@@ -96,5 +96,12 @@ module.exports.getAbi = function (contractName) {
         return null;
     }
 
-    return JSON.parse(fs.readFileSync(abiPath));
+    let abi = JSON.parse(fs.readFileSync(abiPath));
+    if (functionName) {
+        return abi.find(item => {
+            return item.type === 'function' && item.name == functionName;
+        });
+    }
+
+    return abi;
 };

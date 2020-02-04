@@ -35,9 +35,8 @@ class SystemConfigService extends SeviceBase {
     async setValueByKey(key, value) {
         check(arguments, Str, StrNeg);
 
-        let functionName = utils.spliceFunctionSignature(constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey);
         let parameters = [key, value];
-        let receipt = await this.web3jService.sendRawTransaction(constant.SYSTEM_CONFIG_PRECOMPILE_ADDRESS, functionName, parameters);
+        let receipt = await this.web3jService.sendRawTransaction(constant.SYSTEM_CONFIG_PRECOMPILE_ADDRESS, constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey, parameters);
 
         let result = handleReceipt(receipt, constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey)[0];
 

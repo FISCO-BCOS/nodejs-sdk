@@ -14,7 +14,7 @@
 
 'use strict';
 
-const utils = require('../../api/common/utils');
+const decode = require('../../api/decoder');
 const path = require('path');
 const fs = require('fs');
 const { produceSubCommandInfo, FLAGS } = require('./base');
@@ -54,6 +54,14 @@ interfaces.push(produceSubCommandInfo(
                     type: 'string',
                     describe: 'The version of a contract'
                 }
+            },
+            {
+                name: 'parameters',
+                options: {
+                    type: 'string',
+                    describe: 'The parameters(splited by a space) of a function',
+                    flag: FLAGS.VARIADIC
+                }
             }
         ]
     },
@@ -84,11 +92,16 @@ interfaces.push(produceSubCommandInfo(
                 }
                 let outputDir = ContractsOutputDir;
 
-                return web3jService.deploy(contractPath, outputDir).then(result => {
-                    let contractAddress = result.contractAddress;
-                    let abi = fs.readFileSync(path.join(outputDir, `${contractName}.abi`)).toString();
-                    cnsService.registerCns(contractName, contractVersion, contractAddress, abi);
-                    return { contractAddress: contractAddress };
+                let parameters = argv.parameters;
+                return web3jService.deploy(contractPath, outputDir, parameters).then(result => {
+                    if (result.status === '0x0') {
+                        let contractAddress = result.contractAddress;
+                        let abi = fs.readFileSync(path.join(outputDir, `${contractName}.abi`)).toString();
+                        cnsService.registerCns(contractName, contractVersion, contractAddress, abi);
+                        return { status: result.status, contractAddress: contractAddress, transactionHash: result.transactionHash };
+                    } else {
+                        return { status: result.status, transactionHash: result.transactionHash };
+                    }
                 });
             });
 
@@ -197,39 +210,33 @@ interfaces.push(produceSubCommandInfo(
             try {
                 abi = JSON.parse(addressInfo.abi);
                 if (!abi) {
-                    throw new Error();
+                    throw new Error(`no abi for contract ${contractName}`);
                 }
             } catch (error) {
                 throw new Error(`no abi for contract ${contractName}`);
             }
 
             let functionName = argv.function;
-            let functionIndex = abi.findIndex(value => value.type === 'function' && value.name === functionName);
-            if (functionIndex < 0) {
-                throw new Error(`no function named as \`${functionName}\` in contract \`${contractName}\``);
-            }
-
-            abi = abi[functionIndex];
+            let decoder = decode.createDecoder(abi, functionName);
             let parameters = argv.parameters;
-            if (abi.inputs.length !== parameters.length) {
-                throw new Error(`wrong number of parameters for function \`${abi.name}\`, expected ${abi.inputs.length} but got ${parameters.length}`);
-            }
+            abi = abi.find(item => {
+                return item.type === 'function' && item.name === functionName;
+            });
 
-            functionName = utils.spliceFunctionSignature(abi);
             if (abi.constant) {
-                return web3jService.call(address, functionName, parameters).then(result => {
+                return web3jService.call(address, abi, parameters).then(result => {
                     let status = result.result.status;
                     let ret = {
                         status: status
                     };
                     let output = result.result.output;
                     if (output !== '0x') {
-                        ret.output = utils.decodeMethod(abi, output);
+                        ret.output = decoder.decodeOutput(output);
                     }
                     return ret;
                 });
             } else {
-                return web3jService.sendRawTransaction(address, functionName, parameters).then(result => {
+                return web3jService.sendRawTransaction(address, abi, parameters).then(result => {
                     let txHash = result.transactionHash;
                     let status = result.status;
                     let ret = {
@@ -238,14 +245,13 @@ interfaces.push(produceSubCommandInfo(
                     };
                     let output = result.output;
                     if (output !== '0x') {
-                        ret.output = utils.decodeMethod(abi, output);
+                        ret.output = decoder.decodeOutput(output);
                     }
                     return ret;
                 });
             }
         });
     }
-
 ));
 
 module.exports.interfaces = interfaces;

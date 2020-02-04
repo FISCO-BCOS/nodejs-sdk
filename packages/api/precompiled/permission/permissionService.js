@@ -36,10 +36,9 @@ class PermissionService extends SeviceBase {
     }
 
     async _grant(tableName, address) {
-        let functionName = utils.spliceFunctionSignature(constant.PERMISSION_PRECOMPILE_ABI.insert);
         let parameters = [tableName, address];
 
-        let receipt = await this.web3jService.sendRawTransaction(constant.PERMISSION_PRECOMPILE_ADDRESS, functionName, parameters);
+        let receipt = await this.web3jService.sendRawTransaction(constant.PERMISSION_PRECOMPILE_ADDRESS, constant.PERMISSION_PRECOMPILE_ABI.insert, parameters);
         let result = handleReceipt(receipt, constant.PERMISSION_PRECOMPILE_ABI.insert)[0];
 
         let status = parseInt(result);
@@ -58,10 +57,9 @@ class PermissionService extends SeviceBase {
     }
 
     async _revoke(tableName, address) {
-        let functionName = utils.spliceFunctionSignature(constant.PERMISSION_PRECOMPILE_ABI.remove);
         let parameters = [tableName, address];
 
-        let receipt = await this.web3jService.sendRawTransaction(constant.PERMISSION_PRECOMPILE_ADDRESS, functionName, parameters);
+        let receipt = await this.web3jService.sendRawTransaction(constant.PERMISSION_PRECOMPILE_ADDRESS, constant.PERMISSION_PRECOMPILE_ABI.remove, parameters);
         let result = handleReceipt(receipt, constant.PERMISSION_PRECOMPILE_ABI.remove)[0];
 
         let status = parseInt(result);
@@ -79,9 +77,8 @@ class PermissionService extends SeviceBase {
     }
 
     async _list(tableName) {
-        let functionName = utils.spliceFunctionSignature(constant.PERMISSION_PRECOMPILE_ABI.queryByName);
         let parameters = [tableName];
-        let receipt = await this.web3jService.call(constant.PERMISSION_PRECOMPILE_ADDRESS, functionName, parameters);
+        let receipt = await this.web3jService.call(constant.PERMISSION_PRECOMPILE_ADDRESS, constant.PERMISSION_PRECOMPILE_ABI.queryByName, parameters);
 
         receipt = receipt.result;
         let result = handleReceipt(receipt, constant.PERMISSION_PRECOMPILE_ABI.queryByName)[0];

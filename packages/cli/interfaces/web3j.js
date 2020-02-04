@@ -17,6 +17,7 @@
 const path = require('path');
 const fs = require('fs');
 const utils = require('../../api/common/utils');
+const decode = require('../../api/decoder');
 const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
 const { Web3jService, ConsensusService, SystemConfigService } = require('../../api');
 const { ContractsDir, ContractsOutputDir } = require('../constant');
@@ -382,16 +383,27 @@ interfaces.push(produceSubCommandInfo(
     {
         name: 'deploy',
         describe: 'Deploy a contract on blockchain',
-        args: [{
-            name: 'contractName',
-            options: {
-                type: 'string',
-                describe: 'The name of a contract which must be in \`nodejs-sdk/packages/cli/contracts/\` directory',
+        args: [
+            {
+                name: 'contractName',
+                options: {
+                    type: 'string',
+                    describe: 'The name of a contract which must be in \`nodejs-sdk/packages/cli/contracts/\` directory',
+                }
+            },
+            {
+                name: 'parameters',
+                options: {
+                    type: 'string',
+                    describe: 'The parameters(splited by a space) of deployment',
+                    flag: FLAGS.VARIADIC
+                }
             }
-        }]
+        ]
     },
     (argv) => {
         let contractName = argv.contractName;
+        let parameters = argv.parameters;
 
         if (!contractName.endsWith('.sol')) {
             contractName += '.sol';
@@ -403,7 +415,7 @@ interfaces.push(produceSubCommandInfo(
         }
         let outputDir = ContractsOutputDir;
 
-        return web3jService.deploy(contractPath, outputDir).then(result => {
+        return web3jService.deploy(contractPath, outputDir, parameters).then(result => {
             if (result.status === '0x0') {
                 let contractAddress = result.contractAddress;
                 let addressPath = path.join(outputDir, `.${path.basename(contractName, '.sol')}.address`);
@@ -465,55 +477,43 @@ interfaces.push(produceSubCommandInfo(
 
         check([contractName, contractAddress, functionName, parameters], Str, Addr, Str, Any);
 
-        let abi = getAbi(contractName);
+        let abi = getAbi(contractName, functionName);
 
         if (!abi) {
-            throw new Error(`no abi file for contract ${contractName}`);
+            throw new Error(`no ABI for method \`${functionName}\` of contract \`${contractName}\``);
         }
 
-        for (let item of abi) {
-            if (item.name === functionName && item.type === 'function') {
-                if (item.inputs.length !== parameters.length) {
-                    throw new Error(`wrong number of parameters for function \`${item.name}\`, expected ${item.inputs.length} but got ${parameters.length}`);
-                }
+        let decoder = decode.createDecoder(abi);
 
-                functionName = utils.spliceFunctionSignature(item);
-
-                if (item.constant) {
-                    return web3jService.call(contractAddress, functionName, parameters).then(result => {
-                        let status = result.result.status;
-                        let ret = {
-                            status: status
-                        };
-                        let output = result.result.output;
-                        if (output !== '0x') {
-                            ret.output = utils.decodeMethod(item, output);
-                        }
-                        return ret;
-                    });
-                } else {
-                    return web3jService.sendRawTransaction(contractAddress, functionName, parameters).then(result => {
-                        let txHash = result.transactionHash;
-                        let status = result.status;
-                        let ret = {
-                            transactionHash: txHash,
-                            status: status
-                        };
-                        let output = result.output;
-                        if (output !== '0x') {
-                            ret.output = utils.decodeMethod(item, output);
-                        }
-                        return ret;
-                    });
+        if (abi.constant) {
+            return web3jService.call(contractAddress, abi, parameters).then(result => {
+                let status = result.result.status;
+                let ret = {
+                    status: status
+                };
+                let output = result.result.output;
+                if (output !== '0x') {
+                    ret.output = decoder.decodeOutput(output);
                 }
-            }
+                return ret;
+            });
+        } else {
+            return web3jService.sendRawTransaction(contractAddress, abi, parameters).then(result => {
+                let txHash = result.transactionHash;
+                let status = result.status;
+                let ret = {
+                    transactionHash: txHash,
+                    status: status
+                };
+                let output = result.output;
+                if (output !== '0x') {
+                    ret.output = decoder.decodeOutput(output);
+                }
+                return ret;
+            });
         }
-
-        throw new Error(`no function named as \`${functionName}\` in contract \`${contractName}\``);
     }
 ));
-
-
 
 interfaces.push(produceSubCommandInfo(
     {

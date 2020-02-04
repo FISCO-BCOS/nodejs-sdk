@@ -45,9 +45,8 @@ class ConsensusService extends ServiceBase {
     }
 
     async _send(abi, nodeID) {
-        let functionName = utils.spliceFunctionSignature(abi);
         let parameters = [nodeID];
-        let receipt = await this.web3jService.sendRawTransaction(constant.CONSENSUS_PRECOMPILE_ADDRESS, functionName, parameters);
+        let receipt = await this.web3jService.sendRawTransaction(constant.CONSENSUS_PRECOMPILE_ADDRESS, abi, parameters);
 
         let status = parseInt(handleReceipt(receipt, abi)[0]);
 

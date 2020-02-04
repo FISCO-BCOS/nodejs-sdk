@@ -18,6 +18,7 @@ const utils = require('../../common/utils');
 const constant = require('./constant');
 const PrecompiledError = require('../../common/exceptions').PrecompiledError;
 const { check, Str } = require('../../common/typeCheck');
+const ethers = require('ethers');
 const handleReceipt = require('../common').handleReceipt;
 const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
@@ -43,14 +44,13 @@ class CNSService extends ServiceBase {
     }
 
     async _send(abi, parameters, readOnly = false) {
-        let functionName = utils.spliceFunctionSignature(abi);
         let receipt = null;
 
         if (readOnly) {
-            receipt = await this.web3jService.call(constant.CNS_PRECOMPILE_ADDRESS, functionName, parameters);
+            receipt = await this.web3jService.call(constant.CNS_PRECOMPILE_ADDRESS, abi, parameters);
             receipt = receipt.result;
         } else {
-            receipt = await this.web3jService.sendRawTransaction(constant.CNS_PRECOMPILE_ADDRESS, functionName, parameters);
+            receipt = await this.web3jService.sendRawTransaction(constant.CNS_PRECOMPILE_ADDRESS, abi, parameters);
         }
         return handleReceipt(receipt, abi)[0];
     }
