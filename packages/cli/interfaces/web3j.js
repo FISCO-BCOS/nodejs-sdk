@@ -16,8 +16,13 @@
 
 const path = require('path');
 const fs = require('fs');
+<<<<<<< HEAD
 const decode = require('../../api/decoder');
 const compile = require('../../api/').compile;
+=======
+const utils = require('../../api/common/utils');
+const decode = require('../../api/decoder');
+>>>>>>> support ABIEncoderV2
 const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
 const { Web3jService, ConsensusService, SystemConfigService } = require('../../api');
 const { ContractsDir, ContractsOutputDir } = require('../constant');
