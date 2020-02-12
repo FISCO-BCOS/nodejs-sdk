@@ -55,6 +55,15 @@ class Decoder {
 
     decodeOutput(output) {
         let methodID = utils.encodeFunctionName(this.method.signature);
+        if(output.startsWith('0x08c379a0')) {
+            output = '0x' + output.substr(10);
+            let error = this.decoder.decode(['string'], output);
+            return {
+                function: this.method.signature,
+                methodID: methodID,
+                error: error
+            };
+        }
 
         let outputTypes = this.method.outputs;
         let data = this.decoder.decode(outputTypes, output);

@@ -107,3 +107,4 @@ class Condition {
 }
 
 module.exports.Condition = Condition;
+module.exports.ConditionOp = ConditionOp

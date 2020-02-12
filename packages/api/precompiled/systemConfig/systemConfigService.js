@@ -39,7 +39,6 @@ class SystemConfigService extends SeviceBase {
         let receipt = await this.web3jService.sendRawTransaction(constant.SYSTEM_CONFIG_PRECOMPILE_ADDRESS, constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey, parameters);
 
         let result = handleReceipt(receipt, constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey)[0];
-
         let status = parseInt(result);
 
         if (status === 1) {

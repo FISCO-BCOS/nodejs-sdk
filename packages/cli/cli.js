@@ -28,7 +28,6 @@ const FLAGS = require('./interfaces/base').FLAGS;
 const yargs = require('yargs/yargs');
 const fs = require('fs');
 const path = require('path');
-const utils = require('../api/common/utils');
 const { ContractsDir, ContractsOutputDir } = require('./constant');
 const isArray = require('isarray');
 const getAbi = require('./interfaces/base').getAbi;
@@ -52,7 +51,7 @@ function parseSub(subCommandInfo, argv, originArgv) {
     if (subCommandInfo.args) {
         for (let index in subCommandInfo.args) {
             let arg = subCommandInfo.args[index];
-            if(arg.options.choices) {
+            if (arg.options.choices) {
                 arg.options.choices.push('?');
             }
 

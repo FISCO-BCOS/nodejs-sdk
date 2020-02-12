@@ -203,7 +203,7 @@ function checkContractLength(bin) {
     if (bin.length && bin.length <= 0x40000) {
         return;
     }
-    throw new CompileError(`contract bin size overflow, limit=0x40000(256K), size=${bin.length}`);
+    throw new CompileError(`illegal contract bin size, expected (0, 0x40000(256K)] but got ${bin.length}`);
 }
 
 function checkContractError(errors, version = '0.4') {

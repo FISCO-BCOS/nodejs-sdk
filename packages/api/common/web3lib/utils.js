@@ -209,37 +209,6 @@ function rlphash(data) {
     return sha3(rlp.encode(data));
 }
 
-function getValue(value, type, named) {
-    switch (type) {
-        case 'bool':
-        case 'string': {
-            return value;
-        }
-
-        case 'tuple':
-            var result = getValues(value, format, named);
-            if (named) {
-                var namedResult = {};
-                result.forEach(function (value, index) {
-                    namedResult['r' + String(index)] = value;
-                });
-                return namedResult;
-            }
-            return result;
-
-        default:
-            /*
-            case 'number':{
-                return ethers.utils.bigNumberify(value);
-            }
-
-                    case 'buffer':
-            return utils.arrayify(object.value);
-            */
-            throw new Error('invalid type - ' + object.type);
-    }
-}
-
 /**
  * encode function name
  * @param {String} fcn function name

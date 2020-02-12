@@ -40,7 +40,7 @@ module.exports.check = function (args, ...types) {
 
             switch (types[index]) {
                 case exports.Neg: {
-                    if (typeof args[index] != 'number' || Number.isInteger(args[index])) {
+                    if (typeof args[index] != 'number' || !Number.isInteger(args[index])) {
                         throw new SyntaxError(`invalid argument at position ${parseInt(index) + 1}, expected instance of ${_types[types[index]]} but got \`${args[index]}\``);
                     }
 
