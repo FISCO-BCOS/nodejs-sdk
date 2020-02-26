@@ -68,7 +68,7 @@ class CNSService extends ServiceBase {
 
         let parameters = [name, version, address, abi];
         let output = await this._send(constant.CNS_PRECOMPILE_ABI.insert, parameters);
-        return parseInt(output);
+        return parseInt(output, 16);
     }
 
     async getAddressByContractNameAndVersion(contractNameAndVersion) {

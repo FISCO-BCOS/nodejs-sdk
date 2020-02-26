@@ -98,8 +98,8 @@ module.exports.getAbi = function (contractName, functionName) {
 
     let abi = JSON.parse(fs.readFileSync(abiPath));
     if (functionName) {
-        return abi.find(item => {
-            return item.type === 'function' && item.name == functionName;
+        return abi.find((item) => {
+            return item.type === 'function' && item.name === functionName;
         });
     }
 

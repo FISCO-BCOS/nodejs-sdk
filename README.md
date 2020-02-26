@@ -1,14 +1,18 @@
+# FISCO BCOS Node.js SDK
 
-![](https://github.com/FISCO-BCOS/FISCO-BCOS/raw/master/docs/images/FISCO_BCOS_Logo.svg?sanitize=true)
+![logo](https://github.com/FISCO-BCOS/FISCO-BCOS/raw/master/docs/images/FISCO_BCOS_Logo.svg?sanitize=true)
 
 [![Build Status](https://travis-ci.org/FISCO-BCOS/nodejs-sdk.svg?branch=master)](https://travis-ci.org/FISCO-BCOS/nodejs-sdk)
+
 [![GitHub license](https://img.shields.io/badge/%20license-Apache%202.0-green)](https://github.com/FISCO-BCOS/nodejs-sdk/blob/master/LICENSE)
+
 [![GitHub issues](https://img.shields.io/github/issues/FISCO-BCOS/nodejs-sdk.svg)](https://github.com/FISCO-BCOS/nodejs-sdk/issues)
+
 [![Code Lines](https://tokei.rs/b1/github/FISCO-BCOS/nodejs-sdk)](https://github.com/FISCO-BCOS/nodejs-sdk)
+
 ---
 
 Node.js SDK为[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)提供Node.js API，使用FISCO BCOS Node.js SDK可以简单快捷地基于FISCO-BCOS进行区块链应用开发。**此版本只支持**[FISCO BCOS v2.0.0](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/)及以上。
-
 
 ## 关键特性
 
@@ -27,8 +31,9 @@ Node.js SDK为[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)
 - Node.js开发环境
   - Node.js >= 8.10.0
   - npm >= 5.6.0
-  
+
   如果您没有部署过Node.js环境，可以参考下列部署方式：
+
   - 如果您使用Linux或MacOS：
 
     推荐使用[nvm](https://github.com/nvm-sh/nvm/blob/master/README.md)快速部署，使用nvm同时也能够避免潜在的导致Node.js SDK部署失败的权限问题。以部署Node.js 8为例，部署步骤如下：
@@ -64,7 +69,7 @@ Node.js SDK为[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)
 
   该命令可能会下载约1GB的依赖项，整个过程可能会持续数十分钟，请耐心等待。
 
-  **请注意，如果您使用Windows，则如无特殊说明，本文之后所提到的命令均需要在Git bash中执行**
+  **请注意**：如果您使用Windows，则如无特殊说明，本文之后所提到的命令均需要在Git bash中执行**
 
 - FISCO BCOS节点：请参考[FISCO BCOS安装](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/installation.html#fisco-bcos)搭建
 
@@ -75,8 +80,6 @@ git clone https://github.com/FISCO-BCOS/nodejs-sdk.git
 ```
 
 ### 部署
-
-<table><tr><td bgcolor=gray>
 
 *如果您的网络中使用了代理，请先为npm配置代理。如果没有使用代理，请忽略。*
 
@@ -91,7 +94,7 @@ npm config set https-proxy <your proxy>
 npm config set registry https://registry.npm.taobao.org
 ```
 
-</td></tr></table>
+部署：
 
 ```bash
 # 部署过程中请确保能够访问外网以能够安装第三方依赖包
@@ -118,7 +121,7 @@ bash build_chain.sh -l "127.0.0.1:4" -p 30300,20200,8545 -i
 bash nodes/127.0.0.1/start_all.sh
 ```
 
-**配置加密算法类型、私钥、证书、节点IP及Channel端口**
+### 配置
 
 - 加密算法类型
 
@@ -138,7 +141,7 @@ bash nodes/127.0.0.1/start_all.sh
 
 配置完成后，即可开始使用CLI工具，CLI工具位于`packages/cli/cli.js`，所有操作均需要在`packages/cli/`目录下执行，您需要先切换至该目录：
 
-```
+```bash
 cd packages/cli
 ```
 
@@ -168,7 +171,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 ./cli.js list
 ```
 
-*以下示例中的输入、输出及参数仅供举例*
+**请注意**：以下示例中的输入、输出及参数仅供举例
 
 #### 查看所连的FISCO BCOS节点版本
 
@@ -408,9 +411,10 @@ CLI工具的配置文件位于`nodejs-sdk/packages/cli/conf/config.json`，配�
 
 **FISCO BCOS开源社区**是国内活跃的开源社区，社区长期为机构和个人开发者提供各类支持与帮助。已有来自各行业的数千名技术爱好者在研究和使用FISCO BCOS。如您对FISCO BCOS开源技术及应用感兴趣，欢迎加入社区获得更多支持与帮助。
 
-![](https://media.githubusercontent.com/media/FISCO-BCOS/LargeFiles/master/images/QR_image.png)
+![qr_image](https://media.githubusercontent.com/media/FISCO-BCOS/LargeFiles/master/images/QR_image.png)
 
 ## License
+
 ![license](https://img.shields.io/badge/%20license-Apache%202.0-green)
 
 Node.js SDK的开源协议为[APACHE LICENSE, VERSION 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt)，详情参考[LICENSE](./LICENSE)。

@@ -93,14 +93,21 @@ interfaces.push(produceSubCommandInfo(
                 let outputDir = ContractsOutputDir;
 
                 let parameters = argv.parameters;
-                return web3jService.deploy(contractPath, outputDir, parameters).then(result => {
+                return web3jService.deploy(contractPath, outputDir, parameters).then((result) => {
                     if (result.status === '0x0') {
                         let contractAddress = result.contractAddress;
                         let abi = fs.readFileSync(path.join(outputDir, `${contractName}.abi`)).toString();
                         cnsService.registerCns(contractName, contractVersion, contractAddress, abi);
-                        return { status: result.status, contractAddress: contractAddress, transactionHash: result.transactionHash };
+                        return {
+                            status: result.status,
+                            contractAddress,
+                            transactionHash: result.transactionHash
+                        };
                     } else {
-                        return { status: result.status, transactionHash: result.transactionHash };
+                        return {
+                            status: result.status,
+                            transactionHash: result.transactionHash
+                        };
                     }
                 });
             });
@@ -219,12 +226,12 @@ interfaces.push(produceSubCommandInfo(
             let functionName = argv.function;
             let decoder = decode.createDecoder(abi, functionName);
             let parameters = argv.parameters;
-            abi = abi.find(item => {
+            abi = abi.find((item) => {
                 return item.type === 'function' && item.name === functionName;
             });
 
             if (abi.constant) {
-                return web3jService.call(address, abi, parameters).then(result => {
+                return web3jService.call(address, abi, parameters).then((result) => {
                     let status = result.result.status;
                     let ret = {
                         status: status
@@ -236,7 +243,7 @@ interfaces.push(produceSubCommandInfo(
                     return ret;
                 });
             } else {
-                return web3jService.sendRawTransaction(address, abi, parameters).then(result => {
+                return web3jService.sendRawTransaction(address, abi, parameters).then((result) => {
                     let txHash = result.transactionHash;
                     let status = result.status;
                     let ret = {

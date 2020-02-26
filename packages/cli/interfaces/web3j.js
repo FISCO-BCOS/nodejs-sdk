@@ -317,7 +317,7 @@ interfaces.push(produceSubCommandInfo(
     },
     () => {
         return web3jService.getPendingTxSize().then(result => {
-            result.result = parseInt(result.result).toString();
+            result.result = parseInt(result.result, 16).toString();
             return result;
         });
     }
@@ -330,9 +330,9 @@ interfaces.push(produceSubCommandInfo(
     },
     () => {
         return web3jService.getTotalTransactionCount().then(result => {
-            result.result.blockNumber = parseInt(result.result.blockNumber).toString();
-            result.result.failedTxSum = parseInt(result.result.failedTxSum).toString();
-            result.result.txSum = parseInt(result.result.txSum).toString();
+            result.result.blockNumber = parseInt(result.result.blockNumber, 16).toString();
+            result.result.failedTxSum = parseInt(result.result.failedTxSum, 16).toString();
+            result.result.txSum = parseInt(result.result.txSum, 16).toString();
             return result;
         });
     }
@@ -415,7 +415,7 @@ interfaces.push(produceSubCommandInfo(
         }
         let outputDir = ContractsOutputDir;
 
-        return web3jService.deploy(contractPath, outputDir, parameters).then(result => {
+        return web3jService.deploy(contractPath, outputDir, parameters).then((result) => {
             if (result.status === '0x0') {
                 let contractAddress = result.contractAddress;
                 let addressPath = path.join(outputDir, `.${path.basename(contractName, '.sol')}.address`);
@@ -424,10 +424,17 @@ interfaces.push(produceSubCommandInfo(
                     fs.appendFileSync(addressPath, contractAddress + '\n');
                 } catch (error) { }
 
-                return { status: result.status, contractAddress: contractAddress, transactionHash: result.transactionHash };
+                return {
+                    status: result.status,
+                    contractAddress,
+                    transactionHash: result.transactionHash
+                };
             }
 
-            return { status: result.status, transactionHash: result.transactionHash };
+            return {
+                status: result.status,
+                transactionHash: result.transactionHash
+            };
         });
 
     }
@@ -486,7 +493,7 @@ interfaces.push(produceSubCommandInfo(
         let decoder = decode.createDecoder(abi);
 
         if (abi.constant) {
-            return web3jService.call(contractAddress, abi, parameters).then(result => {
+            return web3jService.call(contractAddress, abi, parameters).then((result) => {
                 let status = result.result.status;
                 let ret = {
                     status: status
@@ -498,7 +505,7 @@ interfaces.push(produceSubCommandInfo(
                 return ret;
             });
         } else {
-            return web3jService.sendRawTransaction(contractAddress, abi, parameters).then(result => {
+            return web3jService.sendRawTransaction(contractAddress, abi, parameters).then((result) => {
                 let txHash = result.transactionHash;
                 let status = result.status;
                 let ret = {

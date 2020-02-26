@@ -58,36 +58,6 @@ function signTransaction(txData, privKey, callback) {
     }
 }
 
-/**
- * get transaction data
- * @param {Object} func function info contains signature and input types
- * @param {Array} params params
- * @return {String} transaction data
- */
-function getTxData(func, params) {
-    let signature = func.signature;
-    let inputs = func.inputs;
-
-    let txDataCode = utils.encodeFunctionName(signature);
-    let paramsCode = encodeParams(inputs, params);
-    txDataCode += ethjsUtil.stripHexPrefix(paramsCode);
-
-    return txDataCode;
-}
-
-/**
- * encode params
- * @param {Array} types types
- * @param {Array} params params
- * @return {Buffer} params' code
- */
-function encodeParams(types, params) {
-    let encoder = ethers.utils.defaultAbiCoder;
-    params = formalize(params, types);
-    let ret = encoder.encode(types, params);
-    return ret;
-}
-
 function formalize(data, type) {
     let arrayTypeReg = /(.+)\[\d*\]$/;
     if (type.type === 'tuple' || arrayTypeReg.exec(type.type)) {
@@ -118,6 +88,36 @@ function formalize(data, type) {
     }
 
     return data;
+}
+
+/**
+ * encode params
+ * @param {Array} types types
+ * @param {Array} params params
+ * @return {Buffer} params' code
+ */
+function encodeParams(types, params) {
+    let encoder = ethers.utils.defaultAbiCoder;
+    params = formalize(params, types);
+    let ret = encoder.encode(types, params);
+    return ret;
+}
+
+/**
+ * get transaction data
+ * @param {Object} func function info contains signature and input types
+ * @param {Array} params params
+ * @return {String} transaction data
+ */
+function getTxData(func, params) {
+    let signature = func.signature;
+    let inputs = func.inputs;
+
+    let txDataCode = utils.encodeFunctionName(signature);
+    let paramsCode = encodeParams(inputs, params);
+    txDataCode += ethjsUtil.stripHexPrefix(paramsCode);
+
+    return txDataCode;
 }
 
 /**
