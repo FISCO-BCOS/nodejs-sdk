@@ -3,11 +3,8 @@
 ![logo](https://github.com/FISCO-BCOS/FISCO-BCOS/raw/master/docs/images/FISCO_BCOS_Logo.svg?sanitize=true)
 
 [![Build Status](https://travis-ci.org/FISCO-BCOS/nodejs-sdk.svg?branch=master)](https://travis-ci.org/FISCO-BCOS/nodejs-sdk)
-
 [![GitHub license](https://img.shields.io/badge/%20license-Apache%202.0-green)](https://github.com/FISCO-BCOS/nodejs-sdk/blob/master/LICENSE)
-
 [![GitHub issues](https://img.shields.io/github/issues/FISCO-BCOS/nodejs-sdk.svg)](https://github.com/FISCO-BCOS/nodejs-sdk/issues)
-
 [![Code Lines](https://tokei.rs/b1/github/FISCO-BCOS/nodejs-sdk)](https://github.com/FISCO-BCOS/nodejs-sdk)
 
 ---

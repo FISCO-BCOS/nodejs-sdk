@@ -16,7 +16,6 @@
 
 const path = require('path');
 const fs = require('fs');
-const utils = require('../../api/common/utils');
 const decode = require('../../api/decoder');
 const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
 const { Web3jService, ConsensusService, SystemConfigService } = require('../../api');
@@ -360,27 +359,6 @@ interfaces.push(produceSubCommandInfo(
 
 interfaces.push(produceSubCommandInfo(
     {
-        name: 'getSystemConfigByKey',
-        describe: 'Query a system config value by key',
-        args: [
-            {
-                name: 'key',
-                options: {
-                    type: 'string',
-                    describe: 'The name of system config',
-                    choices: ['tx_count_limit', 'tx_gas_limit']
-                }
-            }
-        ]
-    },
-    (argv) => {
-        let key = argv.key;
-        return web3jService.getSystemConfigByKey(key);
-    }
-));
-
-interfaces.push(produceSubCommandInfo(
-    {
         name: 'deploy',
         describe: 'Deploy a contract on blockchain',
         args: [
@@ -582,6 +560,8 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
+const systemKeys = ['tx_count_limit', 'tx_gas_limit', 'rpbft_epoch_block_num', 'rpbft_epoch_sealer_num'];
+
 interfaces.push(produceSubCommandInfo(
     {
         name: 'setSystemConfigByKey',
@@ -592,7 +572,7 @@ interfaces.push(produceSubCommandInfo(
                 options: {
                     type: 'string',
                     describe: 'The name of system config',
-                    choices: ['tx_count_limit', 'tx_gas_limit']
+                    choices: systemKeys
                 }
             },
             {
@@ -609,6 +589,27 @@ interfaces.push(produceSubCommandInfo(
         let value = argv.value;
 
         return systemConfigService.setValueByKey(key, value);
+    }
+));
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'getSystemConfigByKey',
+        describe: 'Query a system config value by key',
+        args: [
+            {
+                name: 'key',
+                options: {
+                    type: 'string',
+                    describe: 'The name of system config',
+                    choices: systemKeys
+                }
+            }
+        ]
+    },
+    (argv) => {
+        let key = argv.key;
+        return web3jService.getSystemConfigByKey(key);
     }
 ));
 
