@@ -395,7 +395,7 @@ interfaces.push(produceSubCommandInfo(
                 name: 'parameters',
                 options: {
                     type: 'string',
-                    describe: 'The parameters(splited by a space) of deployment',
+                    describe: 'The parameters(splited by space) of contructor',
                     flag: FLAGS.VARIADIC
                 }
             }
@@ -463,7 +463,7 @@ interfaces.push(produceSubCommandInfo(
                 name: 'parameters',
                 options: {
                     type: 'string',
-                    describe: 'The parameters(splited by a space) of a function',
+                    describe: 'The parameters(splited by space) of a function',
                     flag: FLAGS.VARIADIC
                 }
             }

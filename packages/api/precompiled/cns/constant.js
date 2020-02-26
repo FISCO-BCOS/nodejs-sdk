@@ -21,3 +21,4 @@ module.exports.CNS_PRECOMPILE_ABI = {
     'insert': { "constant": false, "inputs": [{ "name": "name", "type": "string" }, { "name": "version", "type": "string" }, { "name": "addr", "type": "string" }, { "name": "abi", "type": "string" }], "name": "insert", "outputs": [{ "name": "", "type": "int256" }], "payable": false, "stateMutability": "nonpayable", "type": "function" }
 };
 module.exports.ADDRESS_LENGTH_IN_HEX = 40;
+module.exports.CNS_VERSION_MAX_LENGTH = 128;

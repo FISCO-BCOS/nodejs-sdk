@@ -364,7 +364,7 @@ Call a contract by a function and parameters
   contractName     The name of a contract                        [字符串] [必需]
   contractAddress  20 Bytes - The address of a contract          [字符串] [必需]
   function         The function of a contract                    [字符串] [必需]
-  parameters       The parameters(splited by a space) of a function
+  parameters       The parameters(splited by space) of a function
                                                              [数组] [默认值: []]
 
 选项：

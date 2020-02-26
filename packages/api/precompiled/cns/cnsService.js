@@ -39,6 +39,10 @@ class CNSService extends ServiceBase {
         return addressNoPrefix.length === constant.ADDRESS_LENGTH_IN_HEX;
     }
 
+    _isValiadVersion(version) {
+        return version.length <= constant.CNS_VERSION_MAX_LENGTH;
+    }
+
     _isValidCnsName(input) {
         return input && (input.includes(':') || !this._isValidAddress(input));
     }
@@ -58,6 +62,10 @@ class CNSService extends ServiceBase {
     async registerCns(name, version, address, abi) {
         check(arguments, Str, Str, Str, Str);
 
+        if (!this._isValiadVersion(version)) {
+            throw new PrecompiledError(`length of version shouldn't be more than ${constant.CNS_VERSION_MAX_LENGTH}`);
+        }
+
         let parameters = [name, version, address, abi];
         let output = await this._send(constant.CNS_PRECOMPILE_ABI.insert, parameters);
         return parseInt(output);
@@ -74,6 +82,11 @@ class CNSService extends ServiceBase {
 
         if (contractNameAndVersion.includes(':')) {
             let [contractName, contractVersion] = contractNameAndVersion.split(':', 2);
+
+            if (!this._isValiadVersion(contractVersion)) {
+                throw new PrecompiledError(`length of version shouldn't be more than ${constant.CNS_VERSION_MAX_LENGTH}`);
+            }
+
             let parameters = [contractName, contractVersion];
             contractAddressInfo = await this._send(constant.CNS_PRECOMPILE_ABI.selectByNameAndVersion, parameters, true);
         } else {
@@ -101,6 +114,10 @@ class CNSService extends ServiceBase {
 
     async queryCnsByNameAndVersion(name, version) {
         check(arguments, Str, Str);
+
+        if (!this._isValiadVersion(version)) {
+            throw new PrecompiledError(`length of version shouldn't be more than ${constant.CNS_VERSION_MAX_LENGTH}`);
+        }
 
         let parameters = [name, version];
         let contractAddressInfo = await this._send(constant.CNS_PRECOMPILE_ABI.selectByNameAndVersion, parameters, true);
