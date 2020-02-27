@@ -26,10 +26,12 @@ const semver = require('semver');
 const Table = require('./table').Table;
 const Entry = require('./entry').Entry;
 const Condition = require('./condition').Condition;
+const ConditionOp = require('./condition').ConditionOp;
 
 module.exports.Table = Table;
 module.exports.Entry = Entry;
 module.exports.Condition = Condition;
+module.exports.ConditionOp = ConditionOp;
 
 class CRUDService extends ServiceBase {
     constructor() {
@@ -60,14 +62,13 @@ class CRUDService extends ServiceBase {
     }
 
     async _send(abi, parameters, readOnly = false, address = constant.CRUD_PRECOMPILE_ADDRESS) {
-        let functionName = utils.spliceFunctionSignature(abi);
         let receipt = null;
 
         if (readOnly) {
-            receipt = await this.web3jService.call(address, functionName, parameters);
+            receipt = await this.web3jService.call(address, abi, parameters);
             receipt = receipt.result;
         } else {
-            receipt = await this.web3jService.sendRawTransaction(address, functionName, parameters);
+            receipt = await this.web3jService.sendRawTransaction(address, abi, parameters);
         }
 
         return handleReceipt(receipt, abi)[0];
@@ -77,11 +78,8 @@ class CRUDService extends ServiceBase {
         check(arguments, Table);
 
         if(table.tableName.length > 48) {
-            throw new PrecompiledError('The table name length is greater than 48.');
+            throw new PrecompiledError('the table name length is greater than 48.');
         }
-
-        let parameters = [table.tableName, table.key, table.valueFields];
-        let output = await this._send(constant.TABLE_FACTORY_PRECOMPILE_ABI.createTable, parameters, false, constant.TABLE_FACTORY_PRECOMPILE_ADDRESS);
 
         if (table.key.length > constant.SYS_TABLE_KEY_FIELD_NAME_MAX_LENGTH) {
             throw new PrecompiledError(`the table primary key name length is greater than ${constant.SYS_TABLE_KEY_FIELD_NAME_MAX_LENGTH}`);

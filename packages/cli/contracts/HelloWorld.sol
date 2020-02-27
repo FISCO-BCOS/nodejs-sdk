@@ -11,7 +11,7 @@ contract HelloWorld {
         return name;
     }
 
-    function  set(string n) public {
+    function set(string n) public {
     	name = n;
     }
 }

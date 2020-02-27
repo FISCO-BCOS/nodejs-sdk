@@ -16,7 +16,7 @@
 
 const TransactionError = require('../common/exceptions').TransactionError;
 const StatusCode = require('../common/statusCode').StatusCode;
-const utils = require('../common/utils');
+const decode = require('../decoder');
 
 module.exports.TableName = {
     SYS_TABLE: '_sys_tables_',
@@ -95,7 +95,6 @@ OutputCode.ObserverList = -51105;
 OutputCode.ContractNameAndVersionExist = -51200;
 OutputCode.VersionExceeds = -51201;
 OutputCode.InvalidKey = -51300;
-
 module.exports.OutputCode = OutputCode;
 
 module.exports.handleReceipt = function (receipt, abi) {
@@ -105,7 +104,8 @@ module.exports.handleReceipt = function (receipt, abi) {
         if (!receipt.output) {
             throw new TransactionError('transaction failed');
         } else {
-            return utils.decodeMethod(abi, receipt.output);
+            let decoder = decode.createDecoder(abi);
+            return decoder.decodeOutput(receipt.output).result;
         }
     }
 };

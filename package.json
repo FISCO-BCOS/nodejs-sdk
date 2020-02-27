@@ -1,10 +1,10 @@
 {
     "name": "nodejs-sdk",
-    "version": "0.9.0",
+    "version": "1.0.0",
     "description": "Node.js sdk for FISCO BCOS",
     "repository": {
         "type": "git",
-        "url": "https://github.com/vita-dounai/nodejs-sdk.git"
+        "url": "https://github.com/FISCO-BCOS/nodejs-sdk.git"
     },
     "author": "catli",
     "engineStrict": true,
@@ -15,10 +15,10 @@
     "scripts": {
         "repoclean": "lerna clean && npm run clean-solc-0.4 && npm run clean-solc-0.5",
         "bootstrap": "lerna bootstrap && npm run install-solc-0.4 && npm run install-solc-0.5",
-        "install-solc-0.4": "cd ./packages/api/common/solc-0.4/ && npm install",
-        "install-solc-0.5": "cd ./packages/api/common/solc-0.5/ && npm install",
-        "clean-solc-0.4": "rm -rf ./packages/api/common/solc-0.4/node_modules",
-        "clean-solc-0.5": "rm -rf ./packages/api/common/solc-0.5/node_modules"
+        "install-solc-0.4": "cd ./packages/api/compile/compilers/solc-0.4 && npm install",
+        "install-solc-0.5": "cd ./packages/api/compile/compilers/solc-0.5 && npm install",
+        "clean-solc-0.4": "rm -rf ./packages/api/compile/compilers/solc-0.4/node_modules",
+        "clean-solc-0.5": "rm -rf ./packages/api/compile/compilers/solc-0.5/node_modules"
     },
     "dependencies": {},
     "devDependencies": {

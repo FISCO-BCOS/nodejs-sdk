@@ -24,3 +24,4 @@ module.exports.CRUDService = require('./precompiled/crud').CRUDService;
 module.exports.Table = require('./precompiled/crud').Table;
 module.exports.Entry = require('./precompiled/crud').Entry;
 module.exports.Condition = require('./precompiled/crud').Condition;
+module.exports.ConditionOp = require('./precompiled/crud').ConditionOp;

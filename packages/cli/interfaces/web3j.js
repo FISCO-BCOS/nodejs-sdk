@@ -17,6 +17,7 @@
 const path = require('path');
 const fs = require('fs');
 const utils = require('../../api/common/utils');
+const decode = require('../../api/decoder');
 const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
 const { Web3jService, ConsensusService, SystemConfigService } = require('../../api');
 const { ContractsDir, ContractsOutputDir } = require('../constant');
@@ -316,7 +317,7 @@ interfaces.push(produceSubCommandInfo(
     },
     () => {
         return web3jService.getPendingTxSize().then(result => {
-            result.result = parseInt(result.result).toString();
+            result.result = parseInt(result.result, 16).toString();
             return result;
         });
     }
@@ -329,9 +330,9 @@ interfaces.push(produceSubCommandInfo(
     },
     () => {
         return web3jService.getTotalTransactionCount().then(result => {
-            result.result.blockNumber = parseInt(result.result.blockNumber).toString();
-            result.result.failedTxSum = parseInt(result.result.failedTxSum).toString();
-            result.result.txSum = parseInt(result.result.txSum).toString();
+            result.result.blockNumber = parseInt(result.result.blockNumber, 16).toString();
+            result.result.failedTxSum = parseInt(result.result.failedTxSum, 16).toString();
+            result.result.txSum = parseInt(result.result.txSum, 16).toString();
             return result;
         });
     }
@@ -359,39 +360,29 @@ interfaces.push(produceSubCommandInfo(
 
 interfaces.push(produceSubCommandInfo(
     {
-        name: 'getSystemConfigByKey',
-        describe: 'Query a system config value by key',
+        name: 'deploy',
+        describe: 'Deploy a contract on blockchain',
         args: [
             {
-                name: 'key',
+                name: 'contractName',
                 options: {
                     type: 'string',
-                    describe: 'The name of system config',
-                    choices: ['tx_count_limit', 'tx_gas_limit']
+                    describe: 'The name of a contract which must be in \`nodejs-sdk/packages/cli/contracts/\` directory',
+                }
+            },
+            {
+                name: 'parameters',
+                options: {
+                    type: 'string',
+                    describe: 'The parameters(splited by space) of contructor',
+                    flag: FLAGS.VARIADIC
                 }
             }
         ]
     },
     (argv) => {
-        let key = argv.key;
-        return web3jService.getSystemConfigByKey(key);
-    }
-));
-
-interfaces.push(produceSubCommandInfo(
-    {
-        name: 'deploy',
-        describe: 'Deploy a contract on blockchain',
-        args: [{
-            name: 'contractName',
-            options: {
-                type: 'string',
-                describe: 'The name of a contract which must be in \`nodejs-sdk/packages/cli/contracts/\` directory',
-            }
-        }]
-    },
-    (argv) => {
         let contractName = argv.contractName;
+        let parameters = argv.parameters;
 
         if (!contractName.endsWith('.sol')) {
             contractName += '.sol';
@@ -403,7 +394,7 @@ interfaces.push(produceSubCommandInfo(
         }
         let outputDir = ContractsOutputDir;
 
-        return web3jService.deploy(contractPath, outputDir).then(result => {
+        return web3jService.deploy(contractPath, outputDir, parameters).then((result) => {
             if (result.status === '0x0') {
                 let contractAddress = result.contractAddress;
                 let addressPath = path.join(outputDir, `.${path.basename(contractName, '.sol')}.address`);
@@ -412,10 +403,17 @@ interfaces.push(produceSubCommandInfo(
                     fs.appendFileSync(addressPath, contractAddress + '\n');
                 } catch (error) { }
 
-                return { status: result.status, contractAddress: contractAddress, transactionHash: result.transactionHash };
+                return {
+                    status: result.status,
+                    contractAddress,
+                    transactionHash: result.transactionHash
+                };
             }
 
-            return { status: result.status, transactionHash: result.transactionHash };
+            return {
+                status: result.status,
+                transactionHash: result.transactionHash
+            };
         });
 
     }
@@ -451,7 +449,7 @@ interfaces.push(produceSubCommandInfo(
                 name: 'parameters',
                 options: {
                     type: 'string',
-                    describe: 'The parameters(splited by a space) of a function',
+                    describe: 'The parameters(splited by space) of a function',
                     flag: FLAGS.VARIADIC
                 }
             }
@@ -465,55 +463,43 @@ interfaces.push(produceSubCommandInfo(
 
         check([contractName, contractAddress, functionName, parameters], Str, Addr, Str, Any);
 
-        let abi = getAbi(contractName);
+        let abi = getAbi(contractName, functionName);
 
         if (!abi) {
-            throw new Error(`no abi file for contract ${contractName}`);
+            throw new Error(`no ABI for method \`${functionName}\` of contract \`${contractName}\``);
         }
 
-        for (let item of abi) {
-            if (item.name === functionName && item.type === 'function') {
-                if (item.inputs.length !== parameters.length) {
-                    throw new Error(`wrong number of parameters for function \`${item.name}\`, expected ${item.inputs.length} but got ${parameters.length}`);
-                }
+        let decoder = decode.createDecoder(abi);
 
-                functionName = utils.spliceFunctionSignature(item);
-
-                if (item.constant) {
-                    return web3jService.call(contractAddress, functionName, parameters).then(result => {
-                        let status = result.result.status;
-                        let ret = {
-                            status: status
-                        };
-                        let output = result.result.output;
-                        if (output !== '0x') {
-                            ret.output = utils.decodeMethod(item, output);
-                        }
-                        return ret;
-                    });
-                } else {
-                    return web3jService.sendRawTransaction(contractAddress, functionName, parameters).then(result => {
-                        let txHash = result.transactionHash;
-                        let status = result.status;
-                        let ret = {
-                            transactionHash: txHash,
-                            status: status
-                        };
-                        let output = result.output;
-                        if (output !== '0x') {
-                            ret.output = utils.decodeMethod(item, output);
-                        }
-                        return ret;
-                    });
+        if (abi.constant) {
+            return web3jService.call(contractAddress, abi, parameters).then((result) => {
+                let status = result.result.status;
+                let ret = {
+                    status: status
+                };
+                let output = result.result.output;
+                if (output !== '0x') {
+                    ret.output = decoder.decodeOutput(output);
                 }
-            }
+                return ret;
+            });
+        } else {
+            return web3jService.sendRawTransaction(contractAddress, abi, parameters).then((result) => {
+                let txHash = result.transactionHash;
+                let status = result.status;
+                let ret = {
+                    transactionHash: txHash,
+                    status: status
+                };
+                let output = result.output;
+                if (output !== '0x') {
+                    ret.output = decoder.decodeOutput(output);
+                }
+                return ret;
+            });
         }
-
-        throw new Error(`no function named as \`${functionName}\` in contract \`${contractName}\``);
     }
 ));
-
-
 
 interfaces.push(produceSubCommandInfo(
     {
@@ -575,6 +561,8 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
+const systemKeys = ['tx_count_limit', 'tx_gas_limit', 'rpbft_epoch_size', 'rpbft_rotating_interval'];
+
 interfaces.push(produceSubCommandInfo(
     {
         name: 'setSystemConfigByKey',
@@ -585,7 +573,7 @@ interfaces.push(produceSubCommandInfo(
                 options: {
                     type: 'string',
                     describe: 'The name of system config',
-                    choices: ['tx_count_limit', 'tx_gas_limit']
+                    choices: systemKeys
                 }
             },
             {
@@ -602,6 +590,27 @@ interfaces.push(produceSubCommandInfo(
         let value = argv.value;
 
         return systemConfigService.setValueByKey(key, value);
+    }
+));
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'getSystemConfigByKey',
+        describe: 'Query a system config value by key',
+        args: [
+            {
+                name: 'key',
+                options: {
+                    type: 'string',
+                    describe: 'The name of system config',
+                    choices: systemKeys
+                }
+            }
+        ]
+    },
+    (argv) => {
+        let key = argv.key;
+        return web3jService.getSystemConfigByKey(key);
     }
 ));
 

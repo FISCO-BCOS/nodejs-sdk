@@ -35,7 +35,6 @@ function decodePem(pem, encryptType) {
     }
     return privateKey;
 }
-module.exports.decodePem = decodePem;
 
 class Configuration {
     static setConfig($config) {
@@ -115,7 +114,7 @@ class Configuration {
                 let node = nodes[nodeIndex];
                 for (let childProperty of ['ip', 'port']) {
                     if (!node[childProperty] || typeof node[childProperty] !== 'string') {
-                        throw new ConfigurationError(`invalid ${childProperty} property in \`nodes\` at position ${nodeIndex}`);
+                        throw new ConfigurationError(`invalid ${childProperty} property in \`nodes\` at position ${parseInt(nodeIndex) + 1}`);
                     }
                 }
             }

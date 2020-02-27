@@ -15,12 +15,14 @@
 'use strict';
 
 const utils = require('../common/utils');
-const { check, Str, Bool, StrNeg, Addr, Any } = require('../common/typeCheck');
+const compile = require('../compile');
+const { check, Str, Bool, StrNeg, Addr, Any, Obj, ArrayList } = require('../common/typeCheck');
 const channelPromise = require('../common/channelPromise');
 const web3Sync = require('../common/web3lib/web3sync');
 const isArray = require('isarray');
 const path = require('path');
 const fs = require('fs');
+const ethers = require('ethers');
 const ServiceBase = require('../common/serviceBase').ServiceBase;
 const READ_ONLY = require('./constant').READ_ONLY;
 
@@ -361,7 +363,7 @@ class Web3jService extends ServiceBase {
             params = params ? [params] : [];
         }
 
-        let signTx = web3Sync.getSignTx(this.config.groupID, this.config.account, this.config.privateKey, to, func, params, blockLimit);
+        let signTx = web3Sync.getSignTx(this.config, to, func, params, blockLimit);
         return signTx;
     }
 
@@ -378,11 +380,15 @@ class Web3jService extends ServiceBase {
             };
             return channelPromise(node, this.config.authentication, requestData, this.config.timeout);
         } else {
-            check(arguments, Addr, Str, Any);
+            check(arguments, Addr, Obj, Any);
 
             let to = args[0];
             let func = args[1];
             let params = args[2];
+
+            let iface = new ethers.utils.Interface([func]);
+            func = iface.functions[func.name];
+
             let blockNumberResult = await this.getBlockNumber();
             let blockNumber = parseInt(blockNumberResult.result, '16');
             let signTx = await this.rawTransaction(to, func, params, blockNumber + 500);
@@ -390,51 +396,8 @@ class Web3jService extends ServiceBase {
         }
     }
 
-    /**
-     * 使用自定义公钥和私钥组装交易数据（签名）。
-     * @param {*} account 自定义公钥
-     * @param {*} privateKey 自定义私钥
-     * @param {*} to 交易对方的公钥
-     * @param {*} func 函数名称
-     * @param {*} params 函数参数
-     * @param {*} blockLimit 块限制
-     */
-    async rawTransactionUsingCustomCredentials(account, privateKey, to, func, params, blockLimit) {
-        if (!isArray(params)) {
-            params = params ? [params] : [];
-        }
-
-        return web3Sync.getSignTx(this.config.groupID, account, privateKey, to, func, params, blockLimit);
-    }
-
-    /**
-     * 使用自定义公钥和私钥发送交易。
-     * @param {*} account 自定义公钥
-     * @param {*} privateKey 自定义私钥
-     */
-    async sendRawTransactionUsingCustomCredentials(account, privateKey, ...args) {
-        let node = utils.selectNode(this.config.nodes);
-        if (args.length !== 3) {
-            let requestData = {
-                'jsonrpc': '2.0',
-                'method': 'sendRawTransaction',
-                'params': [this.config.groupID, args[0]],
-                'id': 1
-            };
-            return channelPromise(node, this.config.authentication, requestData, this.config.timeout);
-        } else {
-            let to = args[0];
-            let func = args[1];
-            let params = args[2];
-            let blockNumberResult = await this.getBlockNumber();
-            let blockNumber = parseInt(blockNumberResult.result, '16');
-            let signTx = this.rawTransactionUsingCustomCredentials(account, privateKey, to, func, params, blockNumber + 500);
-            return this.sendRawTransaction(account, privateKey, signTx);
-        }
-    }
-
-    async deploy(contractPath, outputDir) {
-        check(arguments, Str, Str);
+    async deploy(contractPath, outputDir, parameters) {
+        check(arguments, Str, Str, ArrayList);
 
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir);
@@ -448,21 +411,41 @@ class Web3jService extends ServiceBase {
             contractPath = path.join(process.cwd(), contractPath);
         }
 
-        await utils.compile(contractPath, outputDir, this.config.solc);
+        await compile.compile(contractPath, outputDir, this.config.solc);
 
         let contractName = path.basename(contractPath, '.sol');
         let contractBin = fs.readFileSync(path.join(outputDir, contractName + '.bin'), 'utf-8');
+        let contractAbi = fs.readFileSync(path.join(outputDir, contractName + '.abi'), 'utf-8');
+        contractAbi = new ethers.utils.Interface(JSON.parse(contractAbi));
+        let inputs = contractAbi.deployFunction.inputs;
+
+        if (inputs.length !== parameters.length) {
+            throw new Error(`wrong number of parameters for constructor, expected ${inputs.length} but got ${parameters.length}`);
+        }
+
+        if (parameters.length !== 0) {
+            let encodedParams = web3Sync.encodeParams(inputs, parameters);
+            contractBin += encodedParams.toString('hex').substr(2);
+        }
+
         let blockNumberResult = await this.getBlockNumber();
         let blockNumber = parseInt(blockNumberResult.result, '16');
-        let signTx = web3Sync.getSignDeployTx(this.config.groupID, this.config.account, this.config.privateKey, contractBin, blockNumber + 500);
+        let signTx = web3Sync.getSignDeployTx(this.config, contractBin, blockNumber + 500);
         return this.sendRawTransaction(signTx);
     }
 
     async call(to, func, params) {
-        check(arguments, Addr, Str, Any);
+        check(arguments, Addr, Obj, Any);
 
         if (!isArray(params)) {
             params = params ? [params] : [];
+        }
+
+        let iface = new ethers.utils.Interface([func]);
+        func = iface.functions[func.name];
+
+        if (func.inputs.length !== params.length) {
+            throw new Error(`wrong number of parameters for function \`${func.name}\`, expected ${func.inputs.length} but got ${params.length}`);
         }
 
         let txData = web3Sync.getTxData(func, params);

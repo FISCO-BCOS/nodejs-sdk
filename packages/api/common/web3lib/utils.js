@@ -19,7 +19,6 @@ const cryptoJSSha3 = require('crypto-js/sha3');
 const keccak = require('keccak');
 const assert = require('assert');
 const rlp = require('rlp');
-const coder = require('web3-eth-abi');
 const ethjsUtil = require('ethjs-util');
 const smCrypto = require('./sm_crypto/SM2Sign');
 
@@ -73,7 +72,7 @@ function sha3(data, bits) {
         digestData = Buffer.from(digestData, 'hex');
         return digestData;
     } else {
-        throw new Error('Unsupported type of encryption');
+        throw new Error('unsupported type of encryption');
     }
 }
 
@@ -93,7 +92,7 @@ function privateKeyToPublicKey(privateKey) {
         let publicKey = smCrypto.priToPub(privateKey);
         return publicKey;
     } else {
-        throw new Error('Unsupported type of encryption');
+        throw new Error('unsupported type of encryption');
     }
 }
 
@@ -196,7 +195,7 @@ function ecsign(msgHash, privateKey) {
         }
         ret.pub = Buffer.from(publicKey, 'hex');
     } else {
-        throw new Error('Unsupported type of encryption');
+        throw new Error('unsupported type of encryption');
     }
     return ret;
 }
@@ -208,28 +207,6 @@ function ecsign(msgHash, privateKey) {
  */
 function rlphash(data) {
     return sha3(rlp.encode(data));
-}
-
-/**
- * encode params
- * @param {Array} types types
- * @param {Array} params params
- * @return {Buffer} params' code
- */
-function encodeParams(types, params) {
-    let ret = coder.encodeParameters(types, params);
-    return ret;
-}
-
-/**
- * decode params
- * @param {Array} types types
- * @param {Buffer} bytes params' code
- * @return {Array} params
- */
-function decodeParams(types, bytes) {
-    let ret = coder.decodeParameters(types, bytes);
-    return ret;
 }
 
 /**
@@ -248,24 +225,10 @@ function encodeFunctionName(fcn) {
             outputLength: 256
         }).toString();
     } else {
-        throw new Error('Unsupported type of encryption');
+        throw new Error('unsupported type of encryption');
     }
     let ret = '0x' + digest.slice(0, 8);
     return ret;
-}
-
-/**
- * encode transaction data
- * @param {String} fcn function name
- * @param {Array} types types
- * @param {Array} params params
- * @return {Buffer} tx data's code
- */
-function encodeTxData(fcn, types, params) {
-    let txDataCode = encodeFunctionName(fcn);
-    let paramsCode = encodeParams(types, params);
-    txDataCode += ethjsUtil.stripHexPrefix(paramsCode);
-    return txDataCode;
 }
 
 module.exports.privateKeyToPublicKey = privateKeyToPublicKey;
@@ -277,6 +240,4 @@ module.exports.ecsign = ecsign;
 module.exports.sha3 = sha3;
 module.exports.toBuffer = toBuffer;
 
-module.exports.encodeTxData = encodeTxData;
-module.exports.decodeParams = decodeParams;
-module.exports.encodeParams = encodeParams;
+module.exports.encodeFunctionName = encodeFunctionName;
