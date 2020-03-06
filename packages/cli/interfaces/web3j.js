@@ -16,7 +16,6 @@
 
 const path = require('path');
 const fs = require('fs');
-const utils = require('../../api/common/utils');
 const decode = require('../../api/decoder');
 const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
 const { Web3jService, ConsensusService, SystemConfigService } = require('../../api');
@@ -561,7 +560,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-const systemKeys = ['tx_count_limit', 'tx_gas_limit', 'rpbft_epoch_size', 'rpbft_rotating_interval'];
+const systemKeys = ['tx_count_limit', 'tx_gas_limit', 'rpbft_epoch_block_num', 'rpbft_epoch_sealer_num'];
 
 interfaces.push(produceSubCommandInfo(
     {
