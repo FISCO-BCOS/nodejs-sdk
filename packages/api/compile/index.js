@@ -135,7 +135,7 @@ function compileWithSolcJS(contractPath, outputDir) {
     let contractName = path.basename(contractPath, '.sol');
 
     let contractContent = fs.readFileSync(contractPath).toString();
-    let solcVerReg = /pragma\s+solidity\s+(.*)\s*;/;
+    let solcVerReg = /pragma\s+solidity\s*(.*)\s*;/;
     let requiredSolcVer = solcVerReg.exec(contractContent)[1] || null;
 
     if (requiredSolcVer === null) {
