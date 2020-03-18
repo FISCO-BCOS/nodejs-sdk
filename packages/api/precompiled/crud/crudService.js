@@ -80,9 +80,6 @@ class CRUDService extends ServiceBase {
             throw new PrecompiledError('The table name length is greater than 48.');
         }
 
-        let parameters = [table.tableName, table.key, table.valueFields];
-        let output = await this._send(constant.TABLE_FACTORY_PRECOMPILE_ABI.createTable, parameters, false, constant.TABLE_FACTORY_PRECOMPILE_ADDRESS);
-
         if (table.key.length > constant.SYS_TABLE_KEY_FIELD_NAME_MAX_LENGTH) {
             throw new PrecompiledError(`the table primary key name length is greater than ${constant.SYS_TABLE_KEY_FIELD_NAME_MAX_LENGTH}`);
         }
