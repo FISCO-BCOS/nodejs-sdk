@@ -84,6 +84,20 @@ module.exports.FLAGS = {
     VARIADIC: 0x2
 };
 
+const compareInputs = (inputsAbi, inputs) => {
+    if (inputsAbi.length !== inputs.length) {
+        return false;
+    }
+
+    inputsAbi.forEach((input, idx) => {
+        if (input.type !== inputs[idx]) {
+            return false;
+        }
+    });
+
+    return true;
+};
+
 module.exports.getAbi = function (contractName, functionName, inputs) {
     if (contractName.endsWith('.sol')) {
         contractName = path.basename(contractName, '.sol');
@@ -111,13 +125,3 @@ module.exports.getAbi = function (contractName, functionName, inputs) {
 
     return abi;
 };
-
-const compareInputs = (inputsAbi, inputs) => {
-    if (inputsAbi.length !== inputs.length) return false;
-
-    inputsAbi.forEach((input, idx) => {
-        if (input.type !== inputs[idx]) return false;
-    });
-
-    return true;
-}
