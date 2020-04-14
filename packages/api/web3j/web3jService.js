@@ -15,16 +15,13 @@
 'use strict';
 
 const utils = require('../common/utils');
-const compile = require('../compile');
-const { check, Str, Bool, StrNeg, Addr, Any, Obj, ArrayList } = require('../common/typeCheck');
+const { check, Str, Bool, StrNeg, Addr, Obj, ArrayList, Neg } = require('../common/typeCheck');
 const channelPromise = require('../common/channelPromise');
 const web3Sync = require('../common/web3lib/web3sync');
-const isArray = require('isarray');
-const path = require('path');
-const fs = require('fs');
 const ethers = require('ethers');
 const ServiceBase = require('../common/serviceBase').ServiceBase;
 const READ_ONLY = require('./constant').READ_ONLY;
+const deepcopy = require('deepcopy');
 
 class Web3jService extends ServiceBase {
     constructor() {
@@ -358,10 +355,17 @@ class Web3jService extends ServiceBase {
         return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
     }
 
-    async rawTransaction(to, func, params, blockLimit) {
-        if (!isArray(params)) {
-            params = params ? [params] : [];
+    _checkParameters(func, params) {
+        let name = func.name;
+        let inputs = func.inputs;
+        if (inputs.length !== params.length) {
+            throw new Error(`wrong number of arguments for \`${name}\`, expected ${inputs.length} but got ${params.length}`);
         }
+    }
+
+    async rawTransaction(to, func, params, blockLimit) {
+        check(arguments, Addr, Obj, ArrayList, Neg);
+        this._checkParameters(func, params);
 
         let signTx = web3Sync.getSignTx(this.config, to, func, params, blockLimit);
         return signTx;
@@ -380,7 +384,7 @@ class Web3jService extends ServiceBase {
             };
             return channelPromise(node, this.config.authentication, requestData, this.config.timeout);
         } else {
-            check(arguments, Addr, Obj, Any);
+            check(arguments, Addr, Obj, ArrayList);
 
             let to = args[0];
             let func = args[1];
@@ -396,33 +400,16 @@ class Web3jService extends ServiceBase {
         }
     }
 
-    async deploy(contractPath, outputDir, parameters) {
-        check(arguments, Str, Str, ArrayList);
+    async deploy(abi, bin, parameters) {
+        check(arguments, Obj, Str, ArrayList);
 
-        if (!fs.existsSync(outputDir)) {
-            fs.mkdirSync(outputDir);
-        }
-
-        if (!path.isAbsolute(outputDir)) {
-            outputDir = path.join(process.cwd(), outputDir);
-        }
-
-        if (!path.isAbsolute(contractPath)) {
-            contractPath = path.join(process.cwd(), contractPath);
-        }
-
-        await compile.compile(contractPath, outputDir, this.config.solc);
-
-        let contractName = path.basename(contractPath, '.sol');
-        let contractBin = fs.readFileSync(path.join(outputDir, contractName + '.bin'), 'utf-8');
-        let contractAbi = fs.readFileSync(path.join(outputDir, contractName + '.abi'), 'utf-8');
-        contractAbi = new ethers.utils.Interface(JSON.parse(contractAbi));
+        let contractAbi = new ethers.utils.Interface(abi);
         let inputs = contractAbi.deployFunction.inputs;
-
         if (inputs.length !== parameters.length) {
             throw new Error(`wrong number of parameters for constructor, expected ${inputs.length} but got ${parameters.length}`);
         }
 
+        let contractBin = deepcopy(bin);
         if (parameters.length !== 0) {
             let encodedParams = web3Sync.encodeParams(inputs, parameters);
             contractBin += encodedParams.toString('hex').substr(2);
@@ -435,21 +422,14 @@ class Web3jService extends ServiceBase {
     }
 
     async call(to, func, params) {
-        check(arguments, Addr, Obj, Any);
-
-        if (!isArray(params)) {
-            params = params ? [params] : [];
-        }
+        check(arguments, Addr, Obj, ArrayList);
 
         let iface = new ethers.utils.Interface([func]);
         func = iface.functions[func.name];
 
-        if (func.inputs.length !== params.length) {
-            throw new Error(`wrong number of parameters for function \`${func.name}\`, expected ${func.inputs.length} but got ${params.length}`);
-        }
+        this._checkParameters(func, params);
 
         let txData = web3Sync.getTxData(func, params);
-
         let requestData = {
             'jsonrpc': '2.0',
             'method': 'call',

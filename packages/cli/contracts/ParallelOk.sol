@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.4.25;
 
 import "./ParallelContract.sol";
 
@@ -46,4 +46,4 @@ contract ParallelOk is ParallelContract
         unregisterParallelFunction("transfer(string,string,uint256)");
         unregisterParallelFunction("set(string,uint256)");
     }
-}
+

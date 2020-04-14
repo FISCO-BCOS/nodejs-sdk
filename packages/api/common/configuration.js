@@ -52,24 +52,7 @@ class Configuration {
         Configuration.instance = null;
     }
 
-    constructor() {
-        let config = deepcopy(Configuration.config);
-        let configDir = null;
-
-        if (!config) {
-            throw new ConfigurationError('invalid configuration object or file path');
-        }
-
-        if (typeof config === 'string') {
-            configDir = path.dirname(config);
-            let configContent = fs.readFileSync(config);
-            try {
-                config = JSON.parse(configContent);
-            } catch (_) {
-                throw new ConfigurationError('read configuration file failed, expected a well JSON-formatted file');
-            }
-        }
-
+    _parseAuthentication(config) {
         if (!config.authentication || typeof config.authentication !== 'object') {
             throw new ConfigurationError('invalid `authentication` property');
         } else {
@@ -80,14 +63,16 @@ class Configuration {
                     throw new ConfigurationError(`invalid ${childProperty} property in \`authentication\``);
                 }
 
-                if (!path.isAbsolute(auth[childProperty]) && configDir) {
-                    auth[childProperty] = path.join(configDir, auth[childProperty]);
+                if (!path.isAbsolute(auth[childProperty]) && this.configDir) {
+                    auth[childProperty] = path.join(this.configDir, auth[childProperty]);
                 }
             }
 
             this.authentication = auth;
         }
+    }
 
+    _parseEncryptType(config) {
         if (!config.encryptType) {
             throw new ConfigurationError('invalid `encryptType` property');
         } else {
@@ -105,7 +90,9 @@ class Configuration {
                 }
             }
         }
+    }
 
+    _parseNodes(config) {
         if (!config.nodes || !isArray(config.nodes) || config.nodes.length < 1) {
             throw new ConfigurationError('invalid `nodes` property');
         } else {
@@ -121,7 +108,9 @@ class Configuration {
 
             this.nodes = nodes;
         }
+    }
 
+    _parseGroupID(config) {
         if (!config.groupID || !Number.isInteger(config.groupID)) {
             throw new ConfigurationError('invalid `groupID` property');
         }
@@ -131,7 +120,9 @@ class Configuration {
         }
 
         this.groupID = config.groupID;
+    }
 
+    _parseChainID(config) {
         if (!config.chainID || !Number.isInteger(config.chainID)) {
             throw new ConfigurationError('invalid `chainID` property');
         }
@@ -141,7 +132,9 @@ class Configuration {
         }
 
         this.chainID = config.chainID;
+    }
 
+    _parseTimeout(config) {
         if (!config.timeout || !Number.isInteger(config.timeout)) {
             throw new ConfigurationError('invalid `timeout` property');
         }
@@ -151,12 +144,16 @@ class Configuration {
         }
 
         this.timeout = config.timeout;
+    }
 
+    _parseSolc(config) {
         if (config.solc && typeof config.solc !== 'string') {
             throw new ConfigurationError('invalid `solc` property');
         }
         this.solc = config.solc;
+    }
 
+    _parsePrivateKey(config) {
         if (!config.privateKey || typeof config.privateKey !== 'object') {
             throw new ConfigurationError('invalid `pem` property');
         } else {
@@ -173,8 +170,8 @@ class Configuration {
                 case 'pem':
                     {
                         let pemFilePath = privateKey.value;
-                        if (!path.isAbsolute(pemFilePath) && configDir) {
-                            pemFilePath = path.join(configDir, pemFilePath);
+                        if (!path.isAbsolute(pemFilePath) && this.configDir) {
+                            pemFilePath = path.join(this.configDir, pemFilePath);
                         }
 
                         let encodedPem = fs.readFileSync(pemFilePath);
@@ -198,8 +195,8 @@ class Configuration {
                         }
 
                         let p12FilePath = privateKey.value;
-                        if (!path.isAbsolute(p12FilePath) && configDir) {
-                            p12FilePath = path.join(configDir, p12FilePath);
+                        if (!path.isAbsolute(p12FilePath) && this.configDir) {
+                            p12FilePath = path.join(this.configDir, p12FilePath);
                         }
 
                         let encodedP12 = fs.readFileSync(p12FilePath, 'binary');
@@ -222,6 +219,34 @@ class Configuration {
                     throw new ConfigurationError('should not go here');
             }
         }
+    }
+
+    constructor() {
+        let config = deepcopy(Configuration.config);
+        this.configDir = null;
+
+        if (!config) {
+            throw new ConfigurationError('invalid configuration object or file path');
+        }
+
+        if (typeof config === 'string') {
+            this.configDir = path.dirname(config);
+            let configContent = fs.readFileSync(config);
+            try {
+                config = JSON.parse(configContent);
+            } catch (_) {
+                throw new ConfigurationError('read configuration file failed, expected a well JSON-formatted file');
+            }
+        }
+
+        this._parseAuthentication(config);
+        this._parseEncryptType(config);
+        this._parseNodes(config);
+        this._parseGroupID(config);
+        this._parseChainID(config);
+        this._parseTimeout(config);
+        this._parseSolc(config);
+        this._parsePrivateKey(config);
     }
 }
 

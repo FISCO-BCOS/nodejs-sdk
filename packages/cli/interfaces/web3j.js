@@ -17,6 +17,7 @@
 const path = require('path');
 const fs = require('fs');
 const decode = require('../../api/decoder');
+const compile = require('../../api/').compile;
 const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
 const { Web3jService, ConsensusService, SystemConfigService } = require('../../api');
 const { ContractsDir, ContractsOutputDir } = require('../constant');
@@ -391,12 +392,27 @@ interfaces.push(produceSubCommandInfo(
         if (!fs.existsSync(contractPath)) {
             throw new Error(`${contractName} doesn't exist`);
         }
-        let outputDir = ContractsOutputDir;
 
-        return web3jService.deploy(contractPath, outputDir, parameters).then((result) => {
+        const Configuration = require('../../api/').Configuration;
+        let contractClass = compile(contractPath, Configuration.getInstance().solc);
+        if (!fs.existsSync(ContractsOutputDir)) {
+            fs.mkdirSync(ContractsOutputDir);
+        }
+
+        contractName = path.basename(contractName);
+        contractName = contractName.substring(0, contractName.indexOf('.'));
+        let abiPath = path.join(ContractsOutputDir, `${path.basename(contractName)}.abi`);
+        let binPath = path.join(ContractsOutputDir, `${path.basename(contractName)}.bin`);
+
+        try {
+            fs.writeFileSync(abiPath, JSON.stringify(contractClass.abi));
+            fs.writeFileSync(binPath, contractClass.bin);
+        } catch (error) { }
+
+        return web3jService.deploy(contractClass.abi, contractClass.bin, parameters).then((result) => {
             if (result.status === '0x0') {
                 let contractAddress = result.contractAddress;
-                let addressPath = path.join(outputDir, `.${path.basename(contractName, '.sol')}.address`);
+                let addressPath = path.join(ContractsOutputDir, `.${path.basename(contractName, '.sol')}.address`);
 
                 try {
                     fs.appendFileSync(addressPath, contractAddress + '\n');
@@ -414,7 +430,6 @@ interfaces.push(produceSubCommandInfo(
                 transactionHash: result.transactionHash
             };
         });
-
     }
 ));
 
@@ -462,7 +477,16 @@ interfaces.push(produceSubCommandInfo(
 
         check([contractName, contractAddress, functionName, parameters], Str, Addr, Str, Any);
 
-        let abi = getAbi(contractName, functionName);
+        let inputsReg = /\(.*\)/;
+        let inputs = inputsReg.exec(functionName);
+        if(inputs) {
+            inputs = inputs[0];
+            inputs = inputs.substring(1, inputs.length - 1).split(',');
+            inputs = inputs.map(input=>input.trim());
+        }
+
+        let pureFunctionName = functionName.replace(inputsReg, '');
+        let abi = getAbi(contractName, pureFunctionName, inputs);
 
         if (!abi) {
             throw new Error(`no ABI for method \`${functionName}\` of contract \`${contractName}\``);

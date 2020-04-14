@@ -1,3 +1,6 @@
+/*jshint esversion: 8 */
+/*jshint node: true */
+
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +17,15 @@
 
 'use strict';
 
-const assert = require('assert');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const semver = require('semver');
-const CompileError = require('../common/exceptions').CompileError;
 const events = require('events');
 const childProcess = require('child_process');
+const uuid = require('uuid');
+const CompileError = require('../common/exceptions').CompileError;
+const createContractClass = require('./contractClass').createContractClass;
 
 let solc0$4Ver;
 let solc0$5Ver;
@@ -84,28 +89,8 @@ function checkContractLength(bin) {
     throw new CompileError(`illegal contract bin size, expected (0, 0x40000(256K)] but got ${bin.length}`);
 }
 
-
 // Used by compileWithSolcJS only
-function writeToFile(contractName, outputDir, abi, bin) {
-    checkContractLength(bin);
-
-    if (typeof abi !== 'string') {
-        abi = JSON.stringify(abi);
-    }
-
-    if (typeof bin !== 'string') {
-        bin = JSON.stringify(bin);
-    }
-
-    let abiFileName = contractName + '.abi';
-    let binFileName = contractName + '.bin';
-
-    fs.writeFileSync(path.join(outputDir, abiFileName), abi);
-    fs.writeFileSync(path.join(outputDir, binFileName), bin);
-}
-
-// Used by compileWithSolcJS only
-function compileWithSolc0$4(solc, contractName, contractContent, readCallback, outputDir) {
+function compileWithSolc0$4(solc, contractName, contractContent, readCallback) {
     let input = {
         sources: {
             [contractName]: contractContent
@@ -128,10 +113,11 @@ function compileWithSolc0$4(solc, contractName, contractContent, readCallback, o
 
     let abi = output.contracts[`${contractName}:${contractName}`].interface;
     let bin = output.contracts[`${contractName}:${contractName}`].bytecode;
-    writeToFile(contractName, outputDir, abi, bin);
+
+    return createContractClass(contractName, abi, bin);
 }
 
-function compileWithSolcJS(contractPath, outputDir) {
+function compileWithSolcJS(contractPath) {
     let contractName = path.basename(contractPath, '.sol');
 
     let contractContent = fs.readFileSync(contractPath).toString();
@@ -183,10 +169,10 @@ function compileWithSolcJS(contractPath, outputDir) {
 
             let abi = output.contracts[contractName][contractName].abi;
             let bin = output.contracts[contractName][contractName].evm.bytecode.object;
-            writeToFile(contractName, outputDir, abi, bin);
+            return createContractClass(contractName, abi, bin);
         } else if (semver.satisfies(solc0$4Ver, requiredSolcVerRange)) {
             let solc = require('./compilers/solc-0.4');
-            compileWithSolc0$4(solc, contractName, contractContent, readCallback, outputDir);
+            return compileWithSolc0$4(solc, contractName, contractContent, readCallback);
         } else {
             throw new CompileError("solc version can't be satisfied");
         }
@@ -195,61 +181,51 @@ function compileWithSolcJS(contractPath, outputDir) {
             let wrapper = require('./compilers/solc-0.4/node_modules/solc/wrapper');
             let solc = wrapper(require('./compilers/gm/soljson-v0.4.25-gm'));
 
-            compileWithSolc0$4(solc, contractName, contractContent, readCallback, outputDir);
+            return compileWithSolc0$4(solc, contractName, contractContent, readCallback);
         } else {
             throw new CompileError("solc version can't be satisfied");
         }
     } else {
         throw new CompileError("solc version can't be satisfied");
     }
-
-    return Promise.resolve();
 }
 
-function compileWithBin(outputDir, contractPath, solc) {
-    let execEmitter = new events.EventEmitter();
-    let execPromise = new Promise((resolve, reject) => {
-        execEmitter.on('done', () => {
-            resolve();
-        });
-        execEmitter.on('error', (stdout, stderr) => {
-            reject(`Compiling error: ${stdout}\n${stderr}`);
-        });
-    });
+function compileWithBin(contractPath, solc) {
+    let outputDir = path.join(os.tmpdir(), uuid.v4());
+    let cmd = `${solc} --overwrite --abi --bin -o ${outputDir} ${contractPath} 2>&1`;
 
-    let cmd = `${solc} --overwrite --abi --bin -o ${outputDir} ${contractPath}`;
-    childProcess.exec(
-        cmd,
-        (error, stdout, stderr) => {
-            if (!error) {
-                execEmitter.emit('done');
-            }
-            else {
-                execEmitter.emit('error', stdout, stderr);
-            }
-        });
+    let output = null;
+    try {
+        output = childProcess.execSync(cmd).toString();
+    } catch (error) {
+        throw new CompileError(error.message);
+    }
 
-    return execPromise.then((result) => {
-        let contractName = path.basename(contractPath, '.sol');
-        let bin = fs.readFileSync(path.join(outputDir, contractName + '.bin'));
-        checkContractLength(bin);
-        return result;
-    });
+    let contractName = path.basename(contractPath, '.sol');
+    let files = fs.readdirSync(outputDir);
+
+    let abiIndex = files.findIndex((file) => { return file.endsWith(contractName + '.abi'); });
+    let binIndex = files.findIndex((file) => { return file.endsWith(contractName + '.bin'); });
+    if (abiIndex === -1 || binIndex === -1) {
+        throw new CompileError('\n' + output.trim());
+    }
+
+    let abi = fs.readFileSync(path.join(outputDir, files[abiIndex])).toString();
+    let bin = fs.readFileSync(path.join(outputDir, files[binIndex])).toString();
+    checkContractLength(bin);
+
+    return createContractClass(contractName, abi, bin);
 }
 
 /**
  * Compile a solidity contract with solc docker container
- * @param {string} contractPath Path of the contract, must be an absolute path
- * @param {string} outputDir Path of the output, must be an absolute path
+ * @param {string} contractPath Path of the contract
  * @param {string} solc Solc config, use user-specified solc
  */
-module.exports.compile = async function (contractPath, outputDir, solc = null) {
-    assert(path.isAbsolute(contractPath), 'contract path must be an absolute path');
-    assert(path.isAbsolute(outputDir), 'output directory must be an absolute path');
-
+module.exports.compile = function (contractPath, solc = undefined) {
     if (solc) {
-        return compileWithBin(contractPath, outputDir, solc);
+        return compileWithBin(contractPath, solc);
     } else {
-        return compileWithSolcJS(contractPath, outputDir);
+        return compileWithSolcJS(contractPath);
     }
 };
