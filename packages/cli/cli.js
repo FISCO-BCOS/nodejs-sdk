@@ -32,7 +32,6 @@ const { ContractsDir, ContractsOutputDir } = require('./constant');
 const isArray = require('isarray');
 const getAbi = require('./interfaces/base').getAbi;
 const Configuration = require('../api/common/configuration').Configuration;
-
 Configuration.setConfig(path.join(__dirname, './conf/config.json'));
 
 let interfaces = [];

@@ -89,11 +89,11 @@ const compareInputs = (inputsAbi, inputs) => {
         return false;
     }
 
-    inputsAbi.forEach((input, idx) => {
-        if (input.type !== inputs[idx]) {
+    for(let i = 0; i < inputsAbi.length; ++i) {
+        if(inputs[i] !== inputsAbi[i].type) {
             return false;
         }
-    });
+    }
 
     return true;
 };

@@ -1,0 +1,22 @@
+{
+    "encryptType": "ECDSA",
+    "privateKey": {
+        "type": "pem",
+        "value": "./ecdsa.pem"
+    },
+    "nodes": [
+        {
+            "ip": "127.0.0.1",
+            "port": "20200"
+        }
+    ],
+    "authentication": {
+        "key": "./sdk.key",
+        "cert": "./sdk.crt",
+        "ca": "./ca.crt"
+    },
+    "groupID": 1,
+    "chainID": 1,
+    "timeout": 10000,
+    "solc": "/Users/lichenxi/Work/nodejs-sdk/packages/api/compile/compilers/solc-0.4/node_modules/solc/solcjs"
+}
