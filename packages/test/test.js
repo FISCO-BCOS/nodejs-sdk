@@ -15,7 +15,7 @@ let helloWorld = contractClass.newInstance();
 
 async function run() {
     let address = await helloWorld.$deploy(web3j);
-    console.log("HelloWorld contract depolyed at " + address);
+    console.log("HelloWorld contract deployed at " + address);
     let ret = await helloWorld.get();
     console.log('origin name: ' + ret[0]);
     await helloWorld.set("你好，世界！");
