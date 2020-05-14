@@ -60,9 +60,10 @@ function checkContractError(errors, version = '0.4') {
     } else {
         let errorMsgs = [];
         errors.forEach((error, index) => {
+            let lineNo, level, msg;
             switch (version) {
                 case '0.4':
-                    let [lineNo, level, msg] = error.split(': ');
+                    [lineNo, level, msg] = error.split(': ');
                     if (solcErrors.includes(level)) {
                         errorMsgs.push(`${index + 1}> ${error}`);
                     }
