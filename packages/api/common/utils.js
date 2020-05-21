@@ -19,25 +19,25 @@
  * @param {Array} nodes Node list
  * @return {Object} Node
  */
-module.exports.selectNode = function (nodes) {
+function selectNode(nodes) {
     return nodes[Math.floor(Math.random() * nodes.length)];
-};
+}
 
-module.exports.cleanHexPrefix = function (input) {
+function cleanHexPrefix(input) {
     if (input.startsWith('0x') || input.startsWith('0X')) {
         return input.substring(2);
     }
     return input;
-};
+}
 
-module.exports.encodeMethodSignature = function (abi) {
-    let functionName = abi.name + '(';
-    for (let index in abi.inputs) {
-        functionName += abi.inputs[index].type;
-        if (index != abi.inputs.length - 1) {
-            functionName += ',';
-        }
-    }
-    functionName += ')';
-    return functionName;
-};
+const ADDRESS_LENGTH_IN_HEX = 40;
+
+function isValidAddress(address) {
+    let addressNoPrefix = cleanHexPrefix(address);
+    return addressNoPrefix.length === ADDRESS_LENGTH_IN_HEX;
+}
+
+module.exports.hash = require('./web3lib/utils').hash;
+module.exports.selectNode = selectNode;
+module.exports.cleanHexPrefix = cleanHexPrefix;
+module.exports.isValidAddress = isValidAddress;

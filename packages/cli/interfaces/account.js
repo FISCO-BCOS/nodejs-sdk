@@ -23,12 +23,26 @@ let interfaces = [];
 interfaces.push(produceSubCommandInfo(
     {
         name: 'showAccount',
-        describe: 'Show account which depends on private key provided in configuration'
+        describe: 'Show account of the specified account name',
+        args: [
+            {
+                name: 'id',
+                options: {
+                    type: 'string',
+                    describe: 'The id of a private key'
+                }
+            }
+        ]
     },
-    () => {
+    (argv) => {
+        let id = argv.id;
+
         let config = Configuration.getInstance();
-        let account = '0x' + web3Utils.privateKeyToAddress(config.privateKey).toString('hex');
-        return Promise.resolve({ account: account });
+        let account = config.accounts[id];
+        if (!account) {
+            throw new Error(`invalid id of account: ${id}`);
+        }
+        return Promise.resolve({ account: account.account });
     }));
 
 module.exports.interfaces = interfaces;

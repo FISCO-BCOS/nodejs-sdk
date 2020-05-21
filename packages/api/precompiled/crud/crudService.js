@@ -14,7 +14,6 @@
 
 'use strict';
 
-const utils = require('../../common/utils');
 const PrecompiledError = require('../../common/exceptions').PrecompiledError;
 const constant = require('./constant');
 const { TableName, handleReceipt, OutputCode } = require('../common');

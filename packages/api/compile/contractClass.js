@@ -1,7 +1,3 @@
-/*jshint esversion: 8 */
-/*jshint node: true */
-/*jshint -W054 */
-
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +12,9 @@
  * limitations under the License.
  */
 
-const createDecoder = require('../decoder').createDecoder;
-
 'use strict';
+
+const createMethodDecoder = require('../decoder').createMethodDecoder;
 
 function createCodeForAddressCheck() {
     let code =
@@ -31,8 +27,8 @@ function createCodeForAddressCheck() {
 function createCodeForConstantMethod(index) {
     let code =
         createCodeForAddressCheck() +
-        `let abi = this._abis[${index}];\n` +
-        `let decoder = this._decoders[${index}];\n` +
+        `let abi = this._functionABIs[${index}];\n` +
+        `let decoder = this._functionDecoders[${index}];\n` +
         'return this.web3jService.call(this.address, abi, Array.from(arguments)).then((result) => {\n' +
         '    let status = result.result.status;\n' +
         '    let output = result.result.output;\n' +
@@ -60,8 +56,8 @@ function createCodeForConstantMethod(index) {
 function createCodeForMutableMethod(index) {
     let code =
         createCodeForAddressCheck() +
-        `let abi = this._abis[${index}];\n` +
-        `let decoder = this._decoders[${index}];\n` +
+        `let abi = this._functionABIs[${index}];\n` +
+        `let decoder = this._functionDecoders[${index}];\n` +
         'return this.web3jService.sendRawTransaction(this.address, abi, Array.from(arguments)).then((result) => {\n' +
         '    let status = result.status;\n' +
         '    let output = result.output;\n' +
@@ -96,6 +92,22 @@ function createCodeForConstructor() {
     return code;
 }
 
+function createCodeForGetAddress() {
+    let code =
+        createCodeForAddressCheck() +
+        'return this.address;';
+    return code;
+}
+
+function createCodeForGetABIOf() {
+    let code =
+        'if(!this._eventABIMapper.has(name)) {\n' +
+        '    throw new Error(`no event ABI named as: ${name}`);\n' +
+        '}\n' +
+        'return this._eventABIMapper.get(name);';
+    return code;
+}
+
 function createContractClass(name, abi, bin) {
     if (typeof abi === 'string') {
         abi = JSON.parse(abi);
@@ -110,31 +122,61 @@ function createContractClass(name, abi, bin) {
                 name: contractClass.name,
                 abi: contractClass.abi,
                 bin: contractClass.bin,
-                _abis: [],
-                _decoders: [],
+                _functionABIs: [],
+                _functionDecoders: [],
+                _eventABIMapper: new Map()
             };
 
+            let hasExplicitConstructor = false;
             for (let i = 0; i < contractClass.abi.length; ++i) {
                 let item = contractClass.abi[i];
-                if (item.type === 'function') {
-                    let parameters = item.inputs.map(input => input.name);
-                    parameters = parameters.join(',');
-                    contract._abis.push(item);
-                    contract._decoders.push(createDecoder(item));
 
-                    if (item.constant) {
-                        contract[item.name] = new Function(parameters, createCodeForConstantMethod(i));
-                    } else {
-                        contract[item.name] = new Function(parameters, createCodeForMutableMethod(i));
+                switch (item.type) {
+                    case 'function': {
+                        if (contract[item.name]) {
+                            throw new Error('function override is not allowed');
+                        }
+
+                        let parameters = item.inputs.map(input => input.name);
+                        parameters = parameters.join(',');
+                        contract._functionABIs.push(item);
+                        contract._functionDecoders.push(createMethodDecoder(item));
+
+                        if (item.constant) {
+                            contract[item.name] = new Function(parameters, createCodeForConstantMethod(contract._functionABIs.length - 1));
+                        } else {
+                            contract[item.name] = new Function(parameters, createCodeForMutableMethod(contract._functionABIs.length - 1));
+                        }
+                        break;
                     }
-                }
+                    case 'constructor': {
+                        hasExplicitConstructor = true;
+                        let parameters = item.inputs.map(input => input.name);
+                        contract.$deploy = new Function('web3jService,' + parameters.join(','), createCodeForConstructor());
+                        break;
+                    }
+                    case 'event': {
+                        if (contract._eventABIMapper.has(item.name)) {
+                            throw new Error('event override is not allowed');
+                        }
 
-                if (item.type === 'constructor') {
-                    let parameters = item.inputs.map(input => input.name);
-                    contract.$deploy = new Function('web3jService,' + parameters.join(','), createCodeForConstructor());
+                        contract._eventABIMapper.set(item.name, item);
+                        break;
+                    }
                 }
             }
 
+            if (!hasExplicitConstructor) {
+                contract.$deploy = new Function('web3jService', createCodeForConstructor());
+            }
+
+            // built-in functions
+
+            // `$getAddress()`, get address of the deployed contract
+            contract.$getAddress = new Function('', createCodeForGetAddress());
+
+            // `$getEventABIOf(name)`, get ABI of the specified name, return null if the abi not exists
+            contract.$getEventABIOf = new Function('name', createCodeForGetABIOf());
             return contract;
         }
     };

@@ -19,6 +19,9 @@ module.exports.ConsensusService = require('./precompiled/consensus').ConsensusSe
 module.exports.SystemConfigService = require('./precompiled/systemConfig').SystemConfigService;
 module.exports.PermissionService = require('./precompiled/permission').PermissionService;
 module.exports.CNSService = require('./precompiled/cns/cnsService').CNSService;
+module.exports.EventLogService = require('./event').EventLogService;
+module.exports.EVENT_LOG_FILTER_PUSH_STATUS = require('./event').EVENT_LOG_FILTER_PUSH_STATUS;
+module.exports.TopicConvertor = require('./event').TopicConvertor;
 
 module.exports.CRUDService = require('./precompiled/crud').CRUDService;
 module.exports.Table = require('./precompiled/crud').Table;
@@ -30,3 +33,4 @@ module.exports.compile = require('./compile/compile').compile;
 module.exports.createContractClass = require('./compile/contractClass').createContractClass;
 
 module.exports.Configuration = require('./common/configuration').Configuration;
+module.exports.hash = require('./common/utils').hash;

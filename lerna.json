@@ -1,7 +1,8 @@
 {
     "lerna": "3.16.1",
     "packages": [
-        "packages/*"
+        "packages/*",
+        "test/"
     ],
     "version": "1.0.0",
     "hoist": true

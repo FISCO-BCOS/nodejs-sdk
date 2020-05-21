@@ -25,10 +25,6 @@ class ServiceBase {
             get: () => {
                 if (!this._config) {
                     this._config = Configuration.getInstance();
-
-                    // To avoid infinite recursive call, I place account setting here ...
-                    let account = '0x' + web3Utils.privateKeyToAddress(this._config.privateKey).toString('hex');
-                    this._config.account = account;
                 }
 
                 return this._config;

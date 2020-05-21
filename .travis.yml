@@ -9,7 +9,7 @@ env:
     - NODEJS_VERSION=10
 os:
   - linux
-  - osx
+  # - osx
 git:
     depth: 5
 matrix:
@@ -24,21 +24,18 @@ matrix:
         #   script: |
         #     bash .ci/code_security_audit.sh
 
-        - language: node_js
-          os: linux
+        - os: linux
           dist: xenial
           sudo: required
 
-        - language: node_js
-          os: linux
+        - os: linux
           dist: xenial
           sudo: required
           script: |
             bash .ci/ci_check_gm.sh
 
-        - language: node_js
-          os: osx
-          osx_image: xcode11.3
+        - os: osx
+          osx_image: xcode11.4
 
 addons:
   apt:

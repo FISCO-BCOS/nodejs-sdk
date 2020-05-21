@@ -1,9 +1,26 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+'use strict';
+
 const isArray = require('isarray');
 const path = require('path');
 const fs = require('fs');
 const pemFile = require('pem-file');
 const forge = require('node-forge');
 const deepcopy = require('deepcopy');
+const web3Utils = require('./web3lib/utils');
 const ConfigurationError = require('./exceptions').ConfigurationError;
 
 const EC_PRIVATE_KEY_PREFIX = '30740201010420';
@@ -46,6 +63,14 @@ class Configuration {
             Configuration.instance = new Configuration();
         }
         return Configuration.instance;
+    }
+
+    static addAccount(id, privateKey) {
+        let account = '0x' + web3Utils.privateKeyToAddress(privateKey).toString('hex');
+        Configuration.getInstance().config.accounts[id] = {
+            account,
+            privateKey
+        };
     }
 
     static reset() {
@@ -153,11 +178,10 @@ class Configuration {
         this.solc = config.solc;
     }
 
-    _parsePrivateKey(config) {
-        if (!config.privateKey || typeof config.privateKey !== 'object') {
-            throw new ConfigurationError('invalid `pem` property');
+    _parsePrivateKey(privateKey) {
+        if (typeof privateKey !== 'object') {
+            throw new ConfigurationError('invalid `privateKey` property');
         } else {
-            let privateKey = config.privateKey;
             if (!privateKey.type || !(['pem', 'ecrandom', 'p12'].includes(privateKey.type))) {
                 throw new ConfigurationError('invalid `type` property in `privateKey`');
             }
@@ -177,16 +201,14 @@ class Configuration {
                         let encodedPem = fs.readFileSync(pemFilePath);
                         let decodedPem = pemFile.decode(encodedPem).toString('hex');
 
-                        this.privateKey = decodePem(decodedPem, this.encryptType);
-                        break;
+                        return decodePem(decodedPem, this.encryptType);
                     }
                 case 'ecrandom':
                     {
                         if (privateKey.value.length !== 64) {
                             throw new ConfigurationError('the length of private key should be 128 bits');
                         }
-                        this.privateKey = privateKey.value;
-                        break;
+                        return privateKey.value;
                     }
                 case 'p12':
                     {
@@ -212,11 +234,40 @@ class Configuration {
                         let encodedPem = forge.pem.encode(msg);
                         let decodedPem = pemFile.decode(encodedPem).toString('hex');
 
-                        this.privateKey = decodePem(decodedPem, this.encryptType);
-                        break;
+                        return decodePem(decodedPem, this.encryptType);
                     }
                 default:
                     throw new ConfigurationError('should not go here');
+            }
+        }
+    }
+
+    _parseAccounts(config) {
+        if (!config.accounts || typeof config.accounts !== 'object') {
+            throw new ConfigurationError('invalid `accounts` property');
+        } else {
+            this.accounts = {};
+            for (let id in config.accounts) {
+                if (config.accounts.hasOwnProperty(id)) {
+                    if (typeof id !== 'string') {
+                        throw new ConfigurationError(`invalid id of account: ${id}`);
+                    }
+
+                    if (!this.accounts[id]) {
+                        this.accounts[id] = {
+                            'privateKey': this._parsePrivateKey(config.accounts[id])
+                        };
+                    } else {
+                        throw new ConfigurationError(`duplicate id of private key: ${id}`);
+                    }
+                }
+            }
+
+            for (let id in this.accounts) {
+                if (this.accounts.hasOwnProperty(id)) {
+                    let account = '0x' + web3Utils.privateKeyToAddress(this.accounts[id].privateKey, this.encryptType).toString('hex');
+                    this.accounts[id].account = account;
+                }
             }
         }
     }
@@ -246,7 +297,7 @@ class Configuration {
         this._parseChainID(config);
         this._parseTimeout(config);
         this._parseSolc(config);
-        this._parsePrivateKey(config);
+        this._parseAccounts(config);
     }
 }
 
