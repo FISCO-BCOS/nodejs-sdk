@@ -9,7 +9,7 @@
 
 ---
 
-Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)提供面向Node.js语言的应用程序接口，使用Node.js SDK可以简单快捷地开发基于FISCO-BCOS的Node.js应用。Node.js SDK**仅支持**v2.0.0及以上的[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)版本。
+Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)提供面向Node.js语言的应用程序接口，使用Node.js SDK可以简单快捷地开发基于FISCO-BCOS的Node.js应用。Node.js SDK**仅支持**v2.0.0及以上版本的[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BCOS/tree/master)。
 
 ## 关键特性
 
@@ -145,7 +145,7 @@ npm run bootstrap
 
 ## 二、CLI工具使用
 
-用户即使不开发应用程序，也可以使用Node.js SDK中自带CLI工具在命令行中方便快捷地部署及调用合约、管理区块链状态、执行CRUD操作等。CLI工具也能够方便地嵌入到命令行脚本中，进行简单的应用开发。同时，CLI工具完全基于在Node.js SDK提供的API的开发而成，可作为一个展示如何使用Node.js SDK API进行二次开发的Demo。
+用户即使不开发应用程序，也可以使用Node.js SDK中自带CLI工具在命令行中方便快捷地部署及调用合约、管理区块链状态、执行CRUD操作等。CLI工具也能够方便地嵌入到命令行脚本中，进行简单的应用开发。同时，CLI工具完全基于Node.js SDK提供的API的开发而成，可作为一个展示如何使用Node.js SDK API进行二次开发的Demo。
 
 ### 2.1 快速建链（可选）
 
@@ -1170,7 +1170,7 @@ Call a contract by a function and parameters
 
 - 我们欢迎并非常感谢您的贡献，请参阅[代码贡献流程](https://mp.weixin.qq.com/s/hEn2rxqnqp0dF6OKH6Ua-A)。
 - 如项目对您有帮助，欢迎star支持！
-- 诚挚感谢以下开发人员对Node.js SDK项目的宝贵贡献（排名不分先后），开源社区因为有你们而更加精彩：
+- 诚挚感谢以下开发人员对Node.js SDK项目的宝贵贡献（排名不分先后），开源社区因为你们而更加精彩：
   - ***leayingly***
     - 个人主页：[https://github.com/leayingly](https://github.com/leayingly)
     - 贡献：Node.js多个重要feature（事件回调、多用户加载等）的推动者，修复CLI工具调用合约时不能处理合约方法重载的bug、编译0.5版本合约时不能正确处理编译器报错的bug
