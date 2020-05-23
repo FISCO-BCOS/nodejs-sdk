@@ -196,10 +196,6 @@ function createNewSocket(ip, port, authentication) {
 
     let tlsSocket = tls.connect(clientOptions);
 
-    tlsSocket.on('error', function (error) {
-        throw new Error(error);
-    });
-
     let socketID = `${ip}:${port}`;
 
     lastBytesRead.set(socketID, 0);
@@ -335,13 +331,20 @@ function channelPromise(data, type, node, authentication, timeout = null) {
     let ip = node.ip;
     let port = node.port;
 
-    let connectionID = `${ip}${port}`;
-    if (!sockets.has(connectionID)) {
+    let socketID = `${ip}:${port}`;
+    if (!sockets.has(socketID)) {
         let newSocket = createNewSocket(ip, port, authentication);
         newSocket.unref();
-        sockets.set(connectionID, newSocket);
+        sockets.set(socketID, newSocket);
+
+        newSocket.on('error', function (error) {
+            buffers.delete(socketID);
+            lastBytesRead.delete(socketID);
+            sockets.delete(socketID);
+            throw new NetworkError(error);
+        });
     }
-    let tlsSocket = sockets.get(connectionID);
+    let tlsSocket = sockets.get(socketID);
 
     let dataPackage = data;
     if (type) {

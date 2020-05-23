@@ -1171,9 +1171,12 @@ Call a contract by a function and parameters
 - 我们欢迎并非常感谢您的贡献，请参阅[代码贡献流程](https://mp.weixin.qq.com/s/hEn2rxqnqp0dF6OKH6Ua-A)。
 - 如项目对您有帮助，欢迎star支持！
 - 诚挚感谢以下开发人员对Node.js SDK项目的宝贵贡献（排名不分先后），开源社区因为你们而更加精彩：
+  - ***slinzhang007***
+    - 个人主页：https://github.com/slinzhang007
+    - 贡献：发现了Node.js SDK无法从网络异常中恢复的bug并给出了修复方案
   - ***leayingly***
     - 个人主页：[https://github.com/leayingly](https://github.com/leayingly)
-    - 贡献：Node.js多个重要feature（事件回调、多用户加载等）的推动者，修复CLI工具调用合约时不能处理合约方法重载的bug、编译0.5版本合约时不能正确处理编译器报错的bug
+    - 贡献：Node.js SDK多个重要feature（事件回调、多用户加载等）的推动者，修复CLI工具调用合约时不能处理合约方法重载的bug、编译0.5版本合约时不能正确处理编译器报错的bug
   - ***rexsea***
     - 个人主页：[https://github.com/rexsea](https://github.com/rexsea)
     - 贡献：修复CRUDService中存在变量重复定义的bug
