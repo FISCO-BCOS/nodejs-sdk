@@ -34,7 +34,7 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query the number of most recent block'
     },
     () => {
-        return web3jService.getBlockNumber().then(result => {
+        return web3jService.getBlockNumber().then((result) => {
             result.result = parseInt(result.result, '16').toString();
             return result;
         });
@@ -47,7 +47,7 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query the pbft view of node',
     },
     () => {
-        return web3jService.getPbftView().then(result => {
+        return web3jService.getPbftView().then((result) => {
             result.result = parseInt(result.result, '16').toString();
             return result;
         });
@@ -316,7 +316,7 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query pending transactions size'
     },
     () => {
-        return web3jService.getPendingTxSize().then(result => {
+        return web3jService.getPendingTxSize().then((result) => {
             result.result = parseInt(result.result, 16).toString();
             return result;
         });
@@ -329,7 +329,7 @@ interfaces.push(produceSubCommandInfo(
         describe: 'Query total transaction count'
     },
     () => {
-        return web3jService.getTotalTransactionCount().then(result => {
+        return web3jService.getTotalTransactionCount().then((result) => {
             result.result.blockNumber = parseInt(result.result.blockNumber, 16).toString();
             result.result.failedTxSum = parseInt(result.result.failedTxSum, 16).toString();
             result.result.txSum = parseInt(result.result.txSum, 16).toString();
@@ -479,10 +479,10 @@ interfaces.push(produceSubCommandInfo(
 
         let inputsReg = /\(.*\)/;
         let inputs = inputsReg.exec(functionName);
-        if(inputs) {
+        if (inputs) {
             inputs = inputs[0];
             inputs = inputs.substring(1, inputs.length - 1).split(',');
-            inputs = inputs.map(input=>input.trim());
+            inputs = inputs.map(input => input.trim());
         }
 
         let pureFunctionName = functionName.replace(inputsReg, '');
@@ -492,7 +492,7 @@ interfaces.push(produceSubCommandInfo(
             throw new Error(`no ABI for method \`${functionName}\` of contract \`${contractName}\``);
         }
 
-        let decoder = decode.createDecoder(abi);
+        let decoder = decode.createMethodDecoder(abi);
 
         if (abi.constant) {
             return web3jService.call(contractAddress, abi, parameters).then((result) => {

@@ -18,11 +18,13 @@
         "install-solc-0.4": "cd ./packages/api/compile/compilers/solc-0.4 && npm install",
         "install-solc-0.5": "cd ./packages/api/compile/compilers/solc-0.5 && npm install",
         "clean-solc-0.4": "rm -rf ./packages/api/compile/compilers/solc-0.4/node_modules",
-        "clean-solc-0.5": "rm -rf ./packages/api/compile/compilers/solc-0.5/node_modules"
+        "clean-solc-0.5": "rm -rf ./packages/api/compile/compilers/solc-0.5/node_modules",
+        "test": "mocha"
     },
     "dependencies": {},
     "devDependencies": {
-        "lerna": "^3.16.1"
+        "lerna": "^3.16.1",
+        "mocha": "^7.1.2"
     },
     "nyc": {
         "exclude": [

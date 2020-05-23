@@ -29,7 +29,7 @@ module.exports.produceSubCommandInfo = function (subCommand, handler) {
                 let ret = handler(argv);
                 if (ret) {
                     if (ret instanceof Promise) {
-                        ret.then(result => {
+                        ret.then((result) => {
                             if (result instanceof Object) {
                                 if (isJSON(result, true)) {
                                     result = JSON.stringify(result);
@@ -89,8 +89,8 @@ const compareInputs = (inputsAbi, inputs) => {
         return false;
     }
 
-    for(let i = 0; i < inputsAbi.length; ++i) {
-        if(inputs[i] !== inputsAbi[i].type) {
+    for (let i = 0; i < inputsAbi.length; ++i) {
+        if (inputs[i] !== inputsAbi[i].type) {
             return false;
         }
     }
@@ -112,7 +112,7 @@ module.exports.getAbi = function (contractName, functionName, inputs) {
 
     let abi = JSON.parse(fs.readFileSync(abiPath));
     if (functionName) {
-        if(inputs && inputs.length > 0) {
+        if (inputs && inputs.length > 0) {
             return abi.find((item) => {
                 return item.type === 'function' && item.name === functionName && compareInputs(item.inputs, inputs);
             });

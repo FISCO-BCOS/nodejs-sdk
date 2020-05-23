@@ -34,7 +34,7 @@ class ConsensusService extends ServiceBase {
     }
 
     async _isValidNodeID(nodeID) {
-        return this.web3jService.getNodeIDList().then(result => {
+        return this.web3jService.getNodeIDList().then((result) => {
             let nodeIDs = result.result;
             if (nodeIDs.includes(nodeID)) {
                 return true;

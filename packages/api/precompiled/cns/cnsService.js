@@ -14,11 +14,10 @@
 
 'use strict';
 
-const utils = require('../../common/utils');
+const { isValidAddress } = require('../../common/utils');
 const constant = require('./constant');
 const PrecompiledError = require('../../common/exceptions').PrecompiledError;
 const { check, Str } = require('../../common/typeCheck');
-const ethers = require('ethers');
 const handleReceipt = require('../common').handleReceipt;
 const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
@@ -34,17 +33,12 @@ class CNSService extends ServiceBase {
         this.web3jService.resetConfig();
     }
 
-    _isValidAddress(address) {
-        let addressNoPrefix = utils.cleanHexPrefix(address);
-        return addressNoPrefix.length === constant.ADDRESS_LENGTH_IN_HEX;
-    }
-
     _isValiadVersion(version) {
         return version.length <= constant.CNS_VERSION_MAX_LENGTH;
     }
 
     _isValidCnsName(input) {
-        return input && (input.includes(':') || !this._isValidAddress(input));
+        return input && (input.includes(':') || !isValidAddress(input));
     }
 
     async _send(abi, parameters, readOnly = false) {

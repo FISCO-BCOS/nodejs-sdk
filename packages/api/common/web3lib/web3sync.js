@@ -1,6 +1,3 @@
-/*jshint esversion: 8 */
-/*jshint node: true */
-
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,12 +127,13 @@ function getTxData(func, params) {
  * @param {Object} func function info contains signature and input types
  * @param {Array} params parameters of the transaction
  * @param {Number} blockLimit block limit
+ * @param {who} the id of account(private key)
  * @return {String} signed transaction data
  */
-function getSignTx(config, to, func, params, blockLimit) {
+function getSignTx(config, to, func, params, blockLimit, who = null) {
     let groupID = config.groupID;
-    let account = config.account;
-    let privateKey = config.privateKey;
+    let account = config.accounts[who].account;
+    let privateKey = config.accounts[who].privateKey;
 
     let txData = getTxData(func, params);
 
@@ -159,12 +157,13 @@ function getSignTx(config, to, func, params, blockLimit) {
  * @param {Object} config configuration contains groupId, account, privateKey
  * @param {Buffer} bin contract bin
  * @param {Number} blockLimit block limit
+ * @param {who} the id of account(private key)
  * @return {String} signed deploy transaction data
  */
-function getSignDeployTx(config, bin, blockLimit) {
+function getSignDeployTx(config, bin, blockLimit, who) {
     let groupID = config.groupID;
-    let account = config.account;
-    let privateKey = config.privateKey;
+    let account = config.accounts[who].account;
+    let privateKey = config.accounts[who].privateKey;
     let txData = bin.indexOf('0x') === 0 ? bin : ('0x' + bin);
 
     let postdata = {

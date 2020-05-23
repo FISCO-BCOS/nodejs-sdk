@@ -1,6 +1,3 @@
-/*jshint esversion: 8 */
-/*jshint node: true */
-
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +18,6 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const semver = require('semver');
-const events = require('events');
 const childProcess = require('child_process');
 const uuid = require('uuid');
 const CompileError = require('../common/exceptions').CompileError;

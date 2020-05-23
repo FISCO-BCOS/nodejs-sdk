@@ -62,14 +62,31 @@ interfaces.push(produceSubCommandInfo(
                     describe: 'The parameters(splited by space) of constructor',
                     flag: FLAGS.VARIADIC
                 }
+            },
+            {
+                name: 'id',
+                options: {
+                    type: 'string',
+                    describe: 'The id of a private key'
+                }
             }
         ]
     },
     (argv) => {
         return permissionService.listCNSManager().then(cnsManagers => {
+            let id = argv.id;
+
             const Configuration = require('../../api/common/configuration').Configuration;
-            if (cnsManagers.length !== 0 && cnsManagers.findIndex(value => value.address === Configuration.getInstance().account) < 0) {
-                throw new Error(OutputCode.getOutputMessage(OutputCode.PermissionDenied));
+            if (cnsManagers.length !== 0) {
+                let account = Configuration.getInstance().accounts[id];
+                if (!account) {
+                    throw new Error(`invalid id of account: ${id}`);
+                }
+                account = account.account;
+
+                if (cnsManagers.findIndex((value) => value.address === account) < 0) {
+                    throw new Error(OutputCode.getOutputMessage(OutputCode.PermissionDenied));
+                }
             }
 
             let contractName = path.basename(argv.contractName, '.sol');
@@ -97,12 +114,13 @@ interfaces.push(produceSubCommandInfo(
                     if (result.status === '0x0') {
                         let contractAddress = result.contractAddress;
                         let abi = fs.readFileSync(path.join(outputDir, `${contractName}.abi`)).toString();
-                        cnsService.registerCns(contractName, contractVersion, contractAddress, abi);
-                        return {
-                            status: result.status,
-                            contractAddress,
-                            transactionHash: result.transactionHash
-                        };
+                        return cnsService.registerCns(contractName, contractVersion, contractAddress, abi).then(() => {
+                            return {
+                                status: result.status,
+                                contractAddress,
+                                transactionHash: result.transactionHash
+                            };
+                        });
                     } else {
                         return {
                             status: result.status,
@@ -224,7 +242,7 @@ interfaces.push(produceSubCommandInfo(
             }
 
             let functionName = argv.function;
-            let decoder = decode.createDecoder(abi, functionName);
+            let decoder = decode.createMethodDecoder(abi, functionName);
             let parameters = argv.parameters;
             abi = abi.find((item) => {
                 return item.type === 'function' && item.name === functionName;

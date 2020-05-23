@@ -19,6 +19,8 @@ const isArray = require('isarray');
 const assert = require('assert');
 const deepcopy = require('deepcopy');
 const utils = require('../common/web3lib/utils');
+const hash = require('../common/web3lib/utils').hash;
+const { Configuration, SM_CRYPTO } = require('../common/configuration');
 
 function formalize(data, type) {
     // for user-defined struct
@@ -61,10 +63,18 @@ function formalize(data, type) {
         return data.toNumber();
     }
 
+    if (ethers.utils.Interface.isIndexed(data)) {
+        return data.hash;
+    }
+
+    if (type.type === 'address') {
+        return data.toLowerCase();
+    }
+
     return data;
 }
 
-class Decoder {
+class MethodDecoder {
     constructor(method) {
         this.method = method;
         this.decoder = ethers.utils.defaultAbiCoder;
@@ -108,20 +118,79 @@ class Decoder {
     }
 }
 
-module.exports.createDecoder = function (abi, name) {
+class EventDecoder {
+    constructor(event) {
+        this.event = event;
+        this.iface = new ethers.utils.Interface([event]);
+
+        // hack for SM crypto
+        if (Configuration.getInstance().encryptType === SM_CRYPTO) {
+            this.topicMapper = new Map();
+
+            for (var name in this.iface.events) {
+                if (name.indexOf('(') === -1) {
+                    continue;
+                }
+                let event = this.iface.events[name];
+                this.topicMapper.set('0x' + hash(event.signature, SM_CRYPTO), event.topic);
+            }
+        }
+    }
+
+    decodeEvent(log) {
+        // hack for SM crypto
+        if (Configuration.getInstance().encryptType === SM_CRYPTO) {
+            if (log.topics && log.topics.length >= 1) {
+                log.topics[0] = this.topicMapper.get(log.topics[0]);
+            }
+        }
+
+        let logDesc = this.iface.parseLog(log);
+        let inputTypes = this.event.inputs;
+        let values = {};
+
+        inputTypes.forEach((input, index) => {
+            let name = input.name;
+            if (typeof logDesc.values[name] !== 'undefined' && logDesc.values[name] !== null) {
+                values[name] = formalize(logDesc.values[name], input);
+            }
+            values[index] = formalize(logDesc.values[index], input);
+        });
+        return values;
+    }
+}
+
+module.exports.createMethodDecoder = function (abi, name) {
     if (!name) {
         if (isArray(abi)) {
             throw new Error('no ABI desription of the method');
         }
 
         let iface = new ethers.utils.Interface([abi]);
-        return new Decoder(iface.functions[abi.name]);
+        return new MethodDecoder(iface.functions[abi.name]);
     } else {
         let iface = new ethers.utils.Interface(abi);
         if (!iface.functions[name]) {
             throw new Error(`no method named as ${name}`);
         }
 
-        return new Decoder(iface.functions[name]);
+        return new MethodDecoder(iface.functions[name]);
+    }
+};
+
+module.exports.createEventDecoder = function (abi, name) {
+    if (!name) {
+        if (isArray(abi)) {
+            throw new Error('no ABI desription of the event');
+        }
+
+        return new EventDecoder(abi);
+    } else {
+        let iface = new ethers.utils.Interface(abi);
+        if (!iface.events[name]) {
+            throw new Error(`no event named as ${name}`);
+        }
+
+        return new EventDecoder(iface.events[name]);
     }
 };
