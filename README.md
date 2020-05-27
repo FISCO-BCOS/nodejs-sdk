@@ -84,10 +84,10 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
       source ~/.$(basename $SHELL)rc
 
       # 安装Node.js 8
-      nvm install 8
+      nvm install 12
 
       # 将Node.js 8设置为默认Node.js版本
-      nvm use 8
+      nvm use 12
       ```
 
   - 如果您使用Windows：
@@ -1155,22 +1155,22 @@ Call a contract by a function and parameters
     - 如果`type`为`pem`，则`value`为pem文件的路径，如果是相对路径，需要以配置文件所在的目录为相对路径起始位置。
     - 如果`type`为`p12`，则`value`为p12文件的路径，如果是相对路径，需要以配置文件所在的目录为相对路径起始位置。
   - `password`：`String`，可选。如果`type`为`p12`，则需要此字段以解密私钥，否则会忽略该字段。
-- `nodes`: `[Object]`，必需。FISCO BCOS节点列表，CLI工具在使用时会从该列表中随机挑选一个节点进行通信，要求节点数目必须 >= 1。每个节点包含两个字段：
+- `nodes`: `[Object]`，必需。FISCO BCOS节点列表，Node.js SDK在发送网络请求时会从该列表中随机挑选一个节点进行通信，要求节点数目必须 >= 1。每个节点包含两个字段：
   - `ip`: `String`，必需。FISCO BCOS节点的IP地址
   - `port`: `String`，必需，FISCO BCOS节点的Channel端口
 - `authentication`：`Object`。必需，包含建立Channel通信时所需的认证信息，一般在建链过程中自动生成。`authentication`包含三个必需字段：
   - `key`: `String`，必需。私钥文件路径，如果是相对路径，需要以配置文件所在的目录为相对路径起始位置。
   - `cert`: `String`，必需。证书文件路径，如果是相对路径，需要以配置文件所在的目录为相对路径起始位置。
   - `ca`: `String`，必需。CA根证书文件路径，如果是相对路径，需要以配置文件所在的目录为相对路径起始位置。
-- `groupID`: `Number`。CLI所操作的链的群组ID
-- `timeout`: `Number`。CLI工具所连节点可能会陷入停止响应的状态。为避免陷入无限等待，CLI工具的每一项操作在`timeout`之后若仍没有得到结果，则强制退出。`timeout`的单位为毫秒。
+- `groupID`: `Number`。群组ID
+- `timeout`: `Number`。Node.js SDK所连的节点可能会陷入停止响应的状态。为避免陷入无限等待，Node.js SDK的每一项操作在`timeout`之后若仍没有得到结果，则强制结束并向上抛出异常。`timeout`的单位为毫秒。
 - `solc`: `String`，可选。Node.js SDK已经自带0.4.26及0.5.10版本的Solidity编译器，如果您有特殊的编译器需求，可以设置本配置项为您的编译器的执行路径或全局命令。
 
 ## 五、贡献代码
 
 - 我们欢迎并非常感谢您的贡献，请参阅[代码贡献流程](https://mp.weixin.qq.com/s/hEn2rxqnqp0dF6OKH6Ua-A)。
 - 如项目对您有帮助，欢迎star支持！
-- 诚挚感谢以下开发人员对Node.js SDK项目的宝贵贡献（排名不分先后），开源社区因为你们而更加精彩：
+- 诚挚感谢以下开发人员对Node.js SDK项目的宝贵贡献（排名不分先后），开源社区因你们而更加精彩：
   - ***slinzhang007***
     - 个人主页：https://github.com/slinzhang007
     - 贡献：发现了Node.js SDK无法从网络异常中恢复的bug并给出了修复方案
