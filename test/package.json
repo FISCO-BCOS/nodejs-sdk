@@ -22,6 +22,7 @@
         }
     ],
     "devDependencies": {
+        "ethers": "^4.0.47",
         "should": "^13.2.3"
     }
 }

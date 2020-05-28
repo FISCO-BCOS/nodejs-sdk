@@ -15,6 +15,9 @@
 'use strict';
 
 const createMethodDecoder = require('../decoder').createMethodDecoder;
+const ethers = require('ethers');
+const deepcopy = require('deepcopy');
+const { getTxData, encodeParams } = require('../common/web3lib/web3sync');
 
 function createCodeForAddressCheck() {
     let code =
@@ -27,8 +30,8 @@ function createCodeForAddressCheck() {
 function createCodeForConstantMethod(index) {
     let code =
         createCodeForAddressCheck() +
-        `let abi = this._functionABIs[${index}];\n` +
-        `let decoder = this._functionDecoders[${index}];\n` +
+        `let abi = this._functionABIMapper.get("${index}").abi;\n` +
+        `let decoder = this._functionABIMapper.get("${index}").decoder;\n` +
         'return this.web3jService.call(this.address, abi, Array.from(arguments)).then((result) => {\n' +
         '    let status = result.result.status;\n' +
         '    let output = result.result.output;\n' +
@@ -56,8 +59,8 @@ function createCodeForConstantMethod(index) {
 function createCodeForMutableMethod(index) {
     let code =
         createCodeForAddressCheck() +
-        `let abi = this._functionABIs[${index}];\n` +
-        `let decoder = this._functionDecoders[${index}];\n` +
+        `let abi = this._functionABIMapper.get("${index}").abi;\n` +
+        `let decoder = this._functionABIMapper.get("${index}").decoer;\n` +
         'return this.web3jService.sendRawTransaction(this.address, abi, Array.from(arguments)).then((result) => {\n' +
         '    let status = result.status;\n' +
         '    let output = result.output;\n' +
@@ -99,12 +102,33 @@ function createCodeForGetAddress() {
     return code;
 }
 
-function createCodeForGetABIOf() {
+function createCodeForGetEventABIOf() {
     let code =
         'if(!this._eventABIMapper.has(name)) {\n' +
-        '    throw new Error(`no event ABI named as: ${name}`);\n' +
+        '    throw new Error(`no event named as: ${name}`);\n' +
         '}\n' +
         'return this._eventABIMapper.get(name);';
+
+    return code;
+}
+
+function createCodeForGetFunctionABIOf() {
+    let code =
+        'if(!this._functionABIMapper.has(name)) {\n' +
+        '    throw new Error(`no function named as: ${name}`);\n' +
+        '}\n' +
+        'return this._functionABIMapper.get(name).abi;';
+
+    return code;
+}
+
+function createCodeForGetFunctionMetaOf() {
+    let code =
+        'if(!this._functionABIMapper.has(name)) {\n' +
+        '    throw new Error(`no function named as: ${name}`);\n' +
+        '}\n' +
+        'return this._functionABIMapper.get(name).meta;';
+
     return code;
 }
 
@@ -122,8 +146,7 @@ function createContractClass(name, abi, bin) {
                 name: contractClass.name,
                 abi: contractClass.abi,
                 bin: contractClass.bin,
-                _functionABIs: [],
-                _functionDecoders: [],
+                _functionABIMapper: new Map(),
                 _eventABIMapper: new Map()
             };
 
@@ -133,26 +156,65 @@ function createContractClass(name, abi, bin) {
 
                 switch (item.type) {
                     case 'function': {
-                        if (contract[item.name]) {
+                        if (contract._functionABIMapper.has(contract[item.name])) {
                             throw new Error('function override is not allowed');
                         }
 
+                        let iface = new ethers.utils.Interface([item]);
+                        let func = iface.functions[item.name];
+
+                        contract._functionABIMapper.set(item.name, {
+                            abi: item,
+                            decoder: createMethodDecoder(item),
+                            meta: func
+                        });
+
                         let parameters = item.inputs.map(input => input.name);
                         parameters = parameters.join(',');
-                        contract._functionABIs.push(item);
-                        contract._functionDecoders.push(createMethodDecoder(item));
 
                         if (item.constant) {
-                            contract[item.name] = new Function(parameters, createCodeForConstantMethod(contract._functionABIs.length - 1));
+                            contract[item.name] = new Function(parameters, createCodeForConstantMethod(item.name));
                         } else {
-                            contract[item.name] = new Function(parameters, createCodeForMutableMethod(contract._functionABIs.length - 1));
+                            contract[item.name] = new Function(parameters, createCodeForMutableMethod(item.name));
                         }
+
+                        Object.defineProperty(contract[item.name], 'encodeABI', {
+                            value: (params = []) => {
+                                return getTxData(func, params);
+                            },
+                            writable: false,
+                            configurable: false,
+                            enumerable: false
+                        });
+
                         break;
                     }
                     case 'constructor': {
                         hasExplicitConstructor = true;
                         let parameters = item.inputs.map(input => input.name);
                         contract.$deploy = new Function('web3jService,' + parameters.join(','), createCodeForConstructor());
+
+                        let contractAbi = new ethers.utils.Interface(contract.abi);
+                        let inputs = contractAbi.deployFunction.inputs;
+
+                        Object.defineProperty(contract.$deploy, 'encodeABI', {
+                            value: (bin, params = []) => {
+                                if (inputs.length !== params.length) {
+                                    throw new Error(`wrong number of parameters for constructor, expected ${inputs.length} but got ${params.length}`);
+                                }
+
+                                let contractBin = deepcopy(bin);
+                                if (params.length !== 0) {
+                                    let encodedParams = encodeParams(inputs, params);
+                                    contractBin += encodedParams.toString('hex').substr(2);
+                                }
+
+                                return contractBin.indexOf('0x') === 0 ? contractBin : ('0x' + contractBin);
+                            },
+                            writable: false,
+                            configurable: false,
+                            enumerable: false
+                        });
                         break;
                     }
                     case 'event': {
@@ -175,8 +237,12 @@ function createContractClass(name, abi, bin) {
             // `$getAddress()`, get address of the deployed contract
             contract.$getAddress = new Function('', createCodeForGetAddress());
 
-            // `$getEventABIOf(name)`, get ABI of the specified name, return null if the abi not exists
-            contract.$getEventABIOf = new Function('name', createCodeForGetABIOf());
+            // `$getEventABIOf(name)`, get event ABI of the specified name, throw if the abi not exists
+            contract.$getEventABIOf = new Function('name', createCodeForGetEventABIOf());
+
+            // `$getFunctionABIOf(name)`, get function ABI of the specified name, throw if the abi not exists
+            contract.$getFunctionABIOf = new Function('name', createCodeForGetFunctionABIOf());
+
             return contract;
         }
     };
