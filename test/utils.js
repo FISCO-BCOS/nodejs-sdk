@@ -17,7 +17,8 @@
 module.exports.waitFor = async function (pred) {
     await Promise.all([new Promise((resolve) => {
         let handle = setInterval(async () => {
-            if (pred()) {
+            let flag = await pred();
+            if (flag) {
                 clearInterval(handle);
                 resolve();
             }

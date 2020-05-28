@@ -1107,6 +1107,18 @@ Call a contract by a function and parameters
   should.equal(ret[0], 'こんにちわ！');
   ```
 
+  动态函数不仅可以被直接调用，其自身也携带一些辅助函数，这些辅助函数包括：
+
+  - encodeABI
+
+    **功能**：根据指定参数生成调用对应合约方法的ABI编码，生成的编码可用于发送交易或作为参数传递给其他智能合约等
+
+    **参数**：
+
+    - `[Object]`，params。参数列表
+
+    **返回值**：`String`，ABI编码
+
 ### 3.9 EventLogService
 
 **引用方式**：`require('packages/api').EventLogService`

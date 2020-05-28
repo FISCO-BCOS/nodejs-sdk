@@ -14,31 +14,26 @@
 
 'use strict';
 
-const path = require('path');
 const should = require('should');
-const { Configuration, Web3jService, compile } = require('../packages/api');
-const { getBlockHeight } = require('../packages/api/common/blockHeightCache');
-const { waitFor } = require('./utils');
+const path = require('path');
+const { Configuration, compile } = require('../packages/api');
 
 Configuration.setConfig(path.join(__dirname, './conf/config.json'));
 
 let contractPath = path.join(__dirname, './contracts/HelloWorld.sol');
 let contractClass = compile(contractPath);
-let helloWorld = contractClass.newInstance();
-let web3j = new Web3jService();
+let eventTest = contractClass.newInstance();
 
-describe('test for block height cache', () => {
-    it('get block height', async () => {
-        let currentBlockHeight1 = await getBlockHeight(web3j);
-        should.exist(currentBlockHeight1);
-
-        await helloWorld.$deploy(web3j);
-        await waitFor(async () => {
-            let height = await getBlockHeight(web3j);
-            return height !== currentBlockHeight1;
+describe('test for getFunctionABIOf', function () {
+    it('inexistent', () => {
+        should.throws(() => {
+            eventTest.$getFunctionABIOf('test');
         });
+    });
 
-        let currentBlockHeight2 = await getBlockHeight(web3j);
-        should.equal(currentBlockHeight2, currentBlockHeight1 + 1);
+    it('existent', () => {
+        let set = eventTest.$getFunctionABIOf('set');
+        should.exist(set);
+        should.equal(set.name, 'set');
     });
 });
