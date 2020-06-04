@@ -28,11 +28,9 @@ const FLAGS = require('./interfaces/base').FLAGS;
 const yargs = require('yargs/yargs');
 const fs = require('fs');
 const path = require('path');
-const { ContractsDir, ContractsOutputDir } = require('./constant');
 const isArray = require('isarray');
-const getAbi = require('./interfaces/base').getAbi;
-const Configuration = require('../api/common/configuration').Configuration;
-Configuration.setConfig(path.join(__dirname, './conf/config.json'));
+const { ContractsDir, ContractsOutputDir } = require('./constant');
+const { getAbi } = require('./interfaces/base');
 
 let interfaces = [];
 interfaces = interfaces.concat(require('./interfaces/account').interfaces);

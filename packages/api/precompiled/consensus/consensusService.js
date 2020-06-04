@@ -14,8 +14,6 @@
 
 'use strict';
 
-const utils = require('../../common/utils');
-const PrecompiledError = require('../../common/exceptions').PrecompiledError;
 const constant = require('./constant');
 const { OutputCode, handleReceipt } = require('../common');
 const { check, Str } = require('../../common/typeCheck');
@@ -23,14 +21,14 @@ const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
 class ConsensusService extends ServiceBase {
-    constructor() {
-        super();
-        this.web3jService = new Web3jService();
+    constructor(config) {
+        super(config);
+        this.web3jService = new Web3jService(config);
     }
 
-    resetConfig() {
-        super.resetConfig();
-        this.web3jService.resetConfig();
+    resetConfig(config) {
+        super.resetConfig(config);
+        this.web3jService.resetConfig(config);
     }
 
     async _isValidNodeID(nodeID) {

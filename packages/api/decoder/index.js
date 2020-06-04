@@ -20,7 +20,7 @@ const assert = require('assert');
 const deepcopy = require('deepcopy');
 const utils = require('../common/web3lib/utils');
 const hash = require('../common/web3lib/utils').hash;
-const { Configuration, SM_CRYPTO } = require('../common/configuration');
+const { ENCRYPT_TYPE } = require('../common/configuration');
 
 function formalize(data, type) {
     // for user-defined struct
@@ -95,13 +95,11 @@ class MethodDecoder {
     }
 
     decodeOutput(output) {
-        let methodID = utils.encodeFunctionName(this.method.signature);
         if (output.startsWith('0x08c379a0')) {
             output = '0x' + output.substr(10);
             let error = this.decoder.decode(['string'], output);
             let ret = {
                 function: this.method.signature,
-                methodID,
                 error
             };
             return ret;
@@ -111,7 +109,6 @@ class MethodDecoder {
         let data = this.decoder.decode(outputTypes, output);
         let ret = {
             function: this.method.signature,
-            methodID,
             result: formalize(data, outputTypes)
         };
         return ret;
@@ -119,12 +116,13 @@ class MethodDecoder {
 }
 
 class EventDecoder {
-    constructor(event) {
+    constructor(event, encryptType) {
         this.event = event;
         this.iface = new ethers.utils.Interface([event]);
+        this.encryptType = encryptType;
 
-        // hack for SM crypto
-        if (Configuration.getInstance().encryptType === SM_CRYPTO) {
+        // hack for SM Crypto
+        if (this.encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
             this.topicMapper = new Map();
 
             for (var name in this.iface.events) {
@@ -132,14 +130,14 @@ class EventDecoder {
                     continue;
                 }
                 let event = this.iface.events[name];
-                this.topicMapper.set('0x' + hash(event.signature, SM_CRYPTO), event.topic);
+                this.topicMapper.set('0x' + hash(event.signature, ENCRYPT_TYPE.SM_CRYPTO), event.topic);
             }
         }
     }
 
     decodeEvent(log) {
         // hack for SM crypto
-        if (Configuration.getInstance().encryptType === SM_CRYPTO) {
+        if (this.encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
             if (log.topics && log.topics.length >= 1) {
                 log.topics[0] = this.topicMapper.get(log.topics[0]);
             }
@@ -161,7 +159,7 @@ class EventDecoder {
 }
 
 module.exports.createMethodDecoder = function (abi, name) {
-    if (!name) {
+    if (name === null) {
         if (isArray(abi)) {
             throw new Error('no ABI desription of the method');
         }
@@ -178,19 +176,19 @@ module.exports.createMethodDecoder = function (abi, name) {
     }
 };
 
-module.exports.createEventDecoder = function (abi, name) {
-    if (!name) {
+module.exports.createEventDecoder = function (abi, name, encryptType) {
+    if (name === null) {
         if (isArray(abi)) {
             throw new Error('no ABI desription of the event');
         }
 
-        return new EventDecoder(abi);
+        return new EventDecoder(abi, encryptType);
     } else {
         let iface = new ethers.utils.Interface(abi);
         if (!iface.events[name]) {
             throw new Error(`no event named as ${name}`);
         }
 
-        return new EventDecoder(iface.events[name]);
+        return new EventDecoder(iface.events[name], encryptType);
     }
 };

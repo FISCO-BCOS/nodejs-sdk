@@ -27,13 +27,12 @@ const {
 } = require('../packages/api');
 const { waitFor } = require('./utils');
 
-Configuration.setConfig(path.join(__dirname, './conf/config.json'));
-
+let config = new Configuration(path.join(__dirname, './conf/config.json'));
 let contractPath = path.join(__dirname, './contracts/EventTest.sol');
-let contractClass = compile(contractPath);
+let contractClass = compile(contractPath, config.encryptType);
 let eventTest = contractClass.newInstance();
-let web3j = new Web3jService();
-let event = new EventLogService();
+let web3j = new Web3jService(config);
+let event = new EventLogService(config);
 
 describe('test for event log', function () {
     this.beforeAll(() => {
@@ -47,7 +46,7 @@ describe('test for event log', function () {
 
         let response = await event.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
-            topics: [TopicConvertor.fromABI(event1ABI)]
+            topics: [TopicConvertor.fromABI(event1ABI, config.encryptType)]
         }, (_status, _logs) => {
             status = _status;
             logs = _logs;
@@ -68,7 +67,7 @@ describe('test for event log', function () {
 
         let response = await event.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
-            topics: [TopicConvertor.fromABI(event2ABI), TopicConvertor.fromInteger(0)]
+            topics: [TopicConvertor.fromABI(event2ABI, config.encryptType), TopicConvertor.fromInteger(0)]
         }, (_status, _logs) => {
             status = _status;
             logs = _logs;
@@ -92,8 +91,8 @@ describe('test for event log', function () {
         let response = await event.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
             topics: [
-                TopicConvertor.fromABI(event3ABI),
-                TopicConvertor.fromString(narcissism),
+                TopicConvertor.fromABI(event3ABI, config.encryptType),
+                TopicConvertor.fromString(narcissism, config.encryptType),
                 TopicConvertor.fromInteger(42)]
         }, (_status, _logs) => {
             status = _status;
@@ -105,7 +104,7 @@ describe('test for event log', function () {
         await waitFor(() => { return status !== null; });
 
         should.equal(status, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
-        should.equal(logs[0].values.s, '0x' + hash(narcissism));
+        should.equal(logs[0].values.s, '0x' + hash(narcissism, config.encryptType));
         should.equal(logs[0].values.n, 42);
     });
 
@@ -116,7 +115,7 @@ describe('test for event log', function () {
 
         let response = await event.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
-            topics: [TopicConvertor.fromABI(event4ABI)]
+            topics: [TopicConvertor.fromABI(event4ABI, config.encryptType)]
         }, (_status, _logs) => {
             status = _status;
             logs = _logs;
@@ -137,7 +136,7 @@ describe('test for event log', function () {
 
         let response = await event.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
-            topics: [TopicConvertor.fromABI(event5ABI)]
+            topics: [TopicConvertor.fromABI(event5ABI, config.encryptType)]
         }, (_status, _logs) => {
             status = _status;
             logs = _logs;
@@ -159,9 +158,9 @@ describe('test for event log', function () {
         let response = await event.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
             topics: [
-                TopicConvertor.fromABI(event6ABI),
+                TopicConvertor.fromABI(event6ABI, config.encryptType),
                 TopicConvertor.fromInteger(42),
-                TopicConvertor.fromString('1234')
+                TopicConvertor.fromString('1234', config.encryptType)
             ]
         }, (_status, _logs) => {
             status = _status;
@@ -175,6 +174,6 @@ describe('test for event log', function () {
         should.equal(status, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
         should.equal(logs[0].values.n, 42);
         should.equal(logs[0].values.b, true);
-        should.equal(logs[0].values.s, '0x' + hash('1234'));
+        should.equal(logs[0].values.s, '0x' + hash('1234', config.encryptType));
     });
 });

@@ -23,14 +23,14 @@ const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
 class CNSService extends ServiceBase {
-    constructor() {
-        super();
-        this.web3jService = new Web3jService();
+    constructor(config) {
+        super(config);
+        this.web3jService = new Web3jService(config);
     }
 
-    resetConfig() {
-        super.resetConfig();
-        this.web3jService.resetConfig();
+    resetConfig(config) {
+        super.resetConfig(config);
+        this.web3jService.resetConfig(config);
     }
 
     _isValiadVersion(version) {

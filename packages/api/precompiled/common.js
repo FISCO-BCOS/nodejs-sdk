@@ -104,7 +104,7 @@ module.exports.handleReceipt = function (receipt, abi) {
         if (!receipt.output) {
             throw new TransactionError('transaction failed');
         } else {
-            let decoder = decode.createMethodDecoder(abi);
+            let decoder = decode.createMethodDecoder(abi, null);
             return decoder.decodeOutput(receipt.output).result;
         }
     }

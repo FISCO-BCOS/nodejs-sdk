@@ -14,7 +14,7 @@
 
 'use strict';
 
-const { registerBlockNotifyCallback } = require("./network");
+const { registerBlockNotifyCallback } = require('./network');
 const assert = require('assert');
 
 let blockHeightRecords = new Map();
@@ -40,24 +40,18 @@ function updateBlockHeight(groupID, blockHeight) {
  * @param {Object} web3j 
  * @returns {Promise} promise to return a block height
  */
-async function getBlockHeight(web3j = null) {
-    const Configuration = require('../common/configuration').Configuration;
-    let groupID = Configuration.getInstance().groupID;
+async function getBlockHeight(config) {
+    const Web3jService = require('../web3j').Web3jService;
+    let web3j = new Web3jService(config);
+    let groupID = config.groupID;
 
     if (!blockHeightRecords.has(groupID)) {
-        if (!web3j) {
-            // if can't acquire initial value of block height,
-            // set block height to zero and try register block
-            // notification callback
-            blockHeightRecords.set(groupID, 0);
-        } else {
-            // `getBlockNumber` wil update cache itself
-            await web3j.getBlockNumber();
-            assert(blockHeightRecords.has(groupID));
-        }
+        let blockHeight = await web3j.getBlockNumber();
+        blockHeight = parseInt(blockHeight.result, 16);
+        blockHeightRecords.set(groupID, blockHeight);
 
-        let nodes = Configuration.getInstance().nodes;
-        let authentication = Configuration.getInstance().authentication;
+        let nodes = config.nodes;
+        let authentication = config.authentication;
         let callback = (groupID, blockHeight) => { updateBlockHeight(groupID, blockHeight); };
 
         // send block notify registration to all known nodes to get an accurate block height
@@ -71,4 +65,3 @@ async function getBlockHeight(web3j = null) {
 }
 
 module.exports.getBlockHeight = getBlockHeight;
-module.exports.updateBlockHeight = updateBlockHeight;

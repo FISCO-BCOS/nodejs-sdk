@@ -17,7 +17,6 @@
 const uuidv4 = require('uuid/v4');
 const utils = require('./utils');
 const Transaction = require('./transactionObject').Transaction;
-const Configuration = require('../configuration').Configuration;
 const ethjsUtil = require('ethjs-util');
 const ethers = require('ethers');
 const isArray = require('isarray');
@@ -44,10 +43,10 @@ function genRandomID() {
  * @param {callback} callback callback function
  * @return {String} signed transaction data
  */
-function signTransaction(txData, privKey, callback) {
-    let tx = new Transaction(txData);
+function signTransaction(txData, privKey, encryptType, callback) {
+    let tx = new Transaction(txData, encryptType);
     let privateKey = Buffer.from(privKey, 'hex');
-    tx.sign(privateKey);
+    tx.sign(privateKey, encryptType);
 
     // Build a serialized hex version of the tx
     let serializedTx = '0x' + tx.serialize().toString('hex');
@@ -109,11 +108,11 @@ function encodeParams(types, params) {
  * @param {Array} params params
  * @return {String} transaction data
  */
-function getTxData(func, params) {
+function getTxData(func, params, encryptType) {
     let signature = func.signature;
     let inputs = func.inputs;
 
-    let txDataCode = utils.encodeFunctionName(signature);
+    let txDataCode = utils.encodeFunctionName(signature, encryptType);
     let paramsCode = encodeParams(inputs, params);
     txDataCode += ethjsUtil.stripHexPrefix(paramsCode);
 
@@ -130,12 +129,14 @@ function getTxData(func, params) {
  * @param {who} the id of account(private key)
  * @return {String} signed transaction data
  */
-function getSignTx(config, to, func, params, blockLimit, who = null) {
+function getSignTx(config, to, func, params, blockLimit, who) {
     let groupID = config.groupID;
     let account = config.accounts[who].account;
     let privateKey = config.accounts[who].privateKey;
+    let chainID = config.chainID;
+    let encryptType = config.encryptType;
 
-    let txData = getTxData(func, params);
+    let txData = getTxData(func, params, encryptType);
 
     let postdata = {
         data: txData,
@@ -144,12 +145,12 @@ function getSignTx(config, to, func, params, blockLimit, who = null) {
         gas: 1000000,
         randomid: genRandomID(),
         blockLimit: blockLimit,
-        chainId: Configuration.getInstance().chainID,
+        chainId: chainID,
         groupId: groupID,
         extraData: '0x0'
     };
 
-    return signTransaction(postdata, privateKey, null);
+    return signTransaction(postdata, privateKey, encryptType, null);
 }
 
 /**
@@ -164,6 +165,8 @@ function getSignDeployTx(config, bin, blockLimit, who) {
     let groupID = config.groupID;
     let account = config.accounts[who].account;
     let privateKey = config.accounts[who].privateKey;
+    let chainID = config.chainID;
+    let encryptType = config.encryptType;
     let txData = bin.indexOf('0x') === 0 ? bin : ('0x' + bin);
 
     let postdata = {
@@ -173,12 +176,12 @@ function getSignDeployTx(config, bin, blockLimit, who) {
         gas: 1000000,
         randomid: genRandomID(),
         blockLimit: blockLimit,
-        chainId: Configuration.getInstance().chainID,
+        chainId: chainID,
         groupId: groupID,
         extraData: '0x0'
     };
 
-    return signTransaction(postdata, privateKey, null);
+    return signTransaction(postdata, privateKey, encryptType, null);
 }
 
 module.exports.getSignDeployTx = getSignDeployTx;

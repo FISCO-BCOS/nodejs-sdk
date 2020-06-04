@@ -18,12 +18,11 @@ const should = require('should');
 const path = require('path');
 const { Configuration, Web3jService, compile } = require('../packages/api');
 
-Configuration.setConfig(path.join(__dirname, './conf/config.json'));
-
+let config = new Configuration(path.join(__dirname, './conf/config.json'));
 let contractPath = path.join(__dirname, './contracts/HelloWorld.sol');
-let contractClass = compile(contractPath);
+let contractClass = compile(contractPath, config.encryptType);
 let helloWorld = contractClass.newInstance();
-let web3j = new Web3jService();
+let web3j = new Web3jService(config);
 
 describe('test for hello world', function () {
     this.beforeAll(() => {

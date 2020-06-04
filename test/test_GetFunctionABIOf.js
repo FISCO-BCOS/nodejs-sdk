@@ -18,10 +18,9 @@ const should = require('should');
 const path = require('path');
 const { Configuration, compile } = require('../packages/api');
 
-Configuration.setConfig(path.join(__dirname, './conf/config.json'));
-
+let config = new Configuration(path.join(__dirname, './conf/config.json'));
 let contractPath = path.join(__dirname, './contracts/HelloWorld.sol');
-let contractClass = compile(contractPath);
+let contractClass = compile(contractPath, config.encryptType);
 let eventTest = contractClass.newInstance();
 
 describe('test for getFunctionABIOf', function () {

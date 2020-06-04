@@ -41,16 +41,16 @@ class TopicConvertor {
         return '0x000000000000000000000000' + cleanHexPrefix(address);
     }
 
-    static fromString(str) {
-        check(arguments, Str);
+    static fromString(str, encryptType) {
+        check(arguments, Str, Num);
 
-        return '0x' + hash(str);
+        return '0x' + hash(str, encryptType);
     }
 
-    static fromABI(eventABI) {
-        check(arguments, Obj);
+    static fromABI(eventABI, encryptType) {
+        check(arguments, Obj, Num);
 
-        return encodeEventName(eventABI);
+        return encodeEventName(eventABI, encryptType);
     }
 }
 

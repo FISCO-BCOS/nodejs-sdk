@@ -14,11 +14,14 @@
 
 'use strict';
 
+const path = require('path');
 const produceSubCommandInfo = require('./base').produceSubCommandInfo;
-const PermissionService = require('../../api').PermissionService;
+const { PermissionService, Configuration } = require('../../api');
 
 let interfaces = [];
-let permissionService = new PermissionService();
+let configFile = path.join(process.cwd(), './conf/config.json');
+let config = new Configuration(configFile);
+let permissionService = new PermissionService(config);
 
 interfaces.push(produceSubCommandInfo(
     {

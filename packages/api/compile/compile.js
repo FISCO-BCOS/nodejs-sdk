@@ -22,6 +22,7 @@ const childProcess = require('child_process');
 const uuid = require('uuid');
 const CompileError = require('../common/exceptions').CompileError;
 const createContractClass = require('./contractClass').createContractClass;
+const { ENCRYPT_TYPE } = require('../common/configuration');
 
 let solc0$4Ver;
 let solc0$5Ver;
@@ -88,7 +89,7 @@ function checkContractLength(bin) {
 }
 
 // Used by compileWithSolcJS only
-function compileWithSolc0$4(solc, contractName, contractContent, readCallback) {
+function compileWithSolc0$4(solc, contractName, contractContent, readCallback, encryptType) {
     let input = {
         sources: {
             [contractName]: contractContent
@@ -112,11 +113,11 @@ function compileWithSolc0$4(solc, contractName, contractContent, readCallback) {
     let abi = output.contracts[`${contractName}:${contractName}`].interface;
     let bin = output.contracts[`${contractName}:${contractName}`].bytecode;
 
-    return createContractClass(contractName, abi, bin);
+    return createContractClass(contractName, abi, bin, encryptType);
 }
 
 // Used by compileWithSolcJS only
-function compileWithSolc0$5(solc, contractName, contractContent, readCallback) {
+function compileWithSolc0$5(solc, contractName, contractContent, readCallback, encryptType) {
     let input = {
         language: "Solidity",
         sources: {
@@ -147,10 +148,10 @@ function compileWithSolc0$5(solc, contractName, contractContent, readCallback) {
 
     let abi = output.contracts[contractName][contractName].abi;
     let bin = output.contracts[contractName][contractName].evm.bytecode.object;
-    return createContractClass(contractName, abi, bin);
+    return createContractClass(contractName, abi, bin, encryptType);
 }
 
-function compileWithSolcJS(contractPath) {
+function compileWithSolcJS(contractPath, encryptType) {
     let contractName = path.basename(contractPath, '.sol');
 
     let contractContent = fs.readFileSync(contractPath).toString();
@@ -167,38 +168,36 @@ function compileWithSolcJS(contractPath) {
         return { contents: fs.readFileSync(importContractPath).toString() };
     };
 
-    const { Configuration, ECDSA, SM_CRYPTO } = require('../common/configuration');
-    let encryptType = Configuration.getInstance().encryptType;
-    if (encryptType === ECDSA) {
+    if (encryptType === ENCRYPT_TYPE.ECDSA) {
         if (semver.satisfies(solc0$5Ver, requiredSolcVerRange)) {
             let solc = require('./compilers/solc-0.5');
-            return compileWithSolc0$5(solc, contractName, contractContent, readCallback);
+            return compileWithSolc0$5(solc, contractName, contractContent, readCallback, encryptType);
         } else if (semver.satisfies(solc0$4Ver, requiredSolcVerRange)) {
             let solc = require('./compilers/solc-0.4');
-            return compileWithSolc0$4(solc, contractName, contractContent, readCallback);
+            return compileWithSolc0$4(solc, contractName, contractContent, readCallback, encryptType);
         } else {
             throw new CompileError("solc version can't be satisfied");
         }
-    } else if (encryptType === SM_CRYPTO) {
+    } else if (encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
         if (semver.satisfies(solc0$4GmVer, requiredSolcVerRange)) {
             let wrapper = require('./compilers/solc-0.4/node_modules/solc/wrapper');
             let solc = wrapper(require('./compilers/gm/soljson-v0.4.25-gm'));
 
-            return compileWithSolc0$4(solc, contractName, contractContent, readCallback);
+            return compileWithSolc0$4(solc, contractName, contractContent, readCallback, encryptType);
         } else if (semver.satisfies(solc0$5GmVer, requiredSolcVer)) {
             let wrapper = require('./compilers/solc-0.5/node_modules/solc/wrapper');
             let solc = wrapper(require('./compilers/gm/soljson-v0.5.1-gm'));
 
-            return compileWithSolc0$5(solc, contractName, contractContent, readCallback);
+            return compileWithSolc0$5(solc, contractName, contractContent, readCallback, encryptType);
         } else {
             throw new CompileError("solc version can't be satisfied");
         }
     } else {
-        throw new CompileError("solc version can't be satisfied");
+        throw new CompileError("invalid encrypt type");
     }
 }
 
-function compileWithBin(contractPath, solc) {
+function compileWithBin(contractPath, solc, encryptType) {
     let outputDir = path.join(os.tmpdir(), uuid.v4());
     let cmd = `${solc} --overwrite --abi --bin -o ${outputDir} ${contractPath} 2>&1`;
 
@@ -222,7 +221,7 @@ function compileWithBin(contractPath, solc) {
     let bin = fs.readFileSync(path.join(outputDir, files[binIndex])).toString();
     checkContractLength(bin);
 
-    return createContractClass(contractName, abi, bin);
+    return createContractClass(contractName, abi, bin, encryptType);
 }
 
 /**
@@ -230,10 +229,10 @@ function compileWithBin(contractPath, solc) {
  * @param {string} contractPath Path of the contract
  * @param {string} solc Solc config, use user-specified solc
  */
-module.exports.compile = function (contractPath, solc = undefined) {
-    if (solc) {
-        return compileWithBin(contractPath, solc);
+module.exports.compile = function (contractPath, encryptType, solc = null) {
+    if (solc !== null) {
+        return compileWithBin(contractPath, solc, encryptType);
     } else {
-        return compileWithSolcJS(contractPath);
+        return compileWithSolcJS(contractPath, encryptType);
     }
 };

@@ -19,14 +19,16 @@ const fs = require('fs');
 const decode = require('../../api/decoder');
 const compile = require('../../api/').compile;
 const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
-const { Web3jService, ConsensusService, SystemConfigService } = require('../../api');
+const { Web3jService, ConsensusService, SystemConfigService, Configuration } = require('../../api');
 const { ContractsDir, ContractsOutputDir } = require('../constant');
 const { check, Str, Addr, Any } = require('../../api/common/typeCheck');
 
 let interfaces = [];
-const web3jService = new Web3jService();
-const consensusService = new ConsensusService();
-const systemConfigService = new SystemConfigService();
+let configFile = path.join(process.cwd(), './conf/config.json');
+let config = new Configuration(configFile);
+const web3jService = new Web3jService(config);
+const consensusService = new ConsensusService(config);
+const systemConfigService = new SystemConfigService(config);
 
 interfaces.push(produceSubCommandInfo(
     {
@@ -393,8 +395,7 @@ interfaces.push(produceSubCommandInfo(
             throw new Error(`${contractName} doesn't exist`);
         }
 
-        const Configuration = require('../../api/').Configuration;
-        let contractClass = compile(contractPath, Configuration.getInstance().solc);
+        let contractClass = compile(contractPath, config.encryptType, config.solc);
         if (!fs.existsSync(ContractsOutputDir)) {
             fs.mkdirSync(ContractsOutputDir);
         }
@@ -492,7 +493,7 @@ interfaces.push(produceSubCommandInfo(
             throw new Error(`no ABI for method \`${functionName}\` of contract \`${contractName}\``);
         }
 
-        let decoder = decode.createMethodDecoder(abi);
+        let decoder = decode.createMethodDecoder(abi, null);
 
         if (abi.constant) {
             return web3jService.call(contractAddress, abi, parameters).then((result) => {
