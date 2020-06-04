@@ -18,7 +18,7 @@ const ethers = require('ethers');
 const deepcopy = require('deepcopy');
 
 const { selectNode } = require('../common/utils');
-const { getBlockHeight, updateBlockHeight } = require('../common/blockHeightCache');
+const { getBlockHeight } = require('../common/blockHeightCache');
 const { ServiceBase } = require('../common/serviceBase');
 const { channelPromise, MESSAGE_TYPE } = require('../common/network');
 const {
@@ -34,12 +34,12 @@ const QUERY = MESSAGE_TYPE.QUERY;
 const TRANSACTION = MESSAGE_TYPE.CHANNEL_RPC_REQUEST;
 
 class Web3jService extends ServiceBase {
-    constructor() {
-        super();
+    constructor(config) {
+        super(config);
     }
 
-    resetConfig() {
-        super.resetConfig();
+    resetConfig(config) {
+        super.resetConfig(config);
     }
 
     _constructRequest(method, params, type = QUERY) {
@@ -59,8 +59,6 @@ class Web3jService extends ServiceBase {
         let promise = this._constructRequest('getBlockNumber', [this.config.groupID]);
         return promise.then((result) => {
             let blockNumber = parseInt(result.result, '16');
-            // update block height cache
-            updateBlockHeight(this.config.groupID, blockNumber);
             return result;
         });
     }
@@ -201,7 +199,7 @@ class Web3jService extends ServiceBase {
             let iface = new ethers.utils.Interface([func]);
             func = iface.functions[func.name];
 
-            let blockNumber = await getBlockHeight(this);
+            let blockNumber = await getBlockHeight(this.config);
             let signTx = await this._rawTransaction(to, func, params, blockNumber + 500, who);
             return this.sendRawTransaction(signTx);
         }
@@ -223,7 +221,7 @@ class Web3jService extends ServiceBase {
             contractBin += encodedParams.toString('hex').substr(2);
         }
 
-        let blockNumber = await getBlockHeight(this);
+        let blockNumber = await getBlockHeight(this.config);
         let signTx = getSignDeployTx(this.config, contractBin, blockNumber + 500, who);
         return this.sendRawTransaction(signTx);
     }
@@ -237,7 +235,7 @@ class Web3jService extends ServiceBase {
 
         this._checkParameters(func, params);
 
-        let txData = getTxData(func, params);
+        let txData = getTxData(func, params, this.config.encryptType);
         return this._constructRequest('call', [this.config.groupID, {
             'from': this.config.accounts[who].account,
             'to': to,

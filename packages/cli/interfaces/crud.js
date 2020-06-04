@@ -14,14 +14,17 @@
 
 'use strict';
 
+const path = require('path');
 const { produceSubCommandInfo } = require('./base');
-const { CRUDService, Table, Condition, Entry, ConditionOp } = require('../../api');
+const { CRUDService, Table, Condition, Entry, ConditionOp, Configuration } = require('../../api');
 
 // SQL Parser
 const { Parser } = require('node-sql-parser');
 
 let interfaces = [];
-let crudService = new CRUDService();
+let configFile = path.join(process.cwd(), './conf/config.json');
+let config = new Configuration(configFile);
+let crudService = new CRUDService(config);
 
 function parseWhere(where, condition) {
     if (where.type === 'binary_expr') {

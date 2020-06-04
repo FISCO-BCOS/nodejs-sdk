@@ -26,8 +26,8 @@ const { createEventDecoder } = require('../decoder');
 const { encodeEventName } = require('../common/web3lib/utils');
 
 class EventLogService extends ServiceBase {
-    constructor() {
-        super();
+    constructor(config) {
+        super(config);
 
         this._eventABICache = new Map();
     }
@@ -62,7 +62,7 @@ class EventLogService extends ServiceBase {
                     throw new Error("invalid event abi");
                 }
 
-                let eventSigHash = encodeEventName(abi);
+                let eventSigHash = encodeEventName(abi, this.config.encryptType);
                 this._eventABICache.set(eventSigHash, abi);
             }
         }
@@ -93,7 +93,7 @@ class EventLogService extends ServiceBase {
             return false;
         }
 
-        let blockNumber = await getBlockHeight();
+        let blockNumber = await getBlockHeight(this.config);
         if (from === 'latest' && to !== 'latest') {
             let toBlock = parseInt(from, 10);
             if (blockNumber <= 1 || toBlock > blockNumber) {
@@ -161,7 +161,7 @@ class EventLogService extends ServiceBase {
                         let topic0 = log.topics[0];
                         if (needDecode) {
                             let abi = this._eventABICache.get(topic0);
-                            let decoder = createEventDecoder(abi);
+                            let decoder = createEventDecoder(abi, null, this.config.encryptType);
                             let values = decoder.decodeEvent(log);
 
                             result.values = values;

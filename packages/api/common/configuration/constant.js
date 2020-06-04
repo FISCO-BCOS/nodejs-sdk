@@ -14,28 +14,7 @@
 
 'use strict';
 
-const { Configuration } = require('./configuration');
-
-class ServiceBase {
-    constructor(config) {
-        if (!(config instanceof Configuration)) {
-            throw new Error('invalid configuration object to initialize service');
-        }
-
-        this.config = config;
-    }
-
-    resetConfig(config) {
-        if (!(config instanceof Configuration)) {
-            throw new Error('invalid configuration object to reset');
-        }
-
-        this.config = config;
-    }
-
-    getConfig() {
-        return this.config;
-    }
-}
-
-module.exports.ServiceBase = ServiceBase;
+module.exports.ENCRYPT_TYPE = {
+    ECDSA: 0,
+    SM_CRYPTO: 1
+};

@@ -122,17 +122,7 @@ function createCodeForGetFunctionABIOf() {
     return code;
 }
 
-function createCodeForGetFunctionMetaOf() {
-    let code =
-        'if(!this._functionABIMapper.has(name)) {\n' +
-        '    throw new Error(`no function named as: ${name}`);\n' +
-        '}\n' +
-        'return this._functionABIMapper.get(name).meta;';
-
-    return code;
-}
-
-function createContractClass(name, abi, bin) {
+function createContractClass(name, abi, bin, encryptType) {
     if (typeof abi === 'string') {
         abi = JSON.parse(abi);
     }
@@ -165,7 +155,7 @@ function createContractClass(name, abi, bin) {
 
                         contract._functionABIMapper.set(item.name, {
                             abi: item,
-                            decoder: createMethodDecoder(item),
+                            decoder: createMethodDecoder(item, null),
                             meta: func
                         });
 
@@ -180,7 +170,7 @@ function createContractClass(name, abi, bin) {
 
                         Object.defineProperty(contract[item.name], 'encodeABI', {
                             value: (params = []) => {
-                                return getTxData(func, params);
+                                return getTxData(func, params, encryptType);
                             },
                             writable: false,
                             configurable: false,

@@ -15,8 +15,11 @@
 'use strict';
 
 const should = require('should');
-const { TopicConvertor } = require('../packages/api');
+const path = require('path');
+const { TopicConvertor, Configuration } = require('../packages/api');
 const { hash } = require('../packages/api/common/web3lib/utils');
+
+let config = new Configuration(path.join(__dirname, './conf/config.json'));
 
 describe('test for topic convertor', function () {
     it('integer', () => {
@@ -42,14 +45,14 @@ describe('test for topic convertor', function () {
 
     it('string', () => {
         let s = 'Node.js SDK is the best SDK in FISCO BCOS world';
-        let t = TopicConvertor.fromString(s);
-        should.equal(t, '0x' + hash(s));
+        let t = TopicConvertor.fromString(s, config.encryptType);
+        should.equal(t, '0x' + hash(s, config.encryptType));
     });
 
     it('abi', () => {
         let abi = JSON.parse('{"anonymous":false,"inputs":[{"indexed":false,"name":"s","type":"string"}],"name":"event1","type":"event"}');
-        let t = TopicConvertor.fromABI(abi);
-        should.equal(t, '0x' + hash('event1(string)'));
+        let t = TopicConvertor.fromABI(abi, config.encryptType);
+        should.equal(t, '0x' + hash('event1(string)', config.encryptType));
     });
 
     it('invalid input', () => {
@@ -66,11 +69,11 @@ describe('test for topic convertor', function () {
         });
 
         should.throws(() => {
-            TopicConvertor.fromString(1);
+            TopicConvertor.fromString(1, null);
         });
 
         should.throws(() => {
-            TopicConvertor.fromABI(1);
+            TopicConvertor.fromABI(1, null);
         });
     });
 });

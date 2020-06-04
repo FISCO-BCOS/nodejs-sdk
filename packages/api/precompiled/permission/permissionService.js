@@ -23,16 +23,16 @@ const Web3jService = require('../../web3j').Web3jService;
 const CRUDService = require('../crud').CRUDService;
 
 class PermissionService extends SeviceBase {
-    constructor() {
-        super();
-        this.web3jService = new Web3jService();
-        this.crudService = new CRUDService();
+    constructor(config) {
+        super(config);
+        this.web3jService = new Web3jService(config);
+        this.crudService = new CRUDService(config);
     }
 
-    resetConfig() {
-        super.resetConfig();
-        this.web3jService.resetConfig();
-        this.crudService.resetConfig();
+    resetConfig(config) {
+        super.resetConfig(config);
+        this.web3jService.resetConfig(config);
+        this.crudService.resetConfig(config);
     }
 
     async _grant(tableName, address) {
@@ -50,7 +50,7 @@ class PermissionService extends SeviceBase {
             };
         } else {
             return {
-                code : status,
+                code: status,
                 msg: OutputCode.getOutputMessage(status)
             };
         }
@@ -70,7 +70,7 @@ class PermissionService extends SeviceBase {
             };
         } else {
             return {
-                code : status,
+                code: status,
                 msg: OutputCode.getOutputMessage(status)
             };
         }

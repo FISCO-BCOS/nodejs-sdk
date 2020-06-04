@@ -20,25 +20,24 @@ const { Configuration, Web3jService, compile } = require('../packages/api');
 const { getBlockHeight } = require('../packages/api/common/blockHeightCache');
 const { waitFor } = require('./utils');
 
-Configuration.setConfig(path.join(__dirname, './conf/config.json'));
-
+let config = new Configuration(path.join(__dirname, './conf/config.json'));
 let contractPath = path.join(__dirname, './contracts/HelloWorld.sol');
-let contractClass = compile(contractPath);
+let contractClass = compile(contractPath, config.encryptType);
 let helloWorld = contractClass.newInstance();
-let web3j = new Web3jService();
+let web3j = new Web3jService(config);
 
 describe('test for block height cache', () => {
     it('get block height', async () => {
-        let currentBlockHeight1 = await getBlockHeight(web3j);
+        let currentBlockHeight1 = await getBlockHeight(config);
         should.exist(currentBlockHeight1);
 
         await helloWorld.$deploy(web3j);
         await waitFor(async () => {
-            let height = await getBlockHeight(web3j);
+            let height = await getBlockHeight(config);
             return height !== currentBlockHeight1;
         });
 
-        let currentBlockHeight2 = await getBlockHeight(web3j);
+        let currentBlockHeight2 = await getBlockHeight(config);
         should.equal(currentBlockHeight2, currentBlockHeight1 + 1);
     });
 });

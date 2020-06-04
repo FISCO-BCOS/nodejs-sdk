@@ -16,7 +16,7 @@
 
 const should = require('should');
 const { createKeyPair, ecsign, ecrecover } = require('../packages/api/common/web3lib/utils');
-const { ECDSA } = require('../packages/api/common/configuration');
+const { ENCRYPT_TYPE } = require('../packages/api');
 
 describe('test for web3 lib', function () {
     it('createKeyPair', () => {
@@ -26,7 +26,7 @@ describe('test for web3 lib', function () {
 
         let msg = Buffer.from('fc7afa24feb522c2d4fd2a1d3bf41232ac585d1bf9d6656126ee1d993fa09691', 'hex');
         // only available in `ECDSA` mode
-        let ret = ecsign(msg, privateKey, ECDSA);
+        let ret = ecsign(msg, privateKey, ENCRYPT_TYPE.ECDSA);
         let publicKey2 = ecrecover(msg, ret.v, ret.r, ret.s);
         should.equal(publicKey.toString('hex'), publicKey2.toString('hex'));
     });

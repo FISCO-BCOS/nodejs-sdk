@@ -20,10 +20,9 @@ const ethers = require('ethers');
 const { Configuration, compile } = require('../packages/api');
 const { getTxData } = require('../packages/api/common/web3lib/web3sync');
 
-Configuration.setConfig(path.join(__dirname, './conf/config.json'));
-
+let config = new Configuration(path.join(__dirname, './conf/config.json'));
 let contractPath = path.join(__dirname, './contracts/HelloWorld.sol');
-let contractClass = compile(contractPath);
+let contractClass = compile(contractPath, config.encryptType);
 let helloWorld = contractClass.newInstance();
 
 describe('test for encodeABI', function () {
@@ -43,7 +42,7 @@ describe('test for encodeABI', function () {
         let func = iface.functions.set;
         should.equal(
             encode,
-            getTxData(func, ["123"])
+            getTxData(func, ["123"], config.encryptType)
         );
     });
 
@@ -54,7 +53,7 @@ describe('test for encodeABI', function () {
         let func = iface.functions.get;
         should.equal(
             encode,
-            getTxData(func, [])
+            getTxData(func, [], config.encryptType)
         );
     });
 });

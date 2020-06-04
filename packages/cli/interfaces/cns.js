@@ -18,8 +18,8 @@ const decode = require('../../api/decoder');
 const path = require('path');
 const fs = require('fs');
 const { produceSubCommandInfo, FLAGS } = require('./base');
-const { CNSService, PermissionService, Web3jService } = require('../../api');
-const OutputCode = require('../../api/precompiled/common').OutputCode;
+const { CNSService, PermissionService, Web3jService, Configuration } = require('../../api');
+const { OutputCode } = require('../../api/precompiled/common');
 const { ContractsDir, ContractsOutputDir } = require('../constant');
 
 function checkVersion(version) {
@@ -31,9 +31,11 @@ function checkVersion(version) {
 }
 
 let interfaces = [];
-let cnsService = new CNSService();
-let permissionService = new PermissionService();
-let web3jService = new Web3jService();
+let configFile = path.join(process.cwd(), './conf/config.json');
+let config = new Configuration(configFile);
+let cnsService = new CNSService(config);
+let permissionService = new PermissionService(config);
+let web3jService = new Web3jService(config);
 
 
 interfaces.push(produceSubCommandInfo(
@@ -76,9 +78,8 @@ interfaces.push(produceSubCommandInfo(
         return permissionService.listCNSManager().then(cnsManagers => {
             let id = argv.id;
 
-            const Configuration = require('../../api/common/configuration').Configuration;
             if (cnsManagers.length !== 0) {
-                let account = Configuration.getInstance().accounts[id];
+                let account = config.accounts[id];
                 if (!account) {
                     throw new Error(`invalid id of account: ${id}`);
                 }

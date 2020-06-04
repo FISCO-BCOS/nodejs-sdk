@@ -15,7 +15,7 @@
         "*"
     ],
     "dependencies": {
-        "solc": "^0.5.10"
+        "solc": "^0.5.2"
     },
     "license": "Apache-2.0",
     "licenses": [

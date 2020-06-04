@@ -33,4 +33,6 @@ module.exports.compile = require('./compile/compile').compile;
 module.exports.createContractClass = require('./compile/contractClass').createContractClass;
 
 module.exports.Configuration = require('./common/configuration').Configuration;
+module.exports.ENCRYPT_TYPE = require('./common/configuration').ENCRYPT_TYPE;
+
 module.exports.hash = require('./common/utils').hash;

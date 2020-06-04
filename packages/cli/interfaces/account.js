@@ -14,9 +14,12 @@
 
 'use strict';
 
-const web3Utils = require('../../api/common/web3lib/utils');
+const path = require('path');
 const produceSubCommandInfo = require('./base').produceSubCommandInfo;
-const Configuration = require('../../api/common/configuration').Configuration;
+const { Configuration } = require('../../api');
+
+let configFile = path.join(process.cwd(), './conf/config.json');
+let config = new Configuration(configFile);
 
 let interfaces = [];
 
@@ -37,7 +40,6 @@ interfaces.push(produceSubCommandInfo(
     (argv) => {
         let id = argv.id;
 
-        let config = Configuration.getInstance();
         let account = config.accounts[id];
         if (!account) {
             throw new Error(`invalid id of account: ${id}`);

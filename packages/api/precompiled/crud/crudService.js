@@ -33,14 +33,14 @@ module.exports.Condition = Condition;
 module.exports.ConditionOp = ConditionOp;
 
 class CRUDService extends ServiceBase {
-    constructor() {
-        super();
-        this.web3jService = new Web3jService();
+    constructor(config) {
+        super(config);
+        this.web3jService = new Web3jService(config);
     }
 
-    resetConfig() {
-        super.resetConfig();
-        this.web3jService.resetConfig();
+    resetConfig(config) {
+        super.resetConfig(config);
+        this.web3jService.resetConfig(config);
     }
 
     _checkTableKeyLength(table) {
@@ -76,7 +76,7 @@ class CRUDService extends ServiceBase {
     async createTable(table) {
         check(arguments, Table);
 
-        if(table.tableName.length > 48) {
+        if (table.tableName.length > 48) {
             throw new PrecompiledError('the table name length is greater than 48.');
         }
 

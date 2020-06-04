@@ -19,20 +19,17 @@ const path = require('path');
 const fs = require('fs');
 const pemFile = require('pem-file');
 const forge = require('node-forge');
-const deepcopy = require('deepcopy');
-const web3Utils = require('./web3lib/utils');
-const ConfigurationError = require('./exceptions').ConfigurationError;
+const web3Utils = require('../web3lib/utils');
+const ConfigurationError = require('../exceptions').ConfigurationError;
+const ENCRYPT_TYPE = require('./constant').ENCRYPT_TYPE;
 
 const EC_PRIVATE_KEY_PREFIX = '30740201010420';
 const PRIVATE_KEY_PREFIX = '308184020100301006072a8648ce3d020106052b8104000a046d306b0201010420';
 const PRIVATE_KEY_PREFIX_SM = '308187020100301306072a8648ce3d020106082a811ccf5501822d046d306b0201010420';
 
-const ECDSA = 0;
-const SM_CRYPTO = 1;
-
 function decodePem(pem, encryptType) {
     let privateKey = null;
-    if (encryptType === ECDSA) {
+    if (encryptType === ENCRYPT_TYPE.ECDSA) {
         if (pem.startsWith(EC_PRIVATE_KEY_PREFIX)) {
             // -----BEGIN EC PRIVATE KEY-----
             privateKey = pem.substring(EC_PRIVATE_KEY_PREFIX.length, EC_PRIVATE_KEY_PREFIX.length + 64);
@@ -42,7 +39,7 @@ function decodePem(pem, encryptType) {
         } else {
             throw new ConfigurationError('expected `EC PRIVATE KEY` or `PRIVATE KEY`');
         }
-    } else if (encryptType === SM_CRYPTO) {
+    } else if (encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
         if (pem.startsWith(PRIVATE_KEY_PREFIX_SM)) {
             // -----BEGIN PRIVATE KEY-----
             privateKey = pem.substring(PRIVATE_KEY_PREFIX_SM.length, PRIVATE_KEY_PREFIX_SM.length + 64);
@@ -54,27 +51,28 @@ function decodePem(pem, encryptType) {
 }
 
 class Configuration {
-    static setConfig($config) {
-        Configuration.config = $config;
-    }
-
-    static getInstance() {
-        if (!Configuration.instance) {
-            Configuration.instance = new Configuration();
+    constructor(configurationFile) {
+        if (!configurationFile) {
+            throw new ConfigurationError('invalid configuration file path');
         }
-        return Configuration.instance;
-    }
 
-    static addAccount(id, privateKey) {
-        let account = '0x' + web3Utils.privateKeyToAddress(privateKey).toString('hex');
-        Configuration.getInstance().config.accounts[id] = {
-            account,
-            privateKey
-        };
-    }
+        this.configDir = path.dirname(configurationFile);
+        let configContent = fs.readFileSync(configurationFile);
+        let config = null;
+        try {
+            config = JSON.parse(configContent);
+        } catch (_) {
+            throw new ConfigurationError('read configuration file failed, expected a well JSON-formatted file');
+        }
 
-    static reset() {
-        Configuration.instance = null;
+        this._parseAuthentication(config);
+        this._parseEncryptType(config);
+        this._parseNodes(config);
+        this._parseGroupID(config);
+        this._parseChainID(config);
+        this._parseTimeout(config);
+        this._parseSolc(config);
+        this._parseAccounts(config);
     }
 
     _parseAuthentication(config) {
@@ -107,9 +105,9 @@ class Configuration {
                 throw new ConfigurationError('invalid type of `encryptType` property, `string` expected');
             } else {
                 if (encryptType === 'ECDSA') {
-                    this.encryptType = ECDSA;
+                    this.encryptType = ENCRYPT_TYPE.ECDSA;
                 } else if (encryptType === 'SM_CRYPTO') {
-                    this.encryptType = SM_CRYPTO;
+                    this.encryptType = ENCRYPT_TYPE.SM_CRYPTO;
                 } else {
                     throw new ConfigurationError('invalid value of `encryptType` property, expect `ECDSA` or `SM_CRYPTO`');
                 }
@@ -271,36 +269,6 @@ class Configuration {
             }
         }
     }
-
-    constructor() {
-        let config = deepcopy(Configuration.config);
-        this.configDir = null;
-
-        if (!config) {
-            throw new ConfigurationError('invalid configuration object or file path');
-        }
-
-        if (typeof config === 'string') {
-            this.configDir = path.dirname(config);
-            let configContent = fs.readFileSync(config);
-            try {
-                config = JSON.parse(configContent);
-            } catch (_) {
-                throw new ConfigurationError('read configuration file failed, expected a well JSON-formatted file');
-            }
-        }
-
-        this._parseAuthentication(config);
-        this._parseEncryptType(config);
-        this._parseNodes(config);
-        this._parseGroupID(config);
-        this._parseChainID(config);
-        this._parseTimeout(config);
-        this._parseSolc(config);
-        this._parseAccounts(config);
-    }
 }
 
 module.exports.Configuration = Configuration;
-module.exports.ECDSA = ECDSA;
-module.exports.SM_CRYPTO = SM_CRYPTO;

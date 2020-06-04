@@ -17,7 +17,7 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
 - 提供调用[预编译合约接口](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/design/virtual_machine/precompiled.html)的Node.js API
 - 提供合约事件推送相关的Node.js API
 - 支持国密模式
-- **非国密模式**下提供编译、部署、调用0.4.26及0.5.10版本Solidity合约的Node.js API
+- **非国密模式**下提供编译、部署、调用0.4.26及0.5.2版本Solidity合约的Node.js API
 - **国密模式**下提供编译、部署、调用0.4.25及0.5.1版本Solidity合约的Node.js API
 - 与FISCO BCOS节点的通信方式采用更安全的双向认证[Channel协议](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/design/protocol_description.html#channelmessage)
 - 提供简单易用的CLI（Command-Line Interface）工具，供用户在命令行中方便地部署及调用合约、管理区块链状态、执行CRUD操作等
@@ -460,7 +460,7 @@ Call a contract by a function and parameters
 
 ### 3.1 API调用约定
 
-- 调用Node.js SDK API前，首先需要初始化全局的`Configuration`对象，用以为各个服务提供必要的配置信息。`Configuration`对象位于可通过`require('packages/api').Configuration`的方式引入，随后调用`Configuration.setConfig(...)`函数即可完成`Configuration`对象初始化，`Configuration.setConfig(...)`函数的参数为配置文件的路径或一个符合`Configuration`格式要求的配置项对象。Node.js SDK所需的配置项请参阅『Node.js SDK配置项说明』一节；
+- 在通过各类Service（Web3jService、EventLogService等）调用Node.js SDK API前，首先需要创建一个`Configuration`对象实例，然后以该对象实例为构造函数参数实例化所需的Service。`Configuration`对象可通过`require('packages/api').Configuration`的方式引入，随后通过`new Configuration(...)`即可创建`Configuration`对象实例，`Configuration`的构造函数参数为配置文件的路径。Node.js SDK所需的配置项请参阅『Node.js SDK配置项说明』一节；
 - 如无特殊说明，Node.js SDK提供的API均为**异步**API。异步API的实际返回值是一个预期返回值的[Promise对象](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)，您可以使用[async/await语法](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await)或[then...catch...finally方法](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)操作该Promise对象以实现自己的应用逻辑；
 - 当API内部出现致命错误导致程序逻辑无法继续执行时（如合约地址不存在），均会直接抛出异常，所有异常均继承自Error类；
 - 当您的应用配置为连接到多个节点时，Node.js SDK会将API产生的网络请求发往一个随机选中的节点。
@@ -469,7 +469,7 @@ Call a contract by a function and parameters
 
 **引用方式**：`require('packages/api').Web3jService`
 
-**使用方式**：使用`new Web3jService()`进行实例化，随后调用对象实例上的成员方法
+**使用方式**：使用`new Web3jService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
 **成员方法**：
 
@@ -679,7 +679,7 @@ Call a contract by a function and parameters
 
 **引用方式**：`require('packages/api').PermissionService`
 
-**使用方式**：使用`new PermissionService()`进行实例化，随后调用对象实例上的成员方法
+**使用方式**：使用`new PermissionService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
 **成员方法**：
 
@@ -859,7 +859,7 @@ Call a contract by a function and parameters
 
 **引用方式**：`require('packages/api').CNSService`
 
-**使用方式**：使用`new CNSService()`进行实例化，随后调用对象实例上的成员方法
+**使用方式**：使用`new CNSService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
 **成员方法**：
 
@@ -910,7 +910,7 @@ Call a contract by a function and parameters
 
 **引用方式**：`require('packages/api').SystemConfigService`
 
-**使用方式**：使用`new SystemConfigService()`进行实例化，随后调用对象实例上的成员方法
+**使用方式**：使用`new SystemConfigService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
 **成员方法**：
 
@@ -929,7 +929,7 @@ Call a contract by a function and parameters
 
 **引用方式**：`require('packages/api').ConsensusService`
 
-**使用方式**：使用`new ConsensusService()`进行实例化，随后调用对象实例上的成员方法
+**使用方式**：使用`new ConsensusService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
 **成员方法**：
 
@@ -967,7 +967,7 @@ Call a contract by a function and parameters
 
 **引用方式**：`require('packages/api').CRUDService`
 
-**使用方式**：使用`new CRUDService()`进行实例化，随后调用对象实例上的成员方法
+**使用方式**：使用`new CRUDService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
 **成员方法**：
 
@@ -1036,7 +1036,8 @@ Call a contract by a function and parameters
 **参数**：
 
 - `String`，contractPath。合约地址
-- `String`，solc，可选。若用户需要使用自定义的Solidity编译器，请将该参数设置为调用自定义Solidity编译器的命令名。
+- `Number`，encryptType。所使用的密码学算法类型，其值为`ENCRYPT_TYPE.ECDSA`或`ENCRYPT_TYPE.SM_CRYPTO`
+- `String`，solc，可选。若用户需要使用自定义的Solidity编译器，请将该参数设置为调用自定义Solidity编译器的全局命令名
 
 **返回值**：`Object`，`ContractClass`对象，其具体功能请参考3.8节
 
@@ -1093,13 +1094,13 @@ Call a contract by a function and parameters
 
   **返回值**：指定合约事件的ABI
 
-- 动态函数簇
+- 动态生成函数
 
   **说明**：合约对象实例会根据用户合约中的方法动态生成相同名字及参数的函数，以[HelloWorld合约](https://github.com/FISCO-BCOS/nodejs-sdk/blob/master/packages/cli/contracts/HelloWorld.sol)为例，HelloWorld合约中存在`get`及`set`两个合约方法，则合约对象实例会自动生成同名且同参数的`get`及`set`函数，用户可在应用中直接调用合约对象实例提供的`get`或`set`函数即可调用已部署HelloWorld合约的`get`或`set`方法，而无需调用Web3jService提供的`sendRawTransaction`及`call` API。动态函数簇的存在可极大简化应用开发，以下代码片段展示了如何使用动态函数簇调用HelloWorld合约：
 
   ```javascript
   // contractPath为HelloWorld合约的路径
-  let contractClass = compile(contractPath);
+  let contractClass = compile(contractPath, ENCRYPT_TYPE.ECDSA);
   let helloWorld = contractClass.newInstance();
 
   await helloWorld.$deploy(web3j);
@@ -1124,7 +1125,7 @@ Call a contract by a function and parameters
 
 **引用方式**：`require('packages/api').EventLogService`
 
-**使用方式**：使用`new EventLogService()`进行实例化，随后调用对象实例上的成员方法
+**使用方式**：使用`new EventLogService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
 **成员方法**：
 
