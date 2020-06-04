@@ -16,8 +16,9 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
 - 提供调用[JSON-RPC接口](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/api.html)的Node.js API
 - 提供调用[预编译合约接口](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/design/virtual_machine/precompiled.html)的Node.js API
 - 提供合约事件推送相关的Node.js API
-- 提供编译、部署、调用0.4.x及0.5.x版本Solidity合约的Node.js API
 - 支持国密模式
+- **非国密模式**下提供编译、部署、调用0.4.26及0.5.10版本Solidity合约的Node.js API
+- **国密模式**下提供编译、部署、调用0.4.25及0.5.1版本Solidity合约的Node.js API
 - 与FISCO BCOS节点的通信方式采用更安全的双向认证[Channel协议](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/design/protocol_description.html#channelmessage)
 - 提供简单易用的CLI（Command-Line Interface）工具，供用户在命令行中方便地部署及调用合约、管理区块链状态、执行CRUD操作等
 - 支持Windows、Linux及MacOS操作系统
@@ -1055,7 +1056,7 @@ Call a contract by a function and parameters
 
   **返回值**：`Object`，合约对象，其具体功能请参考3.9节
 
-### 3.8 合约对象
+### 3.9 合约对象
 
 **引用方式**：无
 
@@ -1119,7 +1120,7 @@ Call a contract by a function and parameters
 
     **返回值**：`String`，ABI编码
 
-### 3.9 EventLogService
+### 3.10 EventLogService
 
 **引用方式**：`require('packages/api').EventLogService`
 

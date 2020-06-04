@@ -26,6 +26,7 @@ const createContractClass = require('./contractClass').createContractClass;
 let solc0$4Ver;
 let solc0$5Ver;
 let solc0$4GmVer = '0.4.25';
+let solc0$5GmVer = '0.5.2';
 
 try {
     solc0$4Ver = require('./compilers/solc-0.4/node_modules/solc/package.json').version;
@@ -114,6 +115,41 @@ function compileWithSolc0$4(solc, contractName, contractContent, readCallback) {
     return createContractClass(contractName, abi, bin);
 }
 
+// Used by compileWithSolcJS only
+function compileWithSolc0$5(solc, contractName, contractContent, readCallback) {
+    let input = {
+        language: "Solidity",
+        sources: {
+            [contractName]: {
+                content: contractContent
+            }
+        },
+        settings: {
+            outputSelection: {
+                '*': {
+                    '*': ['abi', 'evm.bytecode']
+                }
+            }
+        }
+    };
+    let output = JSON.parse(solc.compile(JSON.stringify(input), readCallback));
+    checkContractError(output.errors, '0.5');
+
+    if (!output.contracts[contractName][contractName]) {
+        let existKeys = [];
+        for (let key in output.contracts[contractName]) {
+            if (output.contracts[contractName].hasOwnProperty(key)) {
+                existKeys.push(key);
+            }
+        }
+        throw new CompileError(`no contract found with name ${contractName}, only contracts named [${existKeys.join(', ')}] found`);
+    }
+
+    let abi = output.contracts[contractName][contractName].abi;
+    let bin = output.contracts[contractName][contractName].evm.bytecode.object;
+    return createContractClass(contractName, abi, bin);
+}
+
 function compileWithSolcJS(contractPath) {
     let contractName = path.basename(contractPath, '.sol');
 
@@ -136,37 +172,7 @@ function compileWithSolcJS(contractPath) {
     if (encryptType === ECDSA) {
         if (semver.satisfies(solc0$5Ver, requiredSolcVerRange)) {
             let solc = require('./compilers/solc-0.5');
-            let input = {
-                language: "Solidity",
-                sources: {
-                    [contractName]: {
-                        content: contractContent
-                    }
-                },
-                settings: {
-                    outputSelection: {
-                        '*': {
-                            '*': ['abi', 'evm.bytecode']
-                        }
-                    }
-                }
-            };
-            let output = JSON.parse(solc.compile(JSON.stringify(input), readCallback));
-            checkContractError(output.errors, '0.5');
-
-            if (!output.contracts[contractName][contractName]) {
-                let existKeys = [];
-                for (let key in output.contracts[contractName]) {
-                    if (output.contracts[contractName].hasOwnProperty(key)) {
-                        existKeys.push(key);
-                    }
-                }
-                throw new CompileError(`no contract found with name ${contractName}, only contracts named [${existKeys.join(', ')}] found`);
-            }
-
-            let abi = output.contracts[contractName][contractName].abi;
-            let bin = output.contracts[contractName][contractName].evm.bytecode.object;
-            return createContractClass(contractName, abi, bin);
+            return compileWithSolc0$5(solc, contractName, contractContent, readCallback);
         } else if (semver.satisfies(solc0$4Ver, requiredSolcVerRange)) {
             let solc = require('./compilers/solc-0.4');
             return compileWithSolc0$4(solc, contractName, contractContent, readCallback);
@@ -179,6 +185,11 @@ function compileWithSolcJS(contractPath) {
             let solc = wrapper(require('./compilers/gm/soljson-v0.4.25-gm'));
 
             return compileWithSolc0$4(solc, contractName, contractContent, readCallback);
+        } else if (semver.satisfies(solc0$5GmVer, requiredSolcVer)) {
+            let wrapper = require('./compilers/solc-0.5/node_modules/solc/wrapper');
+            let solc = wrapper(require('./compilers/gm/soljson-v0.5.1-gm'));
+
+            return compileWithSolc0$5(solc, contractName, contractContent, readCallback);
         } else {
             throw new CompileError("solc version can't be satisfied");
         }
