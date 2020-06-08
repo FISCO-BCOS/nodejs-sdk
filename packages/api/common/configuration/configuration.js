@@ -51,13 +51,13 @@ function decodePem(pem, encryptType) {
 }
 
 class Configuration {
-    constructor(configurationFile) {
-        if (!configurationFile) {
+    constructor(configFilePath) {
+        if (!configFilePath) {
             throw new ConfigurationError('invalid configuration file path');
         }
 
-        this.configDir = path.dirname(configurationFile);
-        let configContent = fs.readFileSync(configurationFile);
+        this.configDir = path.dirname(configFilePath);
+        let configContent = fs.readFileSync(configFilePath);
         let config = null;
         try {
             config = JSON.parse(configContent);
