@@ -22,7 +22,12 @@ const rlp = require('rlp');
 const ethjsUtil = require('ethjs-util');
 const smCrypto = require('./sm_crypto/SM2Sign');
 const EC = require('elliptic').ec;
-const { ENCRYPT_TYPE } = require('../configuration');
+
+// To prevent circular dependency problem between `configuration` 
+// and `web3lib/utils`, please import `ENCRYPT_TYPE` directly via 
+// `require('../configuration/constant').ENCRYPT_TYPE`,
+// *DO NOT* use `require('../configuration').ENCRYPT_TYPE` or anything similar.
+const ENCRYPT_TYPE = require('../configuration/constant').ENCRYPT_TYPE;
 
 /**
  * Convert data to Buffer
@@ -106,6 +111,10 @@ function publicKeyToAddress(publicKey, encryptType, sanitize = false) {
             publicKey = secp256k1.publicKeyConvert(publicKey, false).slice(1);
         }
         assert(publicKey.length === 64);
+    } else {
+        if (encryptType !== ENCRYPT_TYPE.SM_CRYPTO) {
+            throw new Error('unsupported type of encryption');
+        }
     }
     // Only take the lower 160bits of the hash as address
     return sha3(publicKey, null, encryptType).slice(-20);
