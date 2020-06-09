@@ -310,4 +310,56 @@ interfaces.push(produceSubCommandInfo(
     })
 );
 
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'grantSysConfigManager',
+        describe: 'Grant permission for system configuration by address',
+        args: [
+            {
+                name: 'address',
+                options: {
+                    type: 'string',
+                    describe: '20 Bytes - The address of a tx.origin'
+                }
+            }
+        ]
+    },
+    (argv) => {
+        let address = argv.address;
+
+        return permissionService.grantSysConfigManager(address);
+    })
+);
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'revokeSysConfigManager',
+        describe: 'Revoke permission for system configuration by address',
+        args: [
+            {
+                name: 'address',
+                options: {
+                    type: 'string',
+                    describe: '20 Bytes - The address of a tx.origin'
+                }
+            }
+        ]
+    },
+    (argv) => {
+        let address = argv.address;
+
+        return permissionService.revokeSysConfigManager(address);
+    })
+);
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'listSysConfigManager',
+        describe: 'Query permission information for system configuration',
+    },
+    () => {
+        return permissionService.listSysConfigManager();
+    })
+);
+
 module.exports.interfaces = interfaces;
