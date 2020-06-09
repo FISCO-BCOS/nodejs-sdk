@@ -23,48 +23,42 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
 - 提供简单易用的CLI（Command-Line Interface）工具，供用户在命令行中方便地部署及调用合约、管理区块链状态、执行CRUD操作等
 - 支持Windows、Linux及MacOS操作系统
 
-目录
-=================
+## 目录
 
-  - [一、SDK部署](#%e4%b8%80sdk%e9%83%a8%e7%bd%b2)
-    - [1.1 环境要求](#11-%e7%8e%af%e5%a2%83%e8%a6%81%e6%b1%82)
-    - [1.2 安装导入项目](#12-%E5%AE%89%E8%A3%85%E5%AF%BC%E5%85%A5%E9%A1%B9%E7%9B%AE)
-    - [1.3 本地部署](#13-%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2)
-  - [二、CLI工具使用](#%e4%ba%8ccli%e5%b7%a5%e5%85%b7%e4%bd%bf%e7%94%a8)
-    - [2.1 快速建链（可选）](#21-%e5%bf%ab%e9%80%9f%e5%bb%ba%e9%93%be%e5%8f%af%e9%80%89)
-    - [2.2 配置](#22-%e9%85%8d%e7%bd%ae)
-    - [2.3 开启命令自动补全](#23-%e5%bc%80%e5%90%af%e5%91%bd%e4%bb%a4%e8%87%aa%e5%8a%a8%e8%a1%a5%e5%85%a8)
-    - [2.4 使用示例](#24-%e4%bd%bf%e7%94%a8%e7%a4%ba%e4%be%8b)
-      - [2.4.1 查看使用帮助](#241-%e6%9f%a5%e7%9c%8b%e4%bd%bf%e7%94%a8%e5%b8%ae%e5%8a%a9)
-      - [2.4.2 查看CLI工具能够调用的命令及对应的功能](#242-%e6%9f%a5%e7%9c%8bcli%e5%b7%a5%e5%85%b7%e8%83%bd%e5%a4%9f%e8%b0%83%e7%94%a8%e7%9a%84%e5%91%bd%e4%bb%a4%e5%8f%8a%e5%af%b9%e5%ba%94%e7%9a%84%e5%8a%9f%e8%83%bd)
-      - [2.4.3 查看所连FISCO BCOS节点的版本](#243-%e6%9f%a5%e7%9c%8b%e6%89%80%e8%bf%9efisco-bcos%e8%8a%82%e7%82%b9%e7%9a%84%e7%89%88%e6%9c%ac)
-      - [2.4.4 显示外部账户](#244-%e6%98%be%e7%a4%ba%e5%a4%96%e9%83%a8%e8%b4%a6%e6%88%b7)
-      - [2.4.5 获取当前的块高](#245-%e8%8e%b7%e5%8f%96%e5%bd%93%e5%89%8d%e7%9a%84%e5%9d%97%e9%ab%98)
-      - [2.4.6 部署CLI工具自带的HelloWorld合约](#246-%e9%83%a8%e7%bd%b2cli%e5%b7%a5%e5%85%b7%e8%87%aa%e5%b8%a6%e7%9a%84helloworld%e5%90%88%e7%ba%a6)
-      - [2.4.7 调用HelloWorld合约的set接口](#247-%e8%b0%83%e7%94%a8helloworld%e5%90%88%e7%ba%a6%e7%9a%84set%e6%8e%a5%e5%8f%a3)
-      - [2.4.8 调用HelloWorld合约的get接口](#248-%e8%b0%83%e7%94%a8helloworld%e5%90%88%e7%ba%a6%e7%9a%84get%e6%8e%a5%e5%8f%a3)
-      - [2.4.9 CRUD操作](#249-crud%e6%93%8d%e4%bd%9c)
-      - [2.4.10 更多CLI子命令使用帮助](#2410-%e6%9b%b4%e5%a4%9acli%e5%ad%90%e5%91%bd%e4%bb%a4%e4%bd%bf%e7%94%a8%e5%b8%ae%e5%8a%a9)
-  - [三、API列表](#%e4%b8%89api%e5%88%97%e8%a1%a8)
-    - [3.1 API调用约定](#31-api%e8%b0%83%e7%94%a8%e7%ba%a6%e5%ae%9a)
-    - [3.2 Web3jService](#32-web3jservice)
-    - [3.3 PermissionService](#33-permissionservice)
-    - [3.4 CNSService](#34-cnsservice)
-    - [3.5 SystemConfigService](#35-systemconfigservice)
-    - [3.6 ConsensusService](#36-consensusservice)
-    - [3.6 CRUDService](#36-crudservice)
-    - [3.7 compile](#37-compile)
-    - [3.8 ContractClass](#38-contractclass)
-    - [3.8 合约对象](#38-%e5%90%88%e7%ba%a6%e5%af%b9%e8%b1%a1)
-    - [3.9 EventLogService](#39-eventlogservice)
-  - [四、Node.js SDK配置项说明](#%e5%9b%9bnodejs-sdk%e9%85%8d%e7%bd%ae%e9%a1%b9%e8%af%b4%e6%98%8e)
-  - [五、贡献代码](#%e4%ba%94%e8%b4%a1%e7%8c%ae%e4%bb%a3%e7%a0%81)
-  - [六、加入我们的社区](#%e5%85%ad%e5%8a%a0%e5%85%a5%e6%88%91%e4%bb%ac%e7%9a%84%e7%a4%be%e5%8c%ba)
-  - [七、License](#%e4%b8%83license)
+  * [一、环境要求](#一环境要求)
+  * [二、CLI工具](#二cli工具)
+     * [2.1 快速建链（可选）](#21-快速建链可选)
+     * [2.2 配置](#22-配置)
+     * [2.3 开启命令自动补全](#23-开启命令自动补全)
+     * [2.4 CLI工具使用示例](#24-cli工具使用示例)
+        * [2.4.1 查看使用帮助](#241-查看使用帮助)
+        * [2.4.2 查看CLI工具能够调用的命令及对应的功能](#242-查看cli工具能够调用的命令及对应的功能)
+        * [2.4.3 查看所连FISCO BCOS节点的版本](#243-查看所连fisco-bcos节点的版本)
+        * [2.4.4 显示外部账户](#244-显示外部账户)
+        * [2.4.5 获取当前的块高](#245-获取当前的块高)
+        * [2.4.6 部署CLI工具自带的HelloWorld合约](#246-部署cli工具自带的helloworld合约)
+        * [2.4.7 调用HelloWorld合约的set接口](#247-调用helloworld合约的set接口)
+        * [2.4.8 调用HelloWorld合约的get接口](#248-调用helloworld合约的get接口)
+        * [2.4.9 CRUD操作](#249-crud操作)
+        * [2.4.10 更多使用帮助](#2410-更多使用帮助)
+  * [三、Node.js SDK API](#三nodejs-sdk-api)
+     * [3.1 API调用约定](#31-api调用约定)
+     * [3.2 Web3jService](#32-web3jservice)
+     * [3.3 PermissionService](#33-permissionservice)
+     * [3.4 CNSService](#34-cnsservice)
+     * [3.5 SystemConfigService](#35-systemconfigservice)
+     * [3.6 ConsensusService](#36-consensusservice)
+     * [3.6 CRUDService](#36-crudservice)
+     * [3.7 compile](#37-compile)
+     * [3.8 ContractClass](#38-contractclass)
+     * [3.9 合约对象](#39-合约对象)
+     * [3.10 EventLogService](#310-eventlogservice)
+  * [四、Node.js SDK配置项说明](#四nodejs-sdk配置项说明)
+  * [五、贡献代码](#五贡献代码)
+  * [六、加入我们的社区](#六加入我们的社区)
+  * [七、License](#七license)
 
-## 一、SDK部署
-
-### 1.1 环境要求
+## 一、环境要求
 
 - Node.js开发环境
   - Node.js >= 8.10.0
@@ -103,54 +97,40 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
   - Git bash（仅Windows需要）
   - MSBuild构建环境（仅Windows需要）
 
-  如果您使用Windows且没有部署过MSBuild构建环境，推荐在Windows PowerShell（管理员）中执行以下命令部署：
+    如果您使用Windows且没有部署过MSBuild构建环境，推荐在Windows PowerShell（管理员）中执行以下命令部署，该命令会下载约1GB的依赖项，整个过程可能会持续数十分钟，请耐心等待：
 
-  ```bash
-  npm install --global --production windows-build-tools
-  ```
-
-  该命令会下载约1GB的依赖项，整个过程可能会持续数十分钟，请耐心等待。
+    ```bash
+    npm install --global --production windows-build-tools
+    ```
 
   **请注意**：如果您使用Windows，则若无无特殊说明，本文之后所提到的命令均需要在Git bash中执行
 
 - FISCO BCOS：请参考FISCO BCOS[环境搭建教程](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/installation.html#fisco-bcos)
 
+- npm代理：**如果您的网络中使用了代理**，请按照如下方式为npm配置代理。如果没有使用代理，请忽略。
 
-### 1.2 安装导入项目
+  ```bash
+  npm config set proxy <your proxy>
+  npm config set https-proxy <your proxy>
+  ```
 
-**请注意**：如果您的网络中使用了代理，请先按照如下方式为npm配置代理。如果没有使用代理，请忽略。
+- npm源：**如果您的网络无法访问npm官方镜像源**，请按照如下方式更换镜像源，如淘宝：
 
-```bash
-npm config set proxy <your proxy>
-npm config set https-proxy <your proxy>
-```
+  ```bash
+  npm config set registry https://registry.npm.taobao.org
+  ```
 
-**请注意**：如果您所使用的网络不能顺利访问npm官方镜像，请按照如下方式更换镜像源，如淘宝：
+## 二、CLI工具
 
-```bash
-npm config set registry https://registry.npm.taobao.org
-```
+用户即使不使用SDK开发应用程序，也可以使用Node.js SDK中自带CLI工具在命令行中方便快捷地部署及调用合约、管理区块链状态、执行CRUD操作等。CLI工具也能够方便地嵌入到命令行脚本中，进行简单的应用开发。同时，CLI工具完全基于Node.js SDK提供的API的开发而成，可作为一个展示如何使用Node.js SDK API进行二次开发的Demo。在使用CLI工具前请下载并部署Node.js SDK：
 
-安装：引入node项目依赖
-```bash
-# 部署过程中请确保能够访问外网以能够安装第三方依赖包
-npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#分支名 -s
-```
-
-### 1.3 本地部署
-如需使用CLI，则需要在本地下载并部署。
 ```bash
 git clone https://github.com/FISCO-BCOS/nodejs-sdk.git
  # 部署过程中请确保能够访问外网以能够安装第三方依赖包
 cd nodejs-sdk
 npm install
-npm run repoclean
 npm run bootstrap
 ```
-
-## 二、CLI工具使用
-
-用户即使不开发应用程序，也可以使用Node.js SDK中自带CLI工具在命令行中方便快捷地部署及调用合约、管理区块链状态、执行CRUD操作等。CLI工具也能够方便地嵌入到命令行脚本中，进行简单的应用开发。同时，CLI工具完全基于Node.js SDK提供的API的开发而成，可作为一个展示如何使用Node.js SDK API进行二次开发的Demo。
 
 ### 2.1 快速建链（可选）
 
@@ -203,9 +183,7 @@ rcfile=~/.$(basename $SHELL)rc && ./cli.js completion >> $rcfile && source $rcfi
 
 使用CLI工具时，可以在输入子命令或参数的过程中按下`Tab`键（依据系统配置的不同，可能需要连续按多次），便可弹出候选子命令或参数的列表，随后使用方向键进行选择即可，当候选子命令或参数唯一时，CLI工具会自动将该子命令或参数填充至对应的位置上。
 
-### 2.4 使用示例
-
-本节展示若干CLI工具的使用示例，供用户参考。
+### 2.4 CLI工具使用示例
 
 **请注意**：示例中的输出结果仅供参考，根据系统、节点版本等因素的不同，实际输出结果可能会有所出入。
 
@@ -427,7 +405,7 @@ CLI工具的`sql`子命令允许用户使用类SQL语法在链上进行CRUD操�
 
     其中，`affected`表示该操作所影响的表的行数。
 
-#### 2.4.10 更多CLI子命令使用帮助
+#### 2.4.10 更多使用帮助
 
 如果您想知道某一个子命令该如何使用，可以使用如下格式的命令：
 
@@ -460,12 +438,19 @@ Call a contract by a function and parameters
   --version  显示版本号                                                   [布尔]
 ```
 
-## 三、API列表
+## 三、Node.js SDK API
+
+在使用Node.js SDK进行应用开发前请先导入Node.js SDK项目依赖：
+
+```bash
+# 导入过程中请确保能够访问外网以能够安装第三方依赖包
+npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#master -s
+```
 
 ### 3.1 API调用约定
 
-- 在通过各类Service（Web3jService、EventLogService等）调用Node.js SDK API前，首先需要创建一个`Configuration`对象实例，然后以该对象实例为构造函数参数实例化所需的Service。`Configuration`对象可通过`require('packages/api').Configuration`的方式引入，随后通过`new Configuration(...)`即可创建`Configuration`对象实例，`Configuration`的构造函数参数为配置文件的路径。Node.js SDK所需的配置项请参阅『Node.js SDK配置项说明』一节；
-- 如无特殊说明，Node.js SDK提供的API均为**异步**API。异步API的实际返回值是一个预期返回值的[Promise对象](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)，您可以使用[async/await语法](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await)或[then...catch...finally方法](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)操作该Promise对象以实现自己的应用逻辑；
+- 在通过各类Service（Web3jService、EventLogService等）调用Node.js SDK API前，首先需要创建一个`Configuration`对象实例，然后以该对象实例为构造函数参数实例化所需的Service。`Configuration`对象可通过`require('nodejs-sdk/packages/api').Configuration`的方式引入，随后通过`new Configuration(...)`即可创建`Configuration`对象实例，`Configuration`的构造函数参数为配置文件的路径。Node.js SDK所需的配置项请参阅『Node.js SDK配置项说明』一节；
+- 如无特殊说明，Node.js SDK提供的API均为**异步**API。异步API的实际返回值是一个包裹预期返回值的[Promise对象](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)，您可以使用[async/await语法](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await)或[then...catch...finally方法](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)操作该Promise对象以实现自己的应用逻辑；
 - 当API内部出现致命错误导致程序逻辑无法继续执行时（如合约地址不存在），均会直接抛出异常，所有异常均继承自Error类；
 - 当您的应用配置为连接到多个节点时，Node.js SDK会将API产生的网络请求发往一个随机选中的节点。
 
@@ -1100,7 +1085,7 @@ Call a contract by a function and parameters
 
 - 动态生成函数
 
-  **说明**：合约对象实例会根据用户合约中的方法动态生成相同名字及参数的函数，以[HelloWorld合约](https://github.com/FISCO-BCOS/nodejs-sdk/blob/master/packages/cli/contracts/HelloWorld.sol)为例，HelloWorld合约中存在`get`及`set`两个合约方法，则合约对象实例会自动生成同名且同参数的`get`及`set`函数，用户可在应用中直接调用合约对象实例提供的`get`或`set`函数即可调用已部署HelloWorld合约的`get`或`set`方法，而无需调用Web3jService提供的`sendRawTransaction`及`call` API。动态函数簇的存在可极大简化应用开发，以下代码片段展示了如何使用动态函数簇调用HelloWorld合约：
+  **说明**：合约对象实例会根据用户合约中的方法动态生成相同名字及参数的函数，以[HelloWorld合约](https://github.com/FISCO-BCOS/nodejs-sdk/blob/master/packages/cli/contracts/HelloWorld.sol)为例，HelloWorld合约中存在`get`及`set`两个合约方法，则合约对象实例会自动生成同名且同参数的`get`及`set`函数，用户可在应用中直接调用合约对象实例提供的`get`或`set`函数即可调用已部署HelloWorld合约的`get`或`set`方法，而无需调用Web3jService提供的`sendRawTransaction`及`call` API。动态函数的存在可极大简化应用开发，以下代码片段展示了如何使用动态函数簇调用HelloWorld合约：
 
   ```javascript
   // contractPath为HelloWorld合约的路径

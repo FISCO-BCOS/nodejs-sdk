@@ -638,4 +638,24 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'getCode',
+        describe: 'Query code at a given address',
+        args: [
+            {
+                name: 'address',
+                options: {
+                    type: 'string',
+                    describe: '20 Bytes - The address of a contract',
+                }
+            }
+        ]
+    },
+    (argv) => {
+        let address = argv.address;
+        return web3jService.getCode(address);
+    }
+));
+
 module.exports.interfaces = interfaces;

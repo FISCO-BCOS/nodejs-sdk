@@ -10,7 +10,7 @@ rm packages/cli/conf/config.json.bak
 cp nodes/127.0.0.1/sdk/* packages/cli/conf/authentication
 cd packages/cli 
 ./cli.js getClientVersion
-./cli.js deploy HelloWorld
+./cli.js deploy HelloWorldV5
 
 cd ../..
 cp nodes/127.0.0.1/sdk/* test/conf/authentication

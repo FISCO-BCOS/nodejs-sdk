@@ -2,6 +2,16 @@
     "name": "nodejs-sdk",
     "version": "1.0.0",
     "description": "Node.js sdk for FISCO BCOS",
+    "keywords": [
+        "FISCO BCOS"
+    ],
+    "homepage": "https://github.com/FISCO-BCOS/nodejs-sdk",
+    "bugs": "https://github.com/FISCO-BCOS/nodejs-sdk/issues",
+    "authors": {
+        "name": "Li Chenxi",
+        "email": "lichenxi.webank@gmail.com",
+        "url": "https://github.com/vita-dounai"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/FISCO-BCOS/nodejs-sdk.git"
@@ -29,13 +39,6 @@
         "mocha": "^7.1.2"
     },
     "nyc": {
-        "exclude": [
-            "lib/**"
-        ],
-        "reporter": [
-            "text-summary",
-            "html"
-        ],
         "all": true,
         "check-coverage": false,
         "statements": 5,
