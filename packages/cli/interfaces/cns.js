@@ -58,18 +58,18 @@ interfaces.push(produceSubCommandInfo(
                 }
             },
             {
+                name: 'id',
+                options: {
+                    type: 'string',
+                    describe: 'The id of a private key'
+                }
+            },
+            {
                 name: 'parameters',
                 options: {
                     type: 'string',
                     describe: 'The parameters(splited by space) of constructor',
                     flag: FLAGS.VARIADIC
-                }
-            },
-            {
-                name: 'id',
-                options: {
-                    type: 'string',
-                    describe: 'The id of a private key'
                 }
             }
         ]
