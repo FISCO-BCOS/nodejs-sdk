@@ -28,8 +28,8 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
 
   - [一、SDK部署](#%e4%b8%80sdk%e9%83%a8%e7%bd%b2)
     - [1.1 环境要求](#11-%e7%8e%af%e5%a2%83%e8%a6%81%e6%b1%82)
-    - [1.2 获取源代码](#12-%e8%8e%b7%e5%8f%96%e6%ba%90%e4%bb%a3%e7%a0%81)
-    - [1.3 部署](#13-%e9%83%a8%e7%bd%b2)
+    - [1.2 安装导入项目](#12-%E5%AE%89%E8%A3%85%E5%AF%BC%E5%85%A5%E9%A1%B9%E7%9B%AE)
+    - [1.3 本地部署](#13-%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2)
   - [二、CLI工具使用](#%e4%ba%8ccli%e5%b7%a5%e5%85%b7%e4%bd%bf%e7%94%a8)
     - [2.1 快速建链（可选）](#21-%e5%bf%ab%e9%80%9f%e5%bb%ba%e9%93%be%e5%8f%af%e9%80%89)
     - [2.2 配置](#22-%e9%85%8d%e7%bd%ae)
@@ -115,13 +115,8 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
 
 - FISCO BCOS：请参考FISCO BCOS[环境搭建教程](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/installation.html#fisco-bcos)
 
-### 1.2 获取源代码
 
-```bash
-git clone https://github.com/FISCO-BCOS/nodejs-sdk.git
-```
-
-### 1.3 部署
+### 1.2 安装导入项目
 
 **请注意**：如果您的网络中使用了代理，请先按照如下方式为npm配置代理。如果没有使用代理，请忽略。
 
@@ -136,8 +131,17 @@ npm config set https-proxy <your proxy>
 npm config set registry https://registry.npm.taobao.org
 ```
 
+安装：引入node项目依赖
 ```bash
 # 部署过程中请确保能够访问外网以能够安装第三方依赖包
+npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#分支名 -s
+```
+
+### 1.3 本地部署
+如需使用CLI，则需要在本地下载并部署。
+```bash
+git clone https://github.com/FISCO-BCOS/nodejs-sdk.git
+ # 部署过程中请确保能够访问外网以能够安装第三方依赖包
 cd nodejs-sdk
 npm install
 npm run repoclean
@@ -467,7 +471,7 @@ Call a contract by a function and parameters
 
 ### 3.2 Web3jService
 
-**引用方式**：`require('packages/api').Web3jService`
+**引用方式**：`require('nodejs-sdk/packages/api').Web3jService`
 
 **使用方式**：使用`new Web3jService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
@@ -677,7 +681,7 @@ Call a contract by a function and parameters
 
 ### 3.3 PermissionService
 
-**引用方式**：`require('packages/api').PermissionService`
+**引用方式**：`require('nodejs-sdk/packages/api').PermissionService`
 
 **使用方式**：使用`new PermissionService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
@@ -857,7 +861,7 @@ Call a contract by a function and parameters
 
 ### 3.4 CNSService
 
-**引用方式**：`require('packages/api').CNSService`
+**引用方式**：`require('nodejs-sdk/packages/api').CNSService`
 
 **使用方式**：使用`new CNSService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
@@ -908,7 +912,7 @@ Call a contract by a function and parameters
 
 ### 3.5 SystemConfigService
 
-**引用方式**：`require('packages/api').SystemConfigService`
+**引用方式**：`require('nodejs-sdk/packages/api').SystemConfigService`
 
 **使用方式**：使用`new SystemConfigService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
@@ -927,7 +931,7 @@ Call a contract by a function and parameters
 
 ### 3.6 ConsensusService
 
-**引用方式**：`require('packages/api').ConsensusService`
+**引用方式**：`require('nodejs-sdk/packages/api').ConsensusService`
 
 **使用方式**：使用`new ConsensusService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
@@ -965,7 +969,7 @@ Call a contract by a function and parameters
 
 ### 3.6 CRUDService
 
-**引用方式**：`require('packages/api').CRUDService`
+**引用方式**：`require('nodejs-sdk/packages/api').CRUDService`
 
 **使用方式**：使用`new CRUDService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
@@ -1027,7 +1031,7 @@ Call a contract by a function and parameters
 
 ### 3.7 compile
 
-**引用方式**：`require('packages/api').compile`
+**引用方式**：`require('nodejs-sdk/packages/api').compile`
 
 **使用方式**：直接作为函数进行调用
 
@@ -1123,7 +1127,7 @@ Call a contract by a function and parameters
 
 ### 3.10 EventLogService
 
-**引用方式**：`require('packages/api').EventLogService`
+**引用方式**：`require('nodejs-sdk/packages/api').EventLogService`
 
 **使用方式**：使用`new EventLogService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
