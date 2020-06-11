@@ -17,6 +17,7 @@
 const decode = require('../../api/decoder');
 const path = require('path');
 const fs = require('fs');
+const compile = require('../../api/').compile;
 const { produceSubCommandInfo, FLAGS } = require('./base');
 const { CNSService, PermissionService, Web3jService, Configuration } = require('../../api');
 const { OutputCode } = require('../../api/precompiled/common');
@@ -77,9 +78,10 @@ interfaces.push(produceSubCommandInfo(
     (argv) => {
         return permissionService.listCNSManager().then(cnsManagers => {
             let id = argv.id;
+            let account = null;
 
             if (cnsManagers.length !== 0) {
-                let account = config.accounts[id];
+                account = config.accounts[id];
                 if (!account) {
                     throw new Error(`invalid id of account: ${id}`);
                 }
@@ -108,14 +110,14 @@ interfaces.push(produceSubCommandInfo(
                 if (!fs.existsSync(contractPath)) {
                     throw new Error(`${contractName} doesn't exist`);
                 }
-                let outputDir = ContractsOutputDir;
 
+                let contractClass = compile(contractPath, config.encryptType, config.solc);
                 let parameters = argv.parameters;
-                return web3jService.deploy(contractPath, outputDir, parameters).then((result) => {
+
+                return web3jService.deploy(contractClass.abi, contractClass.bin, parameters, account).then((result) => {
                     if (result.status === '0x0') {
                         let contractAddress = result.contractAddress;
-                        let abi = fs.readFileSync(path.join(outputDir, `${contractName}.abi`)).toString();
-                        return cnsService.registerCns(contractName, contractVersion, contractAddress, abi).then(() => {
+                        return cnsService.registerCns(contractName, contractVersion, contractAddress, JSON.stringify(contractClass.abi)).then(() => {
                             return {
                                 status: result.status,
                                 contractAddress,
