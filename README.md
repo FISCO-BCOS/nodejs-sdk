@@ -157,7 +157,7 @@ CLI工具的配置文件位于`packages/cli/conf/config.json`，该配置文件�
 
 - 账户
 
-    账户配置位于配置文件的`accounts`配置项中。Node.js SDK支持同时加载多个账户，每个账户由账户名及对应的私钥组成。对于单个账户，您可以直接指定一个随机数（随机数的要求见『Node.js SDK配置项说明』一节）作为私钥，但更一般地，您也可以指定指定私钥文件以让SDK加载私钥。国密私钥文件可以使用[get_gm_account.sh](https://raw.githubusercontent.com/FISCO-BCOS/console/master/tools/get_gm_account.sh)脚本工具生成，非国密私钥文件可以使用[get_account.sh](https://raw.githubusercontent.com/FISCO-BCOS/console/master/tools/get_account.sh)脚本工具生成。请您确保所使用的私钥文件的类型与`encryptType`配置项中指定的加密算法类型一致。
+    账户配置位于配置文件的`accounts`配置项中。Node.js SDK支持同时加载多个账户，每个账户由账户名及对应的私钥组成。对于单个账户，您可以直接指定一个随机数（随机数的要求见『Node.js SDK配置项说明』一节）作为私钥，但更一般地，您也可以指定指定私钥文件以让SDK加载私钥。国密私钥文件可以使用[get_gm_account.sh](https://gitee.com/FISCO-BCOS/console/raw/master/tools/get_gm_account.sh)脚本工具生成，非国密私钥文件可以使用[get_account.sh](https://gitee.com/FISCO-BCOS/console/raw/master/tools/get_account.sh)脚本工具生成。请您确保所使用的私钥文件的类型与`encryptType`配置项中指定的加密算法类型一致。
 
 - 证书
 
@@ -1148,7 +1148,7 @@ npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#master -s
 配置项中各字段的说明如下：
 
 - `encryptType`: `String`，必需。指定交易签名、合约部署时所使用的加密算法。`ECDSA`表示使用ECDSA(secp256k1)加密算法，`SM_CRYPTO`表示使用国密算法。
-- `accounts`：`Object`，必需。用户集合，每个用户均由私钥及用于索引该私钥用户名组成。私钥可以为一个256 bits的随机整数，也可以是一个pem或p12格式的私钥文件，后两者需要结合[get_account.sh](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/manual/account.html)或[get_gm_account.sh](https://raw.githubusercontent.com/FISCO-BCOS/console/master/tools/get_gm_account.sh)生成的私钥文件使用。私钥包含两个必需字段，一个可选字段：
+- `accounts`：`Object`，必需。用户集合，每个用户均由私钥及用于索引该私钥用户名组成。私钥可以为一个256 bits的随机整数，也可以是一个pem或p12格式的私钥文件，后两者需要结合[get_account.sh](https://gitee.com/FISCO-BCOS/console/raw/master/tools/get_account.sh)或[get_gm_account.sh](https://gitee.com/FISCO-BCOS/console/raw/master/tools/get_gm_account.sh)生成的私钥文件使用。私钥包含两个必需字段，一个可选字段：
   - `type`: `String`，必需。用于指示私钥类型。`type`的值必需为下列三个值之一：
     - `ecrandom`：随机整数
     - `pem`：pem格式的文件
