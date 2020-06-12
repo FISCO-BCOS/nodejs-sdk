@@ -8,6 +8,11 @@
         "bob": {
             "type": "pem",
             "value": "./accounts/bob.pem"
+        },
+        "cherry": {
+            "type": "p12",
+            "value": "./accounts/cherry.p12",
+            "password": "123456"
         }
     },
     "nodes": [
