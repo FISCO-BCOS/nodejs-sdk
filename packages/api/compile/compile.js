@@ -22,7 +22,9 @@ const childProcess = require('child_process');
 const uuid = require('uuid');
 const CompileError = require('../common/exceptions').CompileError;
 const createContractClass = require('./contractClass').createContractClass;
-const { ENCRYPT_TYPE } = require('../common/configuration');
+const {
+    ENCRYPT_TYPE
+} = require('../common/configuration');
 
 let solc0$4Ver;
 let solc0$5Ver;
@@ -165,7 +167,9 @@ function compileWithSolcJS(contractPath, encryptType) {
 
     let readCallback = (importContractName) => {
         let importContractPath = path.join(path.dirname(contractPath), importContractName);
-        return { contents: fs.readFileSync(importContractPath).toString() };
+        return {
+            contents: fs.readFileSync(importContractPath).toString()
+        };
     };
 
     if (encryptType === ENCRYPT_TYPE.ECDSA) {
@@ -211,8 +215,12 @@ function compileWithBin(contractPath, solc, encryptType) {
     let contractName = path.basename(contractPath, '.sol');
     let files = fs.readdirSync(outputDir);
 
-    let abiIndex = files.findIndex((file) => { return file.endsWith(contractName + '.abi'); });
-    let binIndex = files.findIndex((file) => { return file.endsWith(contractName + '.bin'); });
+    let abiIndex = files.findIndex((file) => {
+        return file.endsWith(contractName + '.abi');
+    });
+    let binIndex = files.findIndex((file) => {
+        return file.endsWith(contractName + '.bin');
+    });
     if (abiIndex === -1 || binIndex === -1) {
         throw new CompileError('\n' + output.trim());
     }

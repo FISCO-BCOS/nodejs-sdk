@@ -19,8 +19,12 @@ const fs = require('fs');
 const net = require('net');
 const uuidv4 = require('uuid/v4');
 const events = require('events');
-const { NetworkError } = require('../exceptions');
-const { MESSAGE_TYPE } = require('./constant');
+const {
+    NetworkError
+} = require('../exceptions');
+const {
+    MESSAGE_TYPE
+} = require('./constant');
 
 let emitters = new Map();
 let buffers = new Map();
@@ -73,98 +77,93 @@ function parseResponse(response) {
     let errorCode = response.slice(38, 42).readUInt32BE();
 
     switch (type) {
-        case MESSAGE_TYPE.TRANSACTION_NOTIFY:
-            {
-                // transaction notification
-                checkErrorCode(errorCode);
-                let emitter = getEmitter(seq);
-                if (emitter) {
-                    response = JSON.parse(response.slice(42).toString());
+        case MESSAGE_TYPE.TRANSACTION_NOTIFY: {
+            // transaction notification
+            checkErrorCode(errorCode);
+            let emitter = getEmitter(seq);
+            if (emitter) {
+                response = JSON.parse(response.slice(42).toString());
 
+                if (response.error || response.status || (response.result && response.result.status)) {
+                    emitter.emit('gotresult', response);
+                } else {
+                    if (!response.result) {
+                        throw new NetworkError(`unknown message received, seq=${seq}, data=${response.toString()}`);
+                    }
+                }
+            }
+            break;
+        }
+        case MESSAGE_TYPE.BLOCK_NOTIFY: {
+            // block notification, which doesn't care about seq
+            checkErrorCode(errorCode);
+            let data = response.slice(42);
+            // topic length = the actual topic length + 1, strange design
+            let topicLength = data.slice(0, 1).readUInt8();
+            response = data.slice(topicLength).toString('ascii');
+            let [groupID, blockHeight] = response.split(',').map((str) => (parseInt(str)));
+
+            if (blockNotifyCallbacks.has(groupID)) {
+                for (let callback of blockNotifyCallbacks.get(groupID)) {
+                    callback(groupID, blockHeight);
+                }
+            }
+            break;
+        }
+        case MESSAGE_TYPE.CHANNEL_RPC_REQUEST: {
+            // JSON RPC 2.0 format response
+            checkErrorCode(errorCode);
+            let emitter = getEmitter(seq);
+            if (emitter) {
+
+                response = JSON.parse(response.slice(42).toString());
+                let readOnly = Object.getOwnPropertyDescriptor(emitter, 'readOnly').value;
+
+                if (readOnly) {
+                    // read-only query
+                    if (response.error || typeof response.result !== 'undefined') {
+                        emitter.emit('gotresult', response);
+                    }
+                } else {
+                    // transaction
                     if (response.error || response.status || (response.result && response.result.status)) {
                         emitter.emit('gotresult', response);
                     } else {
                         if (!response.result) {
-                            throw new NetworkError(`unknown message receieved, seq=${seq}, data=${response.toString()}`);
+                            throw new NetworkError(`unknown message received, seq=${seq}, data=${response.toString()}`);
                         }
                     }
                 }
-                break;
             }
-        case MESSAGE_TYPE.BLOCK_NOTIFY:
-            {
-                // block notification, which doesn't care about seq
-                checkErrorCode(errorCode);
+            break;
+        }
+        case MESSAGE_TYPE.CLIENT_REGISTER_EVENT_LOG: {
+            // result of register event 
+            checkErrorCode(errorCode);
+            let emitter = getEmitter(seq);
+            if (emitter) {
                 let data = response.slice(42);
                 // topic length = the actual topic length + 1, strange design
                 let topicLength = data.slice(0, 1).readUInt8();
-                response = data.slice(topicLength).toString('ascii');
-                let [groupID, blockHeight] = response.split(',').map((str) => (parseInt(str)));
-
-                if (blockNotifyCallbacks.has(groupID)) {
-                    for (let callback of blockNotifyCallbacks.get(groupID)) {
-                        callback(groupID, blockHeight);
-                    }
-                }
-                break;
+                response = JSON.parse(data.slice(topicLength).toString());
+                emitter.emit('gotresult', response);
             }
-        case MESSAGE_TYPE.CHANNEL_RPC_REQUEST:
-            {
-                // JSON RPC 2.0 format response
-                checkErrorCode(errorCode);
-                let emitter = getEmitter(seq);
-                if (emitter) {
+            break;
+        }
+        case MESSAGE_TYPE.EVENT_LOG_PUSH: {
+            let data = response.slice(42);
+            response = JSON.parse(data);
 
-                    response = JSON.parse(response.slice(42).toString());
-                    let readOnly = Object.getOwnPropertyDescriptor(emitter, 'readOnly').value;
-
-                    if (readOnly) {
-                        // read-only query
-                        if (response.error || typeof response.result !== 'undefined') {
-                            emitter.emit('gotresult', response);
-                        }
-                    } else {
-                        // transaction
-                        if (response.error || response.status || (response.result && response.result.status)) {
-                            emitter.emit('gotresult', response);
-                        } else {
-                            if (!response.result) {
-                                throw new NetworkError(`unknown message receieved, seq=${seq}, data=${response.toString()}`);
-                            }
-                        }
-                    }
-                }
-                break;
+            let filterID = response.filterID;
+            if (eventLogFilterCallbacks.has(filterID)) {
+                let callback = eventLogFilterCallbacks.get(filterID);
+                callback(response);
             }
-        case MESSAGE_TYPE.CLIENT_REGISTER_EVENT_LOG:
-            {
-                // result of register event 
-                checkErrorCode(errorCode);
-                let emitter = getEmitter(seq);
-                if (emitter) {
-                    let data = response.slice(42);
-                    // topic length = the actual topic length + 1, strange design
-                    let topicLength = data.slice(0, 1).readUInt8();
-                    response = JSON.parse(data.slice(topicLength).toString());
-                    emitter.emit('gotresult', response);
-                }
-                break;
-            }
-        case MESSAGE_TYPE.EVENT_LOG_PUSH:
-            {
-                let data = response.slice(42);
-                response = JSON.parse(data);
 
-                let filterID = response.filterID;
-                if (eventLogFilterCallbacks.has(filterID)) {
-                    let callback = eventLogFilterCallbacks.get(filterID);
-                    callback(response);
-                }
-
-                break;
-            }
+            break;
+        }
         default:
-            throw new NetworkError(`unknown type message receieved, type=${type}`);
+            throw new NetworkError(`unknown type message received, type=${type}`);
     }
 }
 
@@ -204,8 +203,7 @@ function createNewSocket(ip, port, authentication) {
         let response = null;
         if (data instanceof Buffer) {
             response = data;
-        }
-        else {
+        } else {
             response = Buffer.from(data, 'ascii');
         }
 
@@ -323,7 +321,7 @@ function clearContext(uuid) {
  * @param {Object} data JSON object of request load
  * @param {Number} type type of the request
  * @param {Object} node network address of the peer node
- * @param {Object} authentication information abour certificate and private key to constract SSL connection
+ * @param {Object} authentication information about certificate and private key to construct SSL connection
  * @param {Number} timeout maximum time for waiting response. If `timeout` set to null, that means the request doesn't need any response
  * @return {Promise} a promise which will be resolved when the request is satisfied
  */
@@ -337,11 +335,20 @@ function channelPromise(data, type, node, authentication, timeout = null) {
         newSocket.unref();
         sockets.set(socketID, newSocket);
 
-        newSocket.on('error', function (error) {
+        let clear = () => {
             buffers.delete(socketID);
             lastBytesRead.delete(socketID);
             sockets.delete(socketID);
+        };
+
+        newSocket.on('error', function (error) {
+            clear();
             throw new NetworkError(error);
+        });
+
+        newSocket.on('end', () => {
+            clear();
+            throw new NetworkError('disconnected from remote node');
         });
     }
     let tlsSocket = sockets.get(socketID);
@@ -385,7 +392,9 @@ function channelPromise(data, type, node, authentication, timeout = null) {
 
             eventEmitter.on('timeout', () => {
                 clearContext(uuid);
-                reject({ 'error': `timeout when send request:  ${JSON.stringify(data)}` });
+                reject({
+                    'error': `timeout when send request:  ${JSON.stringify(data)}`
+                });
                 return; // This `return` is not necessary, but it may can avoid future trap
             });
 
@@ -405,8 +414,7 @@ function channelPromise(data, type, node, authentication, timeout = null) {
 function registerBlockNotifyCallback(groupID, callback, node, authentication) {
     if (blockNotifyCallbacks.has(groupID)) {
         blockNotifyCallbacks.get(groupID).push(callback);
-    }
-    else {
+    } else {
         blockNotifyCallbacks.set(groupID, [callback]);
     }
 
