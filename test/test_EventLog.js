@@ -25,7 +25,9 @@ const {
     hash,
     EVENT_LOG_FILTER_PUSH_STATUS
 } = require('../packages/api');
-const { waitFor } = require('./utils');
+const {
+    waitFor
+} = require('./utils');
 
 let config = new Configuration(path.join(__dirname, './conf/config.json'));
 let contractPath = path.join(__dirname, './contracts/EventTest.sol');
@@ -54,7 +56,9 @@ describe('test for event log', function () {
         should.equal(response.result, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
 
         await eventTest.method1('1234');
-        await waitFor(() => { return status !== null; });
+        await waitFor(() => {
+            return status !== null;
+        });
 
         should.equal(status, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
         should.equal(logs[0].values.s, '1234');
@@ -75,7 +79,9 @@ describe('test for event log', function () {
         should.equal(response.result, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
 
         await eventTest.method2('1234', 0);
-        await waitFor(() => { return status !== null; });
+        await waitFor(() => {
+            return status !== null;
+        });
 
         should.equal(status, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
         should.equal(logs[0].values.s, '1234');
@@ -93,7 +99,8 @@ describe('test for event log', function () {
             topics: [
                 TopicConvertor.fromABI(event3ABI, config.encryptType),
                 TopicConvertor.fromString(narcissism, config.encryptType),
-                TopicConvertor.fromInteger(42)]
+                TopicConvertor.fromInteger(42)
+            ]
         }, (_status, _logs) => {
             status = _status;
             logs = _logs;
@@ -101,7 +108,9 @@ describe('test for event log', function () {
         should.equal(response.result, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
 
         await eventTest.method3(narcissism, 42);
-        await waitFor(() => { return status !== null; });
+        await waitFor(() => {
+            return status !== null;
+        });
 
         should.equal(status, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
         should.equal(logs[0].values.s, '0x' + hash(narcissism, config.encryptType));
@@ -123,7 +132,9 @@ describe('test for event log', function () {
         should.equal(response.result, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
 
         await eventTest.method4('0xd7ec39ec9e33e6feaa8f10d5f25d896e33b178f8');
-        await waitFor(() => { return status !== null; });
+        await waitFor(() => {
+            return status !== null;
+        });
 
         should.equal(status, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
         should.equal(logs[0].values.a, '0xd7ec39ec9e33e6feaa8f10d5f25d896e33b178f8');
@@ -144,7 +155,9 @@ describe('test for event log', function () {
         should.equal(response.result, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
 
         await eventTest.method5('0xd7ec39ec9e33e6feaa8f10d5f25d896e33b178f8');
-        await waitFor(() => { return status !== null; });
+        await waitFor(() => {
+            return status !== null;
+        });
 
         should.equal(status, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
         should.equal(logs[0].values.a, '0xd7ec39ec9e33e6feaa8f10d5f25d896e33b178f8');
@@ -169,7 +182,9 @@ describe('test for event log', function () {
         should.equal(response.result, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
 
         await eventTest.method6(42, true, '1234');
-        await waitFor(() => { return status !== null; });
+        await waitFor(() => {
+            return status !== null;
+        });
 
         should.equal(status, EVENT_LOG_FILTER_PUSH_STATUS.SUCCESS);
         should.equal(logs[0].values.n, 42);

@@ -18,9 +18,10 @@ const ethers = require('ethers');
 const isArray = require('isarray');
 const assert = require('assert');
 const deepcopy = require('deepcopy');
-const utils = require('../common/web3lib/utils');
 const hash = require('../common/web3lib/utils').hash;
-const { ENCRYPT_TYPE } = require('../common/configuration');
+const {
+    ENCRYPT_TYPE
+} = require('../common/configuration');
 
 function formalize(data, type) {
     // for user-defined struct
@@ -81,7 +82,7 @@ class MethodDecoder {
     }
 
     decodeInput(input) {
-        let methodID = input.substr(0, 10);  // method selector
+        let methodID = input.substr(0, 10); // method selector
         input = '0x' + input.substr(10);
 
         let inputTypes = this.method.inputs;

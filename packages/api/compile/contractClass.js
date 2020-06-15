@@ -17,7 +17,10 @@
 const createMethodDecoder = require('../decoder').createMethodDecoder;
 const ethers = require('ethers');
 const deepcopy = require('deepcopy');
-const { getTxData, encodeParams } = require('../common/web3lib/web3sync');
+const {
+    getTxData,
+    encodeParams
+} = require('../common/web3lib/web3sync');
 
 function createCodeForAddressCheck() {
     let code =
