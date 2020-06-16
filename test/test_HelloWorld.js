@@ -29,6 +29,13 @@ describe('test for hello world', function () {
         return helloWorld.$deploy(web3j);
     });
 
+    it('duplicate deploy', async () => {
+        try {
+            let _ = await helloWorld.$deploy(web3j);
+            should.equal(true, false);
+        } catch (_) { }
+    });
+
     it('get', async () => {
         let ret = await helloWorld.get();
         should.exist(ret);

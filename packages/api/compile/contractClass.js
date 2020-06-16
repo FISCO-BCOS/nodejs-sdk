@@ -35,7 +35,8 @@ function createCodeForConstantMethod(index) {
         createCodeForAddressCheck() +
         `let abi = this._functionABIMapper.get("${index}").abi;\n` +
         `let decoder = this._functionABIMapper.get("${index}").decoder;\n` +
-        'return this.web3jService.call(this.address, abi, Array.from(arguments)).then((result) => {\n' +
+        'let user = this._tempUser === null ? this._user: this._tempUser;\n' +
+        'return this.web3jService.call(this.address, abi, Array.from(arguments), user).then((result) => {\n' +
         '    let status = result.result.status;\n' +
         '    let output = result.result.output;\n' +
         '    if (status !== "0x0") {\n' +
@@ -54,7 +55,11 @@ function createCodeForConstantMethod(index) {
         '        return output.result;\n' +
         '    }\n' +
         '    return null;\n' +
-        '});';
+        '}).finally(() => {\n' +
+        '    if (this._tempUser !== null) {\n' +
+        '        this._tempUser = null;\n' +
+        '    }\n' +
+        '});\n';
 
     return code;
 }
@@ -64,7 +69,8 @@ function createCodeForMutableMethod(index) {
         createCodeForAddressCheck() +
         `let abi = this._functionABIMapper.get("${index}").abi;\n` +
         `let decoder = this._functionABIMapper.get("${index}").decoer;\n` +
-        'return this.web3jService.sendRawTransaction(this.address, abi, Array.from(arguments)).then((result) => {\n' +
+        'let user = this._tempUser === null ? this._user: this._tempUser;\n' +
+        'return this.web3jService.sendRawTransaction(this.address, abi, Array.from(arguments), user).then((result) => {\n' +
         '    let status = result.status;\n' +
         '    let output = result.output;\n' +
         '    if (status !== "0x0") {\n' +
@@ -83,6 +89,10 @@ function createCodeForMutableMethod(index) {
         '        return output;\n' +
         '    }\n' +
         '    return null;\n' +
+        '}).finally(() => {\n' +
+        '    if (this._tempUser !== null) {\n' +
+        '        this._tempUser = null;\n' +
+        '    }\n' +
         '});\n';
 
     return code;
@@ -90,11 +100,19 @@ function createCodeForMutableMethod(index) {
 
 function createCodeForConstructor() {
     let code =
+        'if (this.address) {\n' +
+        '    throw new Error(`should not call \\`$deploy\\` twice or more times`);\n' +
+        '}\n' +
+        'let user = this._tempUser === null ? this._user: this._tempUser;\n' +
         'this.web3jService = web3jService;\n' +
-        'return this.web3jService.deploy(this.abi, this.bin, Array.from(arguments).slice(1)).then((result) => {\n' +
+        'return this.web3jService.deploy(this.abi, this.bin, Array.from(arguments).slice(1), user).then((result) => {\n' +
         '    this.address = result.contractAddress;\n' +
         '    return this.address;\n' +
-        '});';
+        '}).finally(() => {\n' +
+        '    if (this._tempUser !== null) {\n' +
+        '        this._tempUser = null;\n' +
+        '    }\n' +
+        '});\n';
     return code;
 }
 
@@ -125,6 +143,19 @@ function createCodeForGetFunctionABIOf() {
     return code;
 }
 
+function createCodeForSetUser() {
+    let code = 'this._user = id;';
+    return code;
+}
+
+function createCodeForBy() {
+    let code =
+        'this._tempUser = id;\n' +
+        'return this;';
+
+    return code;
+}
+
 function createContractClass(name, abi, bin, encryptType) {
     if (typeof abi === 'string') {
         abi = JSON.parse(abi);
@@ -140,7 +171,9 @@ function createContractClass(name, abi, bin, encryptType) {
                 abi: contractClass.abi,
                 bin: contractClass.bin,
                 _functionABIMapper: new Map(),
-                _eventABIMapper: new Map()
+                _eventABIMapper: new Map(),
+                _user: null,
+                _tempUser: null
             };
 
             let hasExplicitConstructor = false;
@@ -235,6 +268,12 @@ function createContractClass(name, abi, bin, encryptType) {
 
             // `$getFunctionABIOf(name)`, get function ABI of the specified name, throw if the abi not exists
             contract.$getFunctionABIOf = new Function('name', createCodeForGetFunctionABIOf());
+
+            // `$setUser(id)`, set permanent user of the contract class instance
+            contract.$setUser = new Function('id', createCodeForSetUser());
+
+            // `$by(id)`, set temporary user of deploy or call on contract class instance
+            contract.$by = new Function('id', createCodeForBy());
 
             return contract;
         }

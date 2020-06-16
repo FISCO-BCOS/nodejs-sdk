@@ -144,7 +144,7 @@ bash build_chain.sh -l "127.0.0.1:4" -p 30300,20200,8545 -i
 # 启动FISCO BCOS链
 bash nodes/127.0.0.1/start_all.sh
 # 将证书文件拷贝至CLI工具的证书配置目录下
-cp nodes/127.0.0.1/* packages/cli/conf/authentication
+cp nodes/127.0.0.1/sdk/* packages/cli/conf/authentication
 ```
 
 ### 2.2 配置
