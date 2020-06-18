@@ -19,16 +19,17 @@ const fs = require('fs');
 const decode = require('../../api/decoder');
 const compile = require('../../api/').compile;
 const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
-const { Web3jService, ConsensusService, SystemConfigService, Configuration } = require('../../api');
+const { Web3jService, ConsensusService, SystemConfigService, CompileService, Configuration } = require('../../api');
 const { ContractsDir, ContractsOutputDir } = require('../constant');
 const { check, Str, Addr, Any } = require('../../api/common/typeCheck');
 
 let interfaces = [];
-let configFile = path.join(process.cwd(), './conf/config.json');
-let config = new Configuration(configFile);
+const configFile = path.join(process.cwd(), './conf/config.json');
+const config = new Configuration(configFile);
 const web3jService = new Web3jService(config);
 const consensusService = new ConsensusService(config);
 const systemConfigService = new SystemConfigService(config);
+const compileService = new CompileService(config);
 
 interfaces.push(produceSubCommandInfo(
     {
@@ -395,7 +396,7 @@ interfaces.push(produceSubCommandInfo(
             throw new Error(`${contractName} doesn't exist`);
         }
 
-        let contractClass = compile(contractPath, config.encryptType, config.solc);
+        let contractClass = compileService.compile(contractPath);
         if (!fs.existsSync(ContractsOutputDir)) {
             fs.mkdirSync(ContractsOutputDir);
         }

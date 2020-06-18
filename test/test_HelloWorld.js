@@ -16,17 +16,25 @@
 
 const should = require('should');
 const path = require('path');
-const { Configuration, Web3jService, compile } = require('../packages/api');
+const { Configuration, Web3jService, CompileService } = require('../packages/api');
 
-let config = new Configuration(path.join(__dirname, './conf/config.json'));
-let contractPath = path.join(__dirname, './contracts/HelloWorld.sol');
-let contractClass = compile(contractPath, config.encryptType);
+const config = new Configuration(path.join(__dirname, './conf/config.json'));
+const contractPath = path.join(__dirname, './contracts/v4/HelloWorld.sol');
+const compileService = new CompileService(config);
+const web3jService = new Web3jService(config);
+let contractClass = compileService.compile(contractPath);
 let helloWorld = contractClass.newInstance();
-let web3j = new Web3jService(config);
 
 describe('test for hello world', function () {
     this.beforeAll(() => {
-        return helloWorld.$deploy(web3j);
+        return helloWorld.$deploy(web3jService);
+    });
+
+    it('duplicate deploy', async () => {
+        try {
+            let _ = await helloWorld.$deploy(web3jService);
+            should.equal(true, false);
+        } catch (_) { }
     });
 
     it('get', async () => {

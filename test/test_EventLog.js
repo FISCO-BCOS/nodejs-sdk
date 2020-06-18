@@ -21,7 +21,7 @@ const {
     Web3jService,
     EventLogService,
     TopicConvertor,
-    compile,
+    CompileService,
     hash,
     EVENT_LOG_FILTER_PUSH_STATUS
 } = require('../packages/api');
@@ -29,16 +29,17 @@ const {
     waitFor
 } = require('./utils');
 
-let config = new Configuration(path.join(__dirname, './conf/config.json'));
-let contractPath = path.join(__dirname, './contracts/EventTest.sol');
-let contractClass = compile(contractPath, config.encryptType);
+const config = new Configuration(path.join(__dirname, './conf/config.json'));
+const contractPath = path.join(__dirname, './contracts/v4/EventTest.sol');
+const web3jService = new Web3jService(config);
+const eventService = new EventLogService(config);
+const compileService = new CompileService(config);
+let contractClass = compileService.compile(contractPath);
 let eventTest = contractClass.newInstance();
-let web3j = new Web3jService(config);
-let event = new EventLogService(config);
 
 describe('test for event log', function () {
     this.beforeAll(() => {
-        return eventTest.$deploy(web3j);
+        return eventTest.$deploy(web3jService);
     });
 
     it('event1(string s)', async () => {
@@ -46,7 +47,7 @@ describe('test for event log', function () {
         let status = null;
         let event1ABI = eventTest.$getEventABIOf('event1');
 
-        let response = await event.registerEventLogFilter({
+        let response = await eventService.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
             topics: [TopicConvertor.fromABI(event1ABI, config.encryptType)]
         }, (_status, _logs) => {
@@ -69,7 +70,7 @@ describe('test for event log', function () {
         let status = null;
         let event2ABI = eventTest.$getEventABIOf('event2');
 
-        let response = await event.registerEventLogFilter({
+        let response = await eventService.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
             topics: [TopicConvertor.fromABI(event2ABI, config.encryptType), TopicConvertor.fromInteger(0)]
         }, (_status, _logs) => {
@@ -94,7 +95,7 @@ describe('test for event log', function () {
         let narcissism = 'Node.js SDK is the best SDK in FISCO BCOS world';
         let event3ABI = eventTest.$getEventABIOf('event3');
 
-        let response = await event.registerEventLogFilter({
+        let response = await eventService.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
             topics: [
                 TopicConvertor.fromABI(event3ABI, config.encryptType),
@@ -122,7 +123,7 @@ describe('test for event log', function () {
         let status = null;
         let event4ABI = eventTest.$getEventABIOf('event4');
 
-        let response = await event.registerEventLogFilter({
+        let response = await eventService.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
             topics: [TopicConvertor.fromABI(event4ABI, config.encryptType)]
         }, (_status, _logs) => {
@@ -145,7 +146,7 @@ describe('test for event log', function () {
         let status = null;
         let event5ABI = eventTest.$getEventABIOf('event5');
 
-        let response = await event.registerEventLogFilter({
+        let response = await eventService.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
             topics: [TopicConvertor.fromABI(event5ABI, config.encryptType)]
         }, (_status, _logs) => {
@@ -168,7 +169,7 @@ describe('test for event log', function () {
         let status = null;
         let event6ABI = eventTest.$getEventABIOf('event6');
 
-        let response = await event.registerEventLogFilter({
+        let response = await eventService.registerEventLogFilter({
             addresses: [eventTest.$getAddress()],
             topics: [
                 TopicConvertor.fromABI(event6ABI, config.encryptType),

@@ -16,13 +16,14 @@
 
 const should = require('should');
 const path = require('path');
-const { Configuration, Web3jService, compile } = require('../packages/api');
+const { Configuration, Web3jService, CompileService } = require('../packages/api');
 
-let config = new Configuration(path.join(__dirname, './conf/config.json'));
-let contractPath = path.join(__dirname, './contracts/HelloWorld.sol');
-let contractClass = compile(contractPath, config.encryptType);
+const config = new Configuration(path.join(__dirname, './conf/config.json'));
+const compileService = new CompileService(config);
+let contractPath = path.join(__dirname, './contracts/v4/HelloWorld.sol');
+let contractClass = compileService.compile(contractPath);
 let helloWorld = contractClass.newInstance();
-let web3j = new Web3jService(config);
+let web3jService = new Web3jService(config);
 
 describe('test for getAddress', function () {
     it('before deploy', () => {
@@ -32,7 +33,7 @@ describe('test for getAddress', function () {
     });
 
     it('after deploy', async () => {
-        let address1 = await helloWorld.$deploy(web3j);
+        let address1 = await helloWorld.$deploy(web3jService);
         let address2 = helloWorld.$getAddress();
         should.equal(address1, address2);
     });

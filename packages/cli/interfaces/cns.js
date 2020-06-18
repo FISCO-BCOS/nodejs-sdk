@@ -19,9 +19,9 @@ const path = require('path');
 const fs = require('fs');
 const compile = require('../../api/').compile;
 const { produceSubCommandInfo, FLAGS } = require('./base');
-const { CNSService, PermissionService, Web3jService, Configuration } = require('../../api');
+const { CNSService, PermissionService, Web3jService, CompileService, Configuration } = require('../../api');
 const { OutputCode } = require('../../api/precompiled/common');
-const { ContractsDir, ContractsOutputDir } = require('../constant');
+const { ContractsDir } = require('../constant');
 
 function checkVersion(version) {
     if (!version.match(/^[A-Za-z0-9.]+$/)) {
@@ -32,11 +32,12 @@ function checkVersion(version) {
 }
 
 let interfaces = [];
-let configFile = path.join(process.cwd(), './conf/config.json');
-let config = new Configuration(configFile);
-let cnsService = new CNSService(config);
-let permissionService = new PermissionService(config);
-let web3jService = new Web3jService(config);
+const configFile = path.join(process.cwd(), './conf/config.json');
+const config = new Configuration(configFile);
+const cnsService = new CNSService(config);
+const permissionService = new PermissionService(config);
+const web3jService = new Web3jService(config);
+const compileService = new CompileService(config);
 
 
 interfaces.push(produceSubCommandInfo(
@@ -111,7 +112,7 @@ interfaces.push(produceSubCommandInfo(
                     throw new Error(`${contractName} doesn't exist`);
                 }
 
-                let contractClass = compile(contractPath, config.encryptType, config.solc);
+                let contractClass = compileService.compile(contractPath);
                 let parameters = argv.parameters;
 
                 return web3jService.deploy(contractClass.abi, contractClass.bin, parameters, account).then((result) => {

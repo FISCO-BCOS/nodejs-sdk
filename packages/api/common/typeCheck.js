@@ -64,7 +64,7 @@ module.exports.check = function (args, ...types) {
                     break;
                 }
                 case exports.StrNeg: {
-                    let intReg = /^(0x)?\d+$/;
+                    let intReg = /^(0x)?(\d|[a-fA-F])+$/;
                     if (!intReg.test(args[index])) {
                         throw new SyntaxError(`invalid argument at position ${parseInt(index) + 1}, expected instance of ${_types[types[index]]} but got \`${args[index]}\``);
                     }

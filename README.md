@@ -17,8 +17,8 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
 - 提供调用[预编译合约接口](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/design/virtual_machine/precompiled.html)的Node.js API
 - 提供合约事件推送相关的Node.js API
 - 支持国密模式
-- **非国密模式**下提供编译、部署、调用0.4.26及0.5.2版本Solidity合约的Node.js API
-- **国密模式**下提供编译、部署、调用0.4.25及0.5.1版本Solidity合约的Node.js API
+- **非国密模式**下提供编译、部署、调用0.4.x及0.5.x版本Solidity合约的Node.js API
+- **国密模式**下提供编译、部署、调用0.4.24及0.5.1版本Solidity合约的Node.js API
 - 与FISCO BCOS节点的通信方式采用更安全的双向认证[Channel协议](https://fisco-bcos-documentation.readthedocs.io/zh_CN/latest/docs/design/protocol_description.html#channelmessage)
 - 提供简单易用的CLI（Command-Line Interface）工具，供用户在命令行中方便地部署及调用合约、管理区块链状态、执行CRUD操作等
 - 支持Windows、Linux及MacOS操作系统
@@ -61,7 +61,7 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
 ## 一、环境要求
 
 - Node.js开发环境
-  - Node.js >= 8.10.0
+  - Node.js >= 10（由于国密版Solidity编译器存在兼容性问题，因此编译国密合约时Node.js版本需要 <= 11）
   - npm >= 5.6.0
 
   如果您没有部署过Node.js环境，可以参考下列部署方式：
@@ -79,10 +79,10 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
       source ~/.$(basename $SHELL)rc
 
       # 安装Node.js 8
-      nvm install 12
+      nvm install 10
 
       # 将Node.js 8设置为默认Node.js版本
-      nvm use 12
+      nvm use 10
       ```
 
   - 如果您使用Windows：
@@ -144,7 +144,7 @@ bash build_chain.sh -l "127.0.0.1:4" -p 30300,20200,8545 -i
 # 启动FISCO BCOS链
 bash nodes/127.0.0.1/start_all.sh
 # 将证书文件拷贝至CLI工具的证书配置目录下
-cp nodes/127.0.0.1/* packages/cli/conf/authentication
+cp nodes/127.0.0.1/sdk/* packages/cli/conf/authentication
 ```
 
 ### 2.2 配置
@@ -1014,27 +1014,50 @@ npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#master -s
 
   **返回值**：`Object`，表对象，包含了表名、主键列名、其他列名等用户表元信息，表对象的定义请参考`packages/api/precompiled/crud/table.js`
 
-### 3.7 compile
+### 3.7 CompileService
 
-**引用方式**：`require('nodejs-sdk/packages/api').compile`
+**引用方式**：`require('nodejs-sdk/packages/api').CompileService`
 
-**使用方式**：直接作为函数进行调用
+**使用方式**：使用`new CompileService(config)`进行实例化，其中`config`为一个`Configuration`对象实例，随后调用对象实例上的成员方法
 
-**功能**：编译合约
+**成员方法**：
 
-**参数**：
+- compile
 
-- `String`，contractPath。合约地址
-- `Number`，encryptType。所使用的密码学算法类型，其值为`ENCRYPT_TYPE.ECDSA`或`ENCRYPT_TYPE.SM_CRYPTO`
-- `String`，solc，可选。若用户需要使用自定义的Solidity编译器，请将该参数设置为调用自定义Solidity编译器的全局命令名
+  **功能**：编译合约
 
-**返回值**：`Object`，`ContractClass`对象，其具体功能请参考3.8节
+  **参数**：
+
+  - `String`，contractPath。合约地址
+  - `Object`，linkLibraries，可选。直接编译包含包含库（Library）调用会导致生成的字节码中出现被引用库地址的占位符，此时的字节码无法使用。若您的合约中包含库调用，您需要通过该参数传入库的地址信息以便链接器对字节码进行链接以生成最终的字节码。
+
+    例如，若在名为`A.sol`的合约中**定义并调用**了名为`B`的库，则编译`A.sol`时需要以下列形式传入linkLibraries参数：
+
+    ```JSON
+    {
+      'A': {
+        'B': '0x1234567890123456789012345678901234567890'
+      }
+    }
+    ```
+
+    若`B`定义位于`B.sol`中，则编译`A.sol`时需要以下列形式传入linkLibraries参数：
+
+    ```JSON
+    {
+      'B.sol': {
+        'B': '0x1234567890123456789012345678901234567890'
+      }
+    }
+    ```
+
+  **返回值**：`Object`，`ContractClass`对象，其具体功能请参考3.8节
 
 ### 3.8 ContractClass
 
 **引用方式**：无
 
-**使用方式**：通过`compile` API生成该类型的对象实例，随后调用对象实例上的成员方法
+**使用方式**：通过`CompilerService.compile` API生成该类型的对象实例，随后调用对象实例上的成员方法
 
 **成员方法**：
 
@@ -1082,6 +1105,26 @@ npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#master -s
   - `String`，name。事件名
 
   **返回值**：指定合约事件的ABI
+
+- $setUser
+
+  **功能**：指定部署、调用合约的用户
+
+  **参数**：
+
+  - `String`，id。用户ID
+
+  **返回值**：无
+
+  - $by
+
+  **功能**：指定部署、调用合约的用户。与`$setUser`不同，`$by`的作用范围是临时的，即若您已经通过`$setUser`指定了部署、调用合约的用户，则`$by`会临时覆盖已指定的用户。`$by`的作用范围会持续至接下来的部署、调用合约动作完成
+
+  **参数**：
+
+  - `String`，id。用户ID
+
+  **返回值**：合约对象自身。您可以在该对象继续执行部署、调用操作
 
 - 动态生成函数
 
