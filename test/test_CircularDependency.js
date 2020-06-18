@@ -48,5 +48,3 @@ describe('test for hello world (circular dependency test)', function () {
         should.equal(ret[0], 'こんにちわ！');
     });
 });
-
-

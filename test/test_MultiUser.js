@@ -88,5 +88,3 @@ describe('test for multi user', function () {
         should.equal(sender, config.accounts.bob.account);
     });
 });
-
-
