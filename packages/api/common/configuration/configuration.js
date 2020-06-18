@@ -170,10 +170,15 @@ class Configuration {
     }
 
     _parseSolc(config) {
-        if (config.solc && typeof config.solc !== 'string') {
-            throw new ConfigurationError('invalid `solc` property');
+        if (config.hasOwnProperty('solc')) {
+            if (typeof config.solc !== 'string') {
+                throw new ConfigurationError('invalid `solc` property');
+            } else {
+                this.solc = config.solc;
+            }
+        } else {
+            this.solc = null;
         }
-        this.solc = config.solc;
     }
 
     _parsePrivateKey(privateKey) {

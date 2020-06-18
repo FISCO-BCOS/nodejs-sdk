@@ -17,12 +17,13 @@
 const should = require('should');
 const path = require('path');
 const ethers = require('ethers');
-const { Configuration, compile } = require('../packages/api');
+const { Configuration, CompileService } = require('../packages/api');
 const { getTxData } = require('../packages/api/common/web3lib/web3sync');
 
-let config = new Configuration(path.join(__dirname, './conf/config.json'));
-let contractPath = path.join(__dirname, './contracts/HelloWorld.sol');
-let contractClass = compile(contractPath, config.encryptType);
+const config = new Configuration(path.join(__dirname, './conf/config.json'));
+const compileService = new CompileService(config);
+const contractPath = path.join(__dirname, './contracts/v4/HelloWorld.sol');
+let contractClass = compileService.compile(contractPath);
 let helloWorld = contractClass.newInstance();
 
 describe('test for encodeABI', function () {

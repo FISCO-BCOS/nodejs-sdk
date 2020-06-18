@@ -22,15 +22,16 @@ describe('test for hello world (circular dependency test)', function () {
     let config = new Configuration(path.join(__dirname, './conf/config.json'));
 
     const Web3jService = require('../packages/api').Web3jService;
-    let web3j = new Web3jService(config);
+    const web3jSerivce = new Web3jService(config);
+    const CompileService = require('../packages/api').CompileService;
+    const compileService = new CompileService(config);
 
-    const compile = require('../packages/api').compile;
-    let contractPath = path.join(__dirname, './contracts/HelloWorld.sol');
-    let contractClass = compile(contractPath, config.encryptType);
+    const contractPath = path.join(__dirname, './contracts/v4/HelloWorld.sol');
+    let contractClass = compileService.compile(contractPath);
     let helloWorld = contractClass.newInstance();
 
     this.beforeAll(() => {
-        return helloWorld.$deploy(web3j);
+        return helloWorld.$deploy(web3jSerivce);
     });
 
     it('get', async () => {

@@ -29,8 +29,7 @@ module.exports.Entry = require('./precompiled/crud').Entry;
 module.exports.Condition = require('./precompiled/crud').Condition;
 module.exports.ConditionOp = require('./precompiled/crud').ConditionOp;
 
-module.exports.compile = require('./compile/compile').compile;
-module.exports.createContractClass = require('./compile/contractClass').createContractClass;
+module.exports.CompileService = require('./compile').CompileService;
 
 module.exports.Configuration = require('./common/configuration').Configuration;
 module.exports.ENCRYPT_TYPE = require('./common/configuration').ENCRYPT_TYPE;

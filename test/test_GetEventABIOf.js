@@ -16,11 +16,12 @@
 
 const should = require('should');
 const path = require('path');
-const { Configuration, compile } = require('../packages/api');
+const { Configuration, CompileService } = require('../packages/api');
 
-let config = new Configuration(path.join(__dirname, './conf/config.json'));
-let contractPath = path.join(__dirname, './contracts/EventTest.sol');
-let contractClass = compile(contractPath, config.encryptType);
+const config = new Configuration(path.join(__dirname, './conf/config.json'));
+const compileService = new CompileService(config);
+const contractPath = path.join(__dirname, './contracts/v4/EventTest.sol');
+let contractClass = compileService.compile(contractPath);
 let eventTest = contractClass.newInstance();
 
 describe('test for getEventABIOf', function () {
