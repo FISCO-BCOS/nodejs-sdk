@@ -16,11 +16,7 @@
 
 const should = require('should');
 const path = require('path');
-<<<<<<< HEAD
 const { Configuration, Web3jService, CompileService, ENCRYPT_TYPE } = require('../packages/api');
-=======
-const { Configuration, Web3jService, CompileService } = require('../packages/api');
->>>>>>> fix bug that linker not supported
 
 const config = new Configuration(path.join(__dirname, './conf/config.json'));
 const compileService = new CompileService(config);
