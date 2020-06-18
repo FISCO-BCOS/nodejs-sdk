@@ -39,7 +39,7 @@ describe('test for hello world', function () {
 
     it('duplicate deploy', async () => {
         try {
-            let _ = await helloWorld.$deploy(web3j);
+            let _ = await helloWorld.$deploy(web3jService);
             should.equal(true, false);
         } catch (_) { }
     });
@@ -58,5 +58,3 @@ describe('test for hello world', function () {
         should.equal(ret[0], 'こんにちわ！');
     });
 });
-
-
