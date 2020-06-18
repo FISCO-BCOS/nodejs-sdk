@@ -38,5 +38,3 @@ describe('test for getAddress', function () {
         should.equal(address1, address2);
     });
 });
-
-
