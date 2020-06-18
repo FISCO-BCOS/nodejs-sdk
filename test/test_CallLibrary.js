@@ -16,7 +16,7 @@
 
 const should = require('should');
 const path = require('path');
-const { Configuration, Web3jService, CompileService } = require('../packages/api');
+const { Configuration, Web3jService, CompileService, ENCRYPT_TYPE } = require('../packages/api');
 
 const config = new Configuration(path.join(__dirname, './conf/config.json'));
 const compileService = new CompileService(config);
@@ -35,15 +35,18 @@ describe('test for call library', function () {
     });
 
     it('v4 with linking', async () => {
-        const contractPath = path.join(__dirname, './contracts/v4/CallLibrary.sol');
-        let contractClass = compileService.compile(contractPath, {
-            "CallLibrary": {
-                DelegateCallLibary: '0x1234567890123456789012345678901234567890'
-            }
-        });
-        let callLibrary = contractClass.newInstance();
-        let address = await callLibrary.$deploy(web3jService);
-        should.exist(address);
+        // not supported in SM_CRYPTO mode yet
+        if (config.encryptType === ENCRYPT_TYPE.ECDSA) {
+            const contractPath = path.join(__dirname, './contracts/v4/CallLibrary.sol');
+            let contractClass = compileService.compile(contractPath, {
+                "CallLibrary": {
+                    DelegateCallLibary: '0x1234567890123456789012345678901234567890'
+                }
+            });
+            let callLibrary = contractClass.newInstance();
+            let address = await callLibrary.$deploy(web3jService);
+            should.exist(address);
+        }
     });
 
     it('v5 without linking', async () => {
@@ -58,15 +61,18 @@ describe('test for call library', function () {
     });
 
     it('v5 with linking', async () => {
-        const contractPath = path.join(__dirname, './contracts/v5/CallLibrary.sol');
-        let contractClass = compileService.compile(contractPath, {
-            "CallLibrary": {
-                DelegateCallLibary: '0x1234567890123456789012345678901234567890'
-            }
-        });
-        let callLibrary = contractClass.newInstance();
-        let address = await callLibrary.$deploy(web3jService);
-        should.exist(address);
+        // not supported in SM_CRYPTO mode yet
+        if (config.encryptType === ENCRYPT_TYPE.ECDSA) {
+            const contractPath = path.join(__dirname, './contracts/v5/CallLibrary.sol');
+            let contractClass = compileService.compile(contractPath, {
+                "CallLibrary": {
+                    DelegateCallLibary: '0x1234567890123456789012345678901234567890'
+                }
+            });
+            let callLibrary = contractClass.newInstance();
+            let address = await callLibrary.$deploy(web3jService);
+            should.exist(address);
+        }
     });
 });
 

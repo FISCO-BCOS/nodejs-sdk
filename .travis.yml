@@ -1,12 +1,11 @@
 # node_js:
-#   - "8"
+#   - "10"
 branches:
   only:
       - /.*/
 env:
-    - NODEJS_VERSION=8
-    - NODEJS_VERSION=9
     - NODEJS_VERSION=10
+    - NODEJS_VERSION=11
 os:
   - linux
   # - osx
@@ -42,12 +41,13 @@ addons:
     packages:
     - libssl-dev
     - openssl
+    update: true
   homebrew:
     packages:
     - openssl
+    update: true
 before_install:
   - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
-  # - source ~/.$(basename $SHELL)rc
 install: 
   - nvm install $NODEJS_VERSION 
   - nvm use $NODEJS_VERSION

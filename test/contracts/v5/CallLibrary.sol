@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.1;
 
 library DelegateCallLibary {
     function relatedVar() public returns (address) {

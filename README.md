@@ -61,7 +61,7 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
 ## 一、环境要求
 
 - Node.js开发环境
-  - Node.js >= 8（由于国密版Solidity编译器存在兼容性问题，因此编译国密合约时Node.js版本需要 <= 10）
+  - Node.js >= 10（由于国密版Solidity编译器存在兼容性问题，因此编译国密合约时Node.js版本需要 <= 11）
   - npm >= 5.6.0
 
   如果您没有部署过Node.js环境，可以参考下列部署方式：
@@ -79,10 +79,10 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
       source ~/.$(basename $SHELL)rc
 
       # 安装Node.js 8
-      nvm install 12
+      nvm install 10
 
       # 将Node.js 8设置为默认Node.js版本
-      nvm use 12
+      nvm use 10
       ```
 
   - 如果您使用Windows：
