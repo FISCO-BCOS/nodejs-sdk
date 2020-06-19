@@ -79,15 +79,13 @@ interfaces.push(produceSubCommandInfo(
     (argv) => {
         return permissionService.listCNSManager().then(cnsManagers => {
             let id = argv.id;
-            let account = null;
+
+            if (!config.accounts.hasOwnProperty(id)) {
+                throw new Error(`invalid id of account: ${id}`);
+            }
+            let account = config.accounts[id].account;
 
             if (cnsManagers.length !== 0) {
-                account = config.accounts[id];
-                if (!account) {
-                    throw new Error(`invalid id of account: ${id}`);
-                }
-                account = account.account;
-
                 if (cnsManagers.findIndex((value) => value.address === account) < 0) {
                     throw new Error(OutputCode.getOutputMessage(OutputCode.PermissionDenied));
                 }
@@ -115,7 +113,7 @@ interfaces.push(produceSubCommandInfo(
                 let contractClass = compileService.compile(contractPath);
                 let parameters = argv.parameters;
 
-                return web3jService.deploy(contractClass.abi, contractClass.bin, parameters, account).then((result) => {
+                return web3jService.deploy(contractClass.abi, contractClass.bin, parameters, id).then((result) => {
                     if (result.status === '0x0') {
                         let contractAddress = result.contractAddress;
                         return cnsService.registerCns(contractName, contractVersion, contractAddress, JSON.stringify(contractClass.abi)).then(() => {
