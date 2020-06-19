@@ -156,12 +156,18 @@ class CompileService extends ServiceBase {
                 let solc = wrapper(require('./compilers/gm/soljson-v0.4.25-gm'));
                 let [abi, bin] = this._compileWithSolc0$4(solc, contractName, contractContent, readCallback);
 
+                if (linkLibraries !== null) {
+                    throw new CompileError('libraries linking is not supported under `SM_CRYPTO` mode');
+                }
                 return createContractClass(contractName, abi, bin, this.config.encryptType);
             } else if (semver.satisfies(solc0$5GmVer, requiredSolcVer)) {
                 let wrapper = require('./compilers/solc-0.5/node_modules/solc/wrapper');
                 let solc = wrapper(require('./compilers/gm/soljson-v0.5.1-gm'));
                 let [abi, bin] = this._compileWithSolc0$5(solc, contractName, contractContent, readCallback);
 
+                if (linkLibraries !== null) {
+                    throw new CompileError('libraries linking is not supported under `SM_CRYPTO` mode');
+                }
                 return createContractClass(contractName, abi, bin, this.config.encryptType);
             } else {
                 throw new CompileError("solc version can't be satisfied");

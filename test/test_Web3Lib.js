@@ -15,7 +15,7 @@
 'use strict';
 
 const should = require('should');
-const { createKeyPair, ecsign, ecrecover } = require('../packages/api/common/web3lib/utils');
+const { createKeyPair, ecsign, ecrecover, encodeFunctionName } = require('../packages/api/common/web3lib/utils');
 const { ENCRYPT_TYPE } = require('../packages/api');
 
 describe('test for web3 lib', function () {
@@ -29,5 +29,13 @@ describe('test for web3 lib', function () {
         let ret = ecsign(msg, privateKey, ENCRYPT_TYPE.ECDSA);
         let publicKey2 = ecrecover(msg, ret.v, ret.r, ret.s);
         should.equal(publicKey.toString('hex'), publicKey2.toString('hex'));
+    });
+
+    it('encodeFunctionName', () => {
+        let hash = encodeFunctionName('add(uint32)', ENCRYPT_TYPE.ECDSA);
+        should.equal(hash.toString('hex'), '0xcbe3a072');
+
+        hash = encodeFunctionName('add(uint32)', ENCRYPT_TYPE.SM_CRYPTO);
+        should.equal(hash.toString('hex'), '0x27d82507');
     });
 });
