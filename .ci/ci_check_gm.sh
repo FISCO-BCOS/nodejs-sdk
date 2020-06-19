@@ -17,4 +17,4 @@ cp nodes/127.0.0.1/sdk/* test/conf/authentication
 sed -i.bak 's?ECDSA?SM_CRYPTO?' test/conf/config.json
 sed -i.bak 's?alice.pem?sm_crypto.pem?' test/conf/config.json
 sed -i.bak 's?bob.pem?sm_crypto.pem?' test/conf/config.json
-npm test
+npm test -- --timeout 5000

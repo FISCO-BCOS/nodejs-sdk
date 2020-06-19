@@ -162,9 +162,9 @@ function createContractClass(name, abi, bin, encryptType) {
     }
 
     let contractClass = {
-        name: name,
-        abi: abi,
-        bin: bin,
+        name,
+        abi,
+        bin,
         newInstance: () => {
             let contract = {
                 name: contractClass.name,
@@ -195,7 +195,7 @@ function createContractClass(name, abi, bin, encryptType) {
                             meta: func
                         });
 
-                        let parameters = item.inputs.map(input => input.name);
+                        let parameters = item.inputs.map((input) => input.name);
                         parameters = parameters.join(',');
 
                         if (item.constant) {
@@ -217,7 +217,7 @@ function createContractClass(name, abi, bin, encryptType) {
                     }
                     case 'constructor': {
                         hasExplicitConstructor = true;
-                        let parameters = item.inputs.map(input => input.name);
+                        let parameters = item.inputs.map((input) => input.name);
                         contract.$deploy = new Function('web3jService,' + parameters.join(','), createCodeForConstructor());
 
                         let contractAbi = new ethers.utils.Interface(contract.abi);
