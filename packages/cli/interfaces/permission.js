@@ -14,11 +14,14 @@
 
 'use strict';
 
+const path = require('path');
 const produceSubCommandInfo = require('./base').produceSubCommandInfo;
-const PermissionService = require('../../api').PermissionService;
+const { PermissionService, Configuration } = require('../../api');
 
 let interfaces = [];
-let permissionService = new PermissionService();
+let configFile = path.join(process.cwd(), './conf/config.json');
+let config = new Configuration(configFile);
+let permissionService = new PermissionService(config);
 
 interfaces.push(produceSubCommandInfo(
     {
@@ -304,6 +307,58 @@ interfaces.push(produceSubCommandInfo(
         let address = argv.address;
 
         return permissionService.revokeCNSManager(address);
+    })
+);
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'grantSysConfigManager',
+        describe: 'Grant permission for system configuration by address',
+        args: [
+            {
+                name: 'address',
+                options: {
+                    type: 'string',
+                    describe: '20 Bytes - The address of a tx.origin'
+                }
+            }
+        ]
+    },
+    (argv) => {
+        let address = argv.address;
+
+        return permissionService.grantSysConfigManager(address);
+    })
+);
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'revokeSysConfigManager',
+        describe: 'Revoke permission for system configuration by address',
+        args: [
+            {
+                name: 'address',
+                options: {
+                    type: 'string',
+                    describe: '20 Bytes - The address of a tx.origin'
+                }
+            }
+        ]
+    },
+    (argv) => {
+        let address = argv.address;
+
+        return permissionService.revokeSysConfigManager(address);
+    })
+);
+
+interfaces.push(produceSubCommandInfo(
+    {
+        name: 'listSysConfigManager',
+        describe: 'Query permission information for system configuration',
+    },
+    () => {
+        return permissionService.listSysConfigManager();
     })
 );
 

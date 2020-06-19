@@ -14,13 +14,26 @@
 
 'use strict';
 
-const utils = require('../../api/common/utils');
+const decode = require('../../api/decoder');
 const path = require('path');
 const fs = require('fs');
-const { produceSubCommandInfo, FLAGS } = require('./base');
-const { CNSService, PermissionService, Web3jService } = require('../../api');
-const OutputCode = require('../../api/precompiled/common').OutputCode;
-const { ContractsDir, ContractsOutputDir } = require('../constant');
+const {
+    produceSubCommandInfo,
+    FLAGS
+} = require('./base');
+const {
+    CNSService,
+    PermissionService,
+    Web3jService,
+    CompileService,
+    Configuration
+} = require('../../api');
+const {
+    OutputCode
+} = require('../../api/precompiled/common');
+const {
+    ContractsDir
+} = require('../constant');
 
 function checkVersion(version) {
     if (!version.match(/^[A-Za-z0-9.]+$/)) {
@@ -31,17 +44,18 @@ function checkVersion(version) {
 }
 
 let interfaces = [];
-let cnsService = new CNSService();
-let permissionService = new PermissionService();
-let web3jService = new Web3jService();
+const configFile = path.join(process.cwd(), './conf/config.json');
+const config = new Configuration(configFile);
+const cnsService = new CNSService(config);
+const permissionService = new PermissionService(config);
+const web3jService = new Web3jService(config);
+const compileService = new CompileService(config);
 
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'deployByCNS',
         describe: 'Deploy a contract on blockchain by CNS',
-        args: [
-            {
+        args: [{
                 name: 'contractName',
                 options: {
                     type: 'string',
@@ -54,14 +68,37 @@ interfaces.push(produceSubCommandInfo(
                     type: 'string',
                     describe: 'The version of a contract'
                 }
+            },
+            {
+                name: 'id',
+                options: {
+                    type: 'string',
+                    describe: 'The id of a private key'
+                }
+            },
+            {
+                name: 'parameters',
+                options: {
+                    type: 'string',
+                    describe: 'The parameters(splited by space) of constructor',
+                    flag: FLAGS.VARIADIC
+                }
             }
         ]
     },
     (argv) => {
         return permissionService.listCNSManager().then(cnsManagers => {
-            const Configuration = require('../../api/common/configuration').Configuration;
-            if (cnsManagers.length !== 0 && cnsManagers.findIndex(value => value.address === Configuration.getInstance().account) < 0) {
-                throw new Error(OutputCode.getOutputMessage(OutputCode.PermissionDenied));
+            let id = argv.id;
+
+            if (!config.accounts.hasOwnProperty(id)) {
+                throw new Error(`invalid id of account: ${id}`);
+            }
+            let account = config.accounts[id].account;
+
+            if (cnsManagers.length !== 0) {
+                if (cnsManagers.findIndex((value) => value.address === account) < 0) {
+                    throw new Error(OutputCode.getOutputMessage(OutputCode.PermissionDenied));
+                }
             }
 
             let contractName = path.basename(argv.contractName, '.sol');
@@ -82,13 +119,26 @@ interfaces.push(produceSubCommandInfo(
                 if (!fs.existsSync(contractPath)) {
                     throw new Error(`${contractName} doesn't exist`);
                 }
-                let outputDir = ContractsOutputDir;
 
-                return web3jService.deploy(contractPath, outputDir).then(result => {
-                    let contractAddress = result.contractAddress;
-                    let abi = fs.readFileSync(path.join(outputDir, `${contractName}.abi`)).toString();
-                    cnsService.registerCns(contractName, contractVersion, contractAddress, abi);
-                    return { contractAddress: contractAddress };
+                let contractClass = compileService.compile(contractPath);
+                let parameters = argv.parameters;
+
+                return web3jService.deploy(contractClass.abi, contractClass.bin, parameters, id).then((result) => {
+                    if (result.status === '0x0') {
+                        let contractAddress = result.contractAddress;
+                        return cnsService.registerCns(contractName, contractVersion, contractAddress, JSON.stringify(contractClass.abi)).then(() => {
+                            return {
+                                status: result.status,
+                                contractAddress,
+                                transactionHash: result.transactionHash
+                            };
+                        });
+                    } else {
+                        return {
+                            status: result.status,
+                            transactionHash: result.transactionHash
+                        };
+                    }
                 });
             });
 
@@ -96,12 +146,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'queryCNS',
         describe: 'Query CNS information by contract name and contract version',
-        args: [
-            {
+        args: [{
                 name: 'contractName',
                 options: {
                     type: 'string',
@@ -133,12 +181,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'callByCNS',
         describe: 'Call a contract by a function and parameters by CNS',
-        args: [
-            {
+        args: [{
                 name: 'contractName:contractVersion',
                 options: {
                     type: 'string',
@@ -156,7 +202,7 @@ interfaces.push(produceSubCommandInfo(
                 name: 'parameters',
                 options: {
                     type: 'string',
-                    describe: 'The parameters(splited by a space) of a function',
+                    describe: 'The parameters(splited by space) of a function',
                     default: [],
                     flag: FLAGS.VARIADIC
                 }
@@ -197,39 +243,33 @@ interfaces.push(produceSubCommandInfo(
             try {
                 abi = JSON.parse(addressInfo.abi);
                 if (!abi) {
-                    throw new Error();
+                    throw new Error(`no abi for contract ${contractName}`);
                 }
             } catch (error) {
                 throw new Error(`no abi for contract ${contractName}`);
             }
 
             let functionName = argv.function;
-            let functionIndex = abi.findIndex(value => value.type === 'function' && value.name === functionName);
-            if (functionIndex < 0) {
-                throw new Error(`no function named as \`${functionName}\` in contract \`${contractName}\``);
-            }
-
-            abi = abi[functionIndex];
+            let decoder = decode.createMethodDecoder(abi, functionName);
             let parameters = argv.parameters;
-            if (abi.inputs.length !== parameters.length) {
-                throw new Error(`wrong number of parameters for function \`${abi.name}\`, expected ${abi.inputs.length} but got ${parameters.length}`);
-            }
+            abi = abi.find((item) => {
+                return item.type === 'function' && item.name === functionName;
+            });
 
-            functionName = utils.spliceFunctionSignature(abi);
             if (abi.constant) {
-                return web3jService.call(address, functionName, parameters).then(result => {
+                return web3jService.call(address, abi, parameters).then((result) => {
                     let status = result.result.status;
                     let ret = {
                         status: status
                     };
                     let output = result.result.output;
                     if (output !== '0x') {
-                        ret.output = utils.decodeMethod(abi, output);
+                        ret.output = decoder.decodeOutput(output);
                     }
                     return ret;
                 });
             } else {
-                return web3jService.sendRawTransaction(address, functionName, parameters).then(result => {
+                return web3jService.sendRawTransaction(address, abi, parameters).then((result) => {
                     let txHash = result.transactionHash;
                     let status = result.status;
                     let ret = {
@@ -238,14 +278,13 @@ interfaces.push(produceSubCommandInfo(
                     };
                     let output = result.output;
                     if (output !== '0x') {
-                        ret.output = utils.decodeMethod(abi, output);
+                        ret.output = decoder.decodeOutput(output);
                     }
                     return ret;
                 });
             }
         });
     }
-
 ));
 
 module.exports.interfaces = interfaces;

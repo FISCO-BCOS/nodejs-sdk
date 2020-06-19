@@ -14,8 +14,6 @@
 
 'use strict';
 
-const utils = require('../../common/utils');
-const PrecompiledError = require('../../common/exceptions').PrecompiledError;
 const constant = require('./constant');
 const { OutputCode, handleReceipt } = require('../common');
 const { check, Str } = require('../../common/typeCheck');
@@ -23,18 +21,18 @@ const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
 class ConsensusService extends ServiceBase {
-    constructor() {
-        super();
-        this.web3jService = new Web3jService();
+    constructor(config) {
+        super(config);
+        this.web3jService = new Web3jService(config);
     }
 
-    resetConfig() {
-        super.resetConfig();
-        this.web3jService.resetConfig();
+    resetConfig(config) {
+        super.resetConfig(config);
+        this.web3jService.resetConfig(config);
     }
 
     async _isValidNodeID(nodeID) {
-        return this.web3jService.getNodeIDList().then(result => {
+        return this.web3jService.getNodeIDList().then((result) => {
             let nodeIDs = result.result;
             if (nodeIDs.includes(nodeID)) {
                 return true;
@@ -45,9 +43,8 @@ class ConsensusService extends ServiceBase {
     }
 
     async _send(abi, nodeID) {
-        let functionName = utils.spliceFunctionSignature(abi);
         let parameters = [nodeID];
-        let receipt = await this.web3jService.sendRawTransaction(constant.CONSENSUS_PRECOMPILE_ADDRESS, functionName, parameters);
+        let receipt = await this.web3jService.sendRawTransaction(constant.CONSENSUS_PRECOMPILE_ADDRESS, abi, parameters);
 
         let status = parseInt(handleReceipt(receipt, abi)[0]);
 

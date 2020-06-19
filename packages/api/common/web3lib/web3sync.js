@@ -17,7 +17,10 @@
 const uuidv4 = require('uuid/v4');
 const utils = require('./utils');
 const Transaction = require('./transactionObject').Transaction;
-const Configuration = require('../configuration').Configuration;
+const ethjsUtil = require('ethjs-util');
+const ethers = require('ethers');
+const isArray = require('isarray');
+const assert = require('assert');
 
 /**
  * Generate a random number via UUID
@@ -40,10 +43,10 @@ function genRandomID() {
  * @param {callback} callback callback function
  * @return {String} signed transaction data
  */
-function signTransaction(txData, privKey, callback) {
-    let tx = new Transaction(txData);
+function signTransaction(txData, privKey, encryptType, callback) {
+    let tx = new Transaction(txData, encryptType);
     let privateKey = Buffer.from(privKey, 'hex');
-    tx.sign(privateKey);
+    tx.sign(privateKey, encryptType);
 
     // Build a serialized hex version of the tx
     let serializedTx = '0x' + tx.serialize().toString('hex');
@@ -54,34 +57,86 @@ function signTransaction(txData, privKey, callback) {
     }
 }
 
+function formalize(data, type) {
+    let arrayTypeReg = /(.+)\[\d*\]$/;
+    if (type.type === 'tuple' || arrayTypeReg.exec(type.type)) {
+        // whatever in struct case or array case, it must be an object
+        return JSON.parse(data);
+    }
+
+    if (isArray(data)) {
+        let result = [];
+        assert(isArray(type) && type.length === data.length);
+
+        data.forEach((item, index) => {
+            item = formalize(item, type[index]);
+            result.push(item);
+        });
+
+        return result;
+    }
+
+    if (type.type === 'bool') {
+        if (data === 'true') {
+            return true;
+        } else if (data === 'false') {
+            return false;
+        }
+
+        // just fall through, depends on the converting rule of solidity for boolean
+    }
+
+    return data;
+}
+
+/**
+ * encode params
+ * @param {Array} types types
+ * @param {Array} params params
+ * @return {Buffer} params' code
+ */
+function encodeParams(types, params) {
+    let encoder = ethers.utils.defaultAbiCoder;
+    params = formalize(params, types);
+    let ret = encoder.encode(types, params);
+    return ret;
+}
+
 /**
  * get transaction data
- * @param {String} func function name
+ * @param {Object} func function info contains signature and input types
  * @param {Array} params params
  * @return {String} transaction data
  */
-function getTxData(func, params) {
-    let r = /^\w+\((.*)\)$/g.exec(func);
-    let types = [];
-    if (r[1]) {
-        types = r[1].split(',');
-    }
-    return utils.encodeTxData(func, types, params);
+function getTxData(func, params, encryptType) {
+    let signature = func.signature;
+    let inputs = func.inputs;
+
+    let txDataCode = utils.encodeFunctionName(signature, encryptType);
+    let paramsCode = encodeParams(inputs, params);
+    txDataCode += ethjsUtil.stripHexPrefix(paramsCode);
+
+    return txDataCode;
 }
 
 /**
  * get signed transaction data
- * @param {Number} groupId
- * @param {Buffer} account user account
- * @param {Buffer} privateKey private key
+ * @param {Object} config configuration contains groupId, account, privateKey
  * @param {Buffer} to target address
- * @param {String} func function name
- * @param {Array} params params
+ * @param {Object} func function info contains signature and input types
+ * @param {Array} params parameters of the transaction
  * @param {Number} blockLimit block limit
+ * @param {who} the id of account(private key)
  * @return {String} signed transaction data
  */
-function getSignTx(groupId, account, privateKey, to, func, params, blockLimit) {
-    let txData = getTxData(func, params);
+function getSignTx(config, to, func, params, blockLimit, who) {
+    let groupID = config.groupID;
+    let account = config.accounts[who].account;
+    let privateKey = config.accounts[who].privateKey;
+    let chainID = config.chainID;
+    let encryptType = config.encryptType;
+
+    let txData = getTxData(func, params, encryptType);
 
     let postdata = {
         data: txData,
@@ -90,24 +145,28 @@ function getSignTx(groupId, account, privateKey, to, func, params, blockLimit) {
         gas: 1000000,
         randomid: genRandomID(),
         blockLimit: blockLimit,
-        chainId: Configuration.getInstance().chainID,
-        groupId: groupId,
+        chainId: chainID,
+        groupId: groupID,
         extraData: '0x0'
     };
 
-    return signTransaction(postdata, privateKey, null);
+    return signTransaction(postdata, privateKey, encryptType, null);
 }
 
 /**
  * get signed deploy tx
- * @param {Number} groupId
- * @param {Buffer} account user account
- * @param {Buffer} privateKey private key
+ * @param {Object} config configuration contains groupId, account, privateKey
  * @param {Buffer} bin contract bin
  * @param {Number} blockLimit block limit
+ * @param {who} the id of account(private key)
  * @return {String} signed deploy transaction data
  */
-function getSignDeployTx(groupId, account, privateKey, bin, blockLimit) {
+function getSignDeployTx(config, bin, blockLimit, who) {
+    let groupID = config.groupID;
+    let account = config.accounts[who].account;
+    let privateKey = config.accounts[who].privateKey;
+    let chainID = config.chainID;
+    let encryptType = config.encryptType;
     let txData = bin.indexOf('0x') === 0 ? bin : ('0x' + bin);
 
     let postdata = {
@@ -117,15 +176,16 @@ function getSignDeployTx(groupId, account, privateKey, bin, blockLimit) {
         gas: 1000000,
         randomid: genRandomID(),
         blockLimit: blockLimit,
-        chainId: Configuration.getInstance().chainID,
-        groupId: groupId,
+        chainId: chainID,
+        groupId: groupID,
         extraData: '0x0'
     };
 
-    return signTransaction(postdata, privateKey, null);
+    return signTransaction(postdata, privateKey, encryptType, null);
 }
 
 module.exports.getSignDeployTx = getSignDeployTx;
 module.exports.signTransaction = signTransaction;
 module.exports.getSignTx = getSignTx;
 module.exports.getTxData = getTxData;
+module.exports.encodeParams = encodeParams;

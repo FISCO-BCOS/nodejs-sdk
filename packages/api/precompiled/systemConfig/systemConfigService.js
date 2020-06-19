@@ -14,7 +14,6 @@
 
 'use strict';
 
-const utils = require('../../common/utils');
 const constant = require('./constant');
 const { handleReceipt, OutputCode } = require('../common');
 const { check, Str, StrNeg } = require('../../common/typeCheck');
@@ -22,25 +21,23 @@ const SeviceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
 class SystemConfigService extends SeviceBase {
-    constructor() {
-        super();
-        this.web3jService = new Web3jService();
+    constructor(config) {
+        super(config);
+        this.web3jService = new Web3jService(config);
     }
 
-    resetConfig() {
-        super.resetConfig();
-        this.web3jService.resetConfig();
+    resetConfig(config) {
+        super.resetConfig(config);
+        this.web3jService.resetConfig(config);
     }
 
     async setValueByKey(key, value) {
         check(arguments, Str, StrNeg);
 
-        let functionName = utils.spliceFunctionSignature(constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey);
         let parameters = [key, value];
-        let receipt = await this.web3jService.sendRawTransaction(constant.SYSTEM_CONFIG_PRECOMPILE_ADDRESS, functionName, parameters);
+        let receipt = await this.web3jService.sendRawTransaction(constant.SYSTEM_CONFIG_PRECOMPILE_ADDRESS, constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey, parameters);
 
         let result = handleReceipt(receipt, constant.SYSTEM_CONFIG_PRECOMPILE_ABI.setValueByKey)[0];
-
         let status = parseInt(result);
 
         if (status === 1) {

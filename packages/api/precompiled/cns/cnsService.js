@@ -14,7 +14,7 @@
 
 'use strict';
 
-const utils = require('../../common/utils');
+const { isValidAddress } = require('../../common/utils');
 const constant = require('./constant');
 const PrecompiledError = require('../../common/exceptions').PrecompiledError;
 const { check, Str } = require('../../common/typeCheck');
@@ -23,34 +23,32 @@ const ServiceBase = require('../../common/serviceBase').ServiceBase;
 const Web3jService = require('../../web3j').Web3jService;
 
 class CNSService extends ServiceBase {
-    constructor() {
-        super();
-        this.web3jService = new Web3jService();
+    constructor(config) {
+        super(config);
+        this.web3jService = new Web3jService(config);
     }
 
-    resetConfig() {
-        super.resetConfig();
-        this.web3jService.resetConfig();
+    resetConfig(config) {
+        super.resetConfig(config);
+        this.web3jService.resetConfig(config);
     }
 
-    _isValidAddress(address) {
-        let addressNoPrefix = utils.cleanHexPrefix(address);
-        return addressNoPrefix.length === constant.ADDRESS_LENGTH_IN_HEX;
+    _isValiadVersion(version) {
+        return version.length <= constant.CNS_VERSION_MAX_LENGTH;
     }
 
     _isValidCnsName(input) {
-        return input && (input.includes(':') || !this._isValidAddress(input));
+        return input && (input.includes(':') || !isValidAddress(input));
     }
 
     async _send(abi, parameters, readOnly = false) {
-        let functionName = utils.spliceFunctionSignature(abi);
         let receipt = null;
 
         if (readOnly) {
-            receipt = await this.web3jService.call(constant.CNS_PRECOMPILE_ADDRESS, functionName, parameters);
+            receipt = await this.web3jService.call(constant.CNS_PRECOMPILE_ADDRESS, abi, parameters);
             receipt = receipt.result;
         } else {
-            receipt = await this.web3jService.sendRawTransaction(constant.CNS_PRECOMPILE_ADDRESS, functionName, parameters);
+            receipt = await this.web3jService.sendRawTransaction(constant.CNS_PRECOMPILE_ADDRESS, abi, parameters);
         }
         return handleReceipt(receipt, abi)[0];
     }
@@ -58,9 +56,13 @@ class CNSService extends ServiceBase {
     async registerCns(name, version, address, abi) {
         check(arguments, Str, Str, Str, Str);
 
+        if (!this._isValiadVersion(version)) {
+            throw new PrecompiledError(`length of version shouldn't be more than ${constant.CNS_VERSION_MAX_LENGTH}`);
+        }
+
         let parameters = [name, version, address, abi];
         let output = await this._send(constant.CNS_PRECOMPILE_ABI.insert, parameters);
-        return parseInt(output);
+        return parseInt(output, 16);
     }
 
     async getAddressByContractNameAndVersion(contractNameAndVersion) {
@@ -74,6 +76,11 @@ class CNSService extends ServiceBase {
 
         if (contractNameAndVersion.includes(':')) {
             let [contractName, contractVersion] = contractNameAndVersion.split(':', 2);
+
+            if (!this._isValiadVersion(contractVersion)) {
+                throw new PrecompiledError(`length of version shouldn't be more than ${constant.CNS_VERSION_MAX_LENGTH}`);
+            }
+
             let parameters = [contractName, contractVersion];
             contractAddressInfo = await this._send(constant.CNS_PRECOMPILE_ABI.selectByNameAndVersion, parameters, true);
         } else {
@@ -101,6 +108,10 @@ class CNSService extends ServiceBase {
 
     async queryCnsByNameAndVersion(name, version) {
         check(arguments, Str, Str);
+
+        if (!this._isValiadVersion(version)) {
+            throw new PrecompiledError(`length of version shouldn't be more than ${constant.CNS_VERSION_MAX_LENGTH}`);
+        }
 
         let parameters = [name, version];
         let contractAddressInfo = await this._send(constant.CNS_PRECOMPILE_ABI.selectByNameAndVersion, parameters, true);

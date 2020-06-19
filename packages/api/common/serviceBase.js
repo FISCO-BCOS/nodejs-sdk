@@ -14,33 +14,27 @@
 
 'use strict';
 
-const web3Utils = require('../common/web3lib/utils');
-const Configuration = require('../common/configuration').Configuration;
+const { Configuration } = require('./configuration');
 
 class ServiceBase {
-    constructor() {
-        Object.defineProperty(this, 'config', {
-            enumerable: true,
-            configurable: false,
-            get: () => {
-                if (!this._config) {
-                    this._config = Configuration.getInstance();
+    constructor(config) {
+        if (!(config instanceof Configuration)) {
+            throw new Error('invalid configuration object to initialize service');
+        }
 
-                    // To avoid infinite recursive call, I place account setting here ...
-                    let account = '0x' + web3Utils.privateKeyToAddress(this._config.privateKey).toString('hex');
-                    this._config.account = account;
-                }
-
-                return this._config;
-            },
-            set: (config) => {
-                this._config = config;
-            }
-        });
+        this.config = config;
     }
 
-    resetConfig() {
-        this.config = Configuration.getInstance();
+    resetConfig(config) {
+        if (!(config instanceof Configuration)) {
+            throw new Error('invalid configuration object to reset');
+        }
+
+        this.config = config;
+    }
+
+    getConfig() {
+        return this.config;
     }
 }
 

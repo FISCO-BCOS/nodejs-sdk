@@ -16,45 +16,63 @@
 
 const path = require('path');
 const fs = require('fs');
-const utils = require('../../api/common/utils');
-const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
-const { Web3jService, ConsensusService, SystemConfigService } = require('../../api');
-const { ContractsDir, ContractsOutputDir } = require('../constant');
-const { check, Str, Addr, Any } = require('../../api/common/typeCheck');
+const decode = require('../../api/decoder');
+const {
+    produceSubCommandInfo,
+    FLAGS,
+    getAbi
+} = require('./base');
+const {
+    Web3jService,
+    ConsensusService,
+    SystemConfigService,
+    CompileService,
+    Configuration
+} = require('../../api');
+const {
+    ContractsDir,
+    ContractsOutputDir
+} = require('../constant');
+const {
+    check,
+    Str,
+    Addr,
+    Any
+} = require('../../api/common/typeCheck');
 
 let interfaces = [];
-const web3jService = new Web3jService();
-const consensusService = new ConsensusService();
-const systemConfigService = new SystemConfigService();
+const configFile = path.join(process.cwd(), './conf/config.json');
+const config = new Configuration(configFile);
+const web3jService = new Web3jService(config);
+const consensusService = new ConsensusService(config);
+const systemConfigService = new SystemConfigService(config);
+const compileService = new CompileService(config);
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getBlockNumber',
         describe: 'Query the number of most recent block'
     },
     () => {
-        return web3jService.getBlockNumber().then(result => {
+        return web3jService.getBlockNumber().then((result) => {
             result.result = parseInt(result.result, '16').toString();
             return result;
         });
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getPbftView',
         describe: 'Query the pbft view of node',
     },
     () => {
-        return web3jService.getPbftView().then(result => {
+        return web3jService.getPbftView().then((result) => {
             result.result = parseInt(result.result, '16').toString();
             return result;
         });
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getObserverList',
         describe: 'Query nodeId list for observer nodes'
     },
@@ -63,8 +81,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getSealerList',
         describe: 'Query nodeId list for sealer nodes'
     },
@@ -73,8 +90,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getConsensusStatus',
         describe: 'Query consensus status'
     },
@@ -83,8 +99,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getSyncStatus',
         describe: 'Query sync status'
     },
@@ -93,8 +108,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getClientVersion',
         describe: 'Query the current node version'
     },
@@ -103,8 +117,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getPeers',
         describe: 'Query peers currently connected to the client'
     },
@@ -113,8 +126,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getNodeIDList',
         describe: 'Query nodeId list for all connected nodes'
     },
@@ -123,8 +135,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getGroupPeers',
         describe: 'Query nodeId list for sealer and observer nodes'
     },
@@ -133,8 +144,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getGroupList',
         describe: 'Query group list'
     },
@@ -143,12 +153,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getBlockByHash',
         describe: 'Query information about a block by hash',
-        args: [
-            {
+        args: [{
                 name: 'blockHash',
                 options: {
                     type: 'string',
@@ -172,12 +180,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getBlockByNumber',
         describe: 'Query information about a block by block number',
-        args: [
-            {
+        args: [{
                 name: 'blockNumber',
                 options: {
                     type: 'string',
@@ -201,19 +207,16 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getBlockHashByNumber',
         describe: 'Query block hash by block number',
-        args: [
-            {
-                name: 'blockNumber',
-                options: {
-                    type: 'string',
-                    describe: 'Integer of a block number'
-                }
+        args: [{
+            name: 'blockNumber',
+            options: {
+                type: 'string',
+                describe: 'Integer of a block number'
             }
-        ]
+        }]
     },
     (argv) => {
         let blockNumber = argv.blockNumber;
@@ -221,19 +224,16 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getTransactionByHash',
         describe: 'Query information about a transaction requested by transaction hash',
-        args: [
-            {
-                name: 'transactionHash',
-                options: {
-                    type: 'string',
-                    describe: '32 Bytes - The hash of a transaction'
-                }
+        args: [{
+            name: 'transactionHash',
+            options: {
+                type: 'string',
+                describe: '32 Bytes - The hash of a transaction'
             }
-        ]
+        }]
     },
     (argv) => {
         let transactionHash = argv.transactionHash;
@@ -241,12 +241,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getTransactionByBlockHashAndIndex',
         describe: 'Query information about a transaction by block hash and transaction index position',
-        args: [
-            {
+        args: [{
                 name: 'blockHash',
                 options: {
                     type: 'string',
@@ -270,12 +268,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getTransactionByBlockNumberAndIndex',
         describe: 'Query information about a transaction by block number and transaction index position',
-        args: [
-            {
+        args: [{
                 name: 'blockNumber',
                 options: {
                     type: 'string',
@@ -299,8 +295,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getPendingTransactions',
         describe: 'Query pending transactions'
     },
@@ -309,47 +304,42 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getPendingTxSize',
         describe: 'Query pending transactions size'
     },
     () => {
-        return web3jService.getPendingTxSize().then(result => {
-            result.result = parseInt(result.result).toString();
+        return web3jService.getPendingTxSize().then((result) => {
+            result.result = parseInt(result.result, 16).toString();
             return result;
         });
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getTotalTransactionCount',
         describe: 'Query total transaction count'
     },
     () => {
-        return web3jService.getTotalTransactionCount().then(result => {
-            result.result.blockNumber = parseInt(result.result.blockNumber).toString();
-            result.result.failedTxSum = parseInt(result.result.failedTxSum).toString();
-            result.result.txSum = parseInt(result.result.txSum).toString();
+        return web3jService.getTotalTransactionCount().then((result) => {
+            result.result.blockNumber = parseInt(result.result.blockNumber, 16).toString();
+            result.result.failedTxSum = parseInt(result.result.failedTxSum, 16).toString();
+            result.result.txSum = parseInt(result.result.txSum, 16).toString();
             return result;
         });
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getTransactionReceipt',
         describe: 'Query the receipt of a transaction by transaction hash',
-        args: [
-            {
-                name: 'transactionHash',
-                options: {
-                    type: 'string',
-                    describe: '32 Bytes - The hash of a transaction'
-                }
+        args: [{
+            name: 'transactionHash',
+            options: {
+                type: 'string',
+                describe: '32 Bytes - The hash of a transaction'
             }
-        ]
+        }]
     },
     (argv) => {
         let txHash = argv.transactionHash;
@@ -357,41 +347,29 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
-        name: 'getSystemConfigByKey',
-        describe: 'Query a system config value by key',
-        args: [
-            {
-                name: 'key',
+interfaces.push(produceSubCommandInfo({
+        name: 'deploy',
+        describe: 'Deploy a contract on blockchain',
+        args: [{
+                name: 'contractName',
                 options: {
                     type: 'string',
-                    describe: 'The name of system config',
-                    choices: ['tx_count_limit', 'tx_gas_limit']
+                    describe: 'The name of a contract which must be in \`nodejs-sdk/packages/cli/contracts/\` directory',
+                }
+            },
+            {
+                name: 'parameters',
+                options: {
+                    type: 'string',
+                    describe: 'The parameters(splited by space) of contructor',
+                    flag: FLAGS.VARIADIC
                 }
             }
         ]
     },
     (argv) => {
-        let key = argv.key;
-        return web3jService.getSystemConfigByKey(key);
-    }
-));
-
-interfaces.push(produceSubCommandInfo(
-    {
-        name: 'deploy',
-        describe: 'Deploy a contract on blockchain',
-        args: [{
-            name: 'contractName',
-            options: {
-                type: 'string',
-                describe: 'The name of a contract which must be in \`nodejs-sdk/packages/cli/contracts/\` directory',
-            }
-        }]
-    },
-    (argv) => {
         let contractName = argv.contractName;
+        let parameters = argv.parameters;
 
         if (!contractName.endsWith('.sol')) {
             contractName += '.sol';
@@ -401,32 +379,50 @@ interfaces.push(produceSubCommandInfo(
         if (!fs.existsSync(contractPath)) {
             throw new Error(`${contractName} doesn't exist`);
         }
-        let outputDir = ContractsOutputDir;
 
-        return web3jService.deploy(contractPath, outputDir).then(result => {
+        let contractClass = compileService.compile(contractPath);
+        if (!fs.existsSync(ContractsOutputDir)) {
+            fs.mkdirSync(ContractsOutputDir);
+        }
+
+        contractName = path.basename(contractName);
+        contractName = contractName.substring(0, contractName.indexOf('.'));
+        let abiPath = path.join(ContractsOutputDir, `${path.basename(contractName)}.abi`);
+        let binPath = path.join(ContractsOutputDir, `${path.basename(contractName)}.bin`);
+
+        try {
+            fs.writeFileSync(abiPath, JSON.stringify(contractClass.abi));
+            fs.writeFileSync(binPath, contractClass.bin);
+        } catch (error) {}
+
+        return web3jService.deploy(contractClass.abi, contractClass.bin, parameters).then((result) => {
             if (result.status === '0x0') {
                 let contractAddress = result.contractAddress;
-                let addressPath = path.join(outputDir, `.${path.basename(contractName, '.sol')}.address`);
+                let addressPath = path.join(ContractsOutputDir, `.${path.basename(contractName, '.sol')}.address`);
 
                 try {
                     fs.appendFileSync(addressPath, contractAddress + '\n');
-                } catch (error) { }
+                } catch (error) {}
 
-                return { status: result.status, contractAddress: contractAddress, transactionHash: result.transactionHash };
+                return {
+                    status: result.status,
+                    contractAddress,
+                    transactionHash: result.transactionHash
+                };
             }
 
-            return { status: result.status, transactionHash: result.transactionHash };
+            return {
+                status: result.status,
+                transactionHash: result.transactionHash
+            };
         });
-
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'call',
         describe: 'Call a contract by a function and parameters',
-        args: [
-            {
+        args: [{
                 name: 'contractName',
                 options: {
                     type: 'string',
@@ -451,7 +447,7 @@ interfaces.push(produceSubCommandInfo(
                 name: 'parameters',
                 options: {
                     type: 'string',
-                    describe: 'The parameters(splited by a space) of a function',
+                    describe: 'The parameters(splited by space) of a function',
                     flag: FLAGS.VARIADIC
                 }
             }
@@ -465,69 +461,63 @@ interfaces.push(produceSubCommandInfo(
 
         check([contractName, contractAddress, functionName, parameters], Str, Addr, Str, Any);
 
-        let abi = getAbi(contractName);
+        let inputsReg = /\(.*\)/;
+        let inputs = inputsReg.exec(functionName);
+        if (inputs) {
+            inputs = inputs[0];
+            inputs = inputs.substring(1, inputs.length - 1).split(',');
+            inputs = inputs.map((input) => input.trim());
+        }
+
+        let pureFunctionName = functionName.replace(inputsReg, '');
+        let abi = getAbi(contractName, pureFunctionName, inputs);
 
         if (!abi) {
-            throw new Error(`no abi file for contract ${contractName}`);
+            throw new Error(`no ABI for method \`${functionName}\` of contract \`${contractName}\``);
         }
 
-        for (let item of abi) {
-            if (item.name === functionName && item.type === 'function') {
-                if (item.inputs.length !== parameters.length) {
-                    throw new Error(`wrong number of parameters for function \`${item.name}\`, expected ${item.inputs.length} but got ${parameters.length}`);
-                }
+        let decoder = decode.createMethodDecoder(abi, null);
 
-                functionName = utils.spliceFunctionSignature(item);
-
-                if (item.constant) {
-                    return web3jService.call(contractAddress, functionName, parameters).then(result => {
-                        let status = result.result.status;
-                        let ret = {
-                            status: status
-                        };
-                        let output = result.result.output;
-                        if (output !== '0x') {
-                            ret.output = utils.decodeMethod(item, output);
-                        }
-                        return ret;
-                    });
-                } else {
-                    return web3jService.sendRawTransaction(contractAddress, functionName, parameters).then(result => {
-                        let txHash = result.transactionHash;
-                        let status = result.status;
-                        let ret = {
-                            transactionHash: txHash,
-                            status: status
-                        };
-                        let output = result.output;
-                        if (output !== '0x') {
-                            ret.output = utils.decodeMethod(item, output);
-                        }
-                        return ret;
-                    });
+        if (abi.constant) {
+            return web3jService.call(contractAddress, abi, parameters).then((result) => {
+                let status = result.result.status;
+                let ret = {
+                    status: status
+                };
+                let output = result.result.output;
+                if (output !== '0x') {
+                    ret.output = decoder.decodeOutput(output);
                 }
-            }
+                return ret;
+            });
+        } else {
+            return web3jService.sendRawTransaction(contractAddress, abi, parameters).then((result) => {
+                let txHash = result.transactionHash;
+                let status = result.status;
+                let ret = {
+                    transactionHash: txHash,
+                    status: status
+                };
+                let output = result.output;
+                if (output !== '0x') {
+                    ret.output = decoder.decodeOutput(output);
+                }
+                return ret;
+            });
         }
-
-        throw new Error(`no function named as \`${functionName}\` in contract \`${contractName}\``);
     }
 ));
 
-
-
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'addSealer',
         describe: 'Add a sealer node',
-        args: [
-            {
-                name: 'nodeID',
-                options: {
-                    type: 'string',
-                    describe: 'The nodeId of a node. The length of the node hex string is 128'
-                }
+        args: [{
+            name: 'nodeID',
+            options: {
+                type: 'string',
+                describe: 'The nodeId of a node. The length of the node hex string is 128'
             }
-        ]
+        }]
     },
     (argv) => {
         let nodeID = argv.nodeID;
@@ -535,19 +525,16 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'addObserver',
         describe: 'Add an observer node',
-        args: [
-            {
-                name: 'nodeID',
-                options: {
-                    type: 'string',
-                    describe: 'The nodeId of a node. The length of the node hex string is 128'
-                }
+        args: [{
+            name: 'nodeID',
+            options: {
+                type: 'string',
+                describe: 'The nodeId of a node. The length of the node hex string is 128'
             }
-        ]
+        }]
     },
     (argv) => {
         let nodeID = argv.nodeID;
@@ -555,19 +542,16 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'removeNode',
         describe: 'Remove a node',
-        args: [
-            {
-                name: 'nodeID',
-                options: {
-                    type: 'string',
-                    describe: 'The nodeId of a node. The length of the node hex string is 128'
-                }
+        args: [{
+            name: 'nodeID',
+            options: {
+                type: 'string',
+                describe: 'The nodeId of a node. The length of the node hex string is 128'
             }
-        ]
+        }]
     },
     (argv) => {
         let nodeID = argv.nodeID;
@@ -575,17 +559,17 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+const systemKeys = ['tx_count_limit', 'tx_gas_limit', 'rpbft_epoch_block_num', 'rpbft_epoch_sealer_num'];
+
+interfaces.push(produceSubCommandInfo({
         name: 'setSystemConfigByKey',
         describe: 'Set a system config value by key',
-        args: [
-            {
+        args: [{
                 name: 'key',
                 options: {
                     type: 'string',
                     describe: 'The name of system config',
-                    choices: ['tx_count_limit', 'tx_gas_limit']
+                    choices: systemKeys
                 }
             },
             {
@@ -602,6 +586,41 @@ interfaces.push(produceSubCommandInfo(
         let value = argv.value;
 
         return systemConfigService.setValueByKey(key, value);
+    }
+));
+
+interfaces.push(produceSubCommandInfo({
+        name: 'getSystemConfigByKey',
+        describe: 'Query a system config value by key',
+        args: [{
+            name: 'key',
+            options: {
+                type: 'string',
+                describe: 'The name of system config',
+                choices: systemKeys
+            }
+        }]
+    },
+    (argv) => {
+        let key = argv.key;
+        return web3jService.getSystemConfigByKey(key);
+    }
+));
+
+interfaces.push(produceSubCommandInfo({
+        name: 'getCode',
+        describe: 'Query code at a given address',
+        args: [{
+            name: 'address',
+            options: {
+                type: 'string',
+                describe: '20 Bytes - The address of a contract',
+            }
+        }]
+    },
+    (argv) => {
+        let address = argv.address;
+        return web3jService.getCode(address);
     }
 ));
 

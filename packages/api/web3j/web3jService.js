@@ -14,473 +14,234 @@
 
 'use strict';
 
-const utils = require('../common/utils');
-const { check, Str, Bool, StrNeg, Addr, Any } = require('../common/typeCheck');
-const channelPromise = require('../common/channelPromise');
-const web3Sync = require('../common/web3lib/web3sync');
-const isArray = require('isarray');
-const path = require('path');
-const fs = require('fs');
-const ServiceBase = require('../common/serviceBase').ServiceBase;
-const READ_ONLY = require('./constant').READ_ONLY;
+const ethers = require('ethers');
+const deepcopy = require('deepcopy');
+
+const { selectNode } = require('../common/utils');
+const { getBlockHeight } = require('../common/blockHeightCache');
+const { ServiceBase } = require('../common/serviceBase');
+const { channelPromise, MESSAGE_TYPE } = require('../common/network');
+const {
+    Str, Bool, StrNeg, Addr, Obj, ArrayList, Neg,
+    check } = require('../common/typeCheck');
+const {
+    getSignTx, getSignDeployTx,
+    encodeParams, getTxData } = require('../common/web3lib/web3sync');
+
+
+
+const QUERY = MESSAGE_TYPE.QUERY;
+const TRANSACTION = MESSAGE_TYPE.CHANNEL_RPC_REQUEST;
 
 class Web3jService extends ServiceBase {
-    constructor() {
-        super();
+    constructor(config) {
+        super(config);
     }
 
-    resetConfig() {
-        super.resetConfig();
+    resetConfig(config) {
+        super.resetConfig(config);
+    }
+
+    _constructRequest(method, params, type = QUERY) {
+        let node = selectNode(this.config.nodes);
+
+        let requestData = {
+            'jsonrpc': '2.0',
+            method,
+            params,
+            'id': 1
+        };
+
+        return channelPromise(requestData, type, node, this.config.authentication, this.config.timeout);
     }
 
     async getBlockNumber() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getBlockNumber',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        let promise = this._constructRequest('getBlockNumber', [this.config.groupID]);
+        return promise.then((result) => {
+            let blockNumber = parseInt(result.result, '16');
+            return result;
+        });
     }
 
     async getPbftView() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getPbftView',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getPbftView', [this.config.groupID]);
     }
 
     async getObserverList() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getObserverList',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getObserverList', [this.config.groupID]);
     }
 
     async getSealerList() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getSealerList',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getSealerList', [this.config.groupID]);
     }
 
     async getConsensusStatus() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getConsensusStatus',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getConsensusStatus', [this.config.groupID]);
     }
 
     async getSyncStatus() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getSyncStatus',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getSyncStatus', [this.config.groupID]);
     }
 
     async getClientVersion() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getClientVersion',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getClientVersion', [this.config.groupID]);
     }
 
     async getPeers() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getPeers',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getPeers', [this.config.groupID]);
     }
 
     async getNodeIDList() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getNodeIDList',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getNodeIDList', [this.config.groupID]);
     }
 
     async getGroupPeers() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getGroupPeers',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getGroupPeers', [this.config.groupID]);
     }
 
     async getGroupList() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getGroupList',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getGroupList', [this.config.groupID]);
     }
 
     async getBlockByHash(blockHash, includeTransactions) {
         check(arguments, Str, Bool);
-
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getBlockByHash',
-            'params': [this.config.groupID, blockHash, includeTransactions],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getBlockByHash', [this.config.groupID, blockHash, includeTransactions]);
     }
 
     async getBlockByNumber(blockNumber, includeTransactions) {
         check(arguments, StrNeg, Bool);
-
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getBlockByNumber',
-            'params': [this.config.groupID, blockNumber, includeTransactions],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getBlockByNumber', [this.config.groupID, blockNumber, includeTransactions]);
     }
 
     async getBlockHashByNumber(blockNumber) {
         check(arguments, StrNeg);
-
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getBlockHashByNumber',
-            'params': [this.config.groupID, blockNumber],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getBlockHashByNumber', [this.config.groupID, blockNumber]);
     }
 
     async getTransactionByHash(transactionHash) {
         check(arguments, Str);
-
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getTransactionByHash',
-            'params': [this.config.groupID, transactionHash],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getTransactionByHash', [this.config.groupID, transactionHash]);
     }
 
     async getTransactionByBlockHashAndIndex(blockHash, transactionIndex) {
         check(arguments, Str, StrNeg);
-
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getTransactionByBlockHashAndIndex',
-            'params': [this.config.groupID, blockHash, transactionIndex],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getTransactionByBlockHashAndIndex', [this.config.groupID, blockHash, transactionIndex]);
     }
 
     async getTransactionByBlockNumberAndIndex(blockNumber, transactionIndex) {
         check(arguments, StrNeg, StrNeg);
-
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getTransactionByBlockNumberAndIndex',
-            'params': [this.config.groupID, blockNumber, transactionIndex],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getTransactionByBlockNumberAndIndex', [this.config.groupID, blockNumber, transactionIndex]);
     }
 
     async getPendingTransactions() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getPendingTransactions',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getPendingTransactions', [this.config.groupID]);
     }
 
     async getPendingTxSize() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getPendingTxSize',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getPendingTxSize', [this.config.groupID]);
     }
 
     async getTotalTransactionCount() {
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getTotalTransactionCount',
-            'params': [this.config.groupID],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getTotalTransactionCount', [this.config.groupID]);
     }
 
     async getTransactionReceipt(txHash) {
         check(arguments, Str);
-
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getTransactionReceipt',
-            'params': [this.config.groupID, txHash],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getTransactionReceipt', [this.config.groupID, txHash]);
     }
 
     async getCode(address) {
         check(arguments, Addr);
-
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getCode',
-            'params': [
-                this.config.groupID,
-                address
-            ],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getCode', [this.config.groupID, address]);
     }
 
     async getSystemConfigByKey(key) {
         check(arguments, Str);
-
-        let node = utils.selectNode(this.config.nodes);
-
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'getSystemConfigByKey',
-            'params': [
-                this.config.groupID,
-                key
-            ],
-            'id': 1
-        };
-
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        return this._constructRequest('getSystemConfigByKey', [this.config.groupID, key]);
     }
 
-    async rawTransaction(to, func, params, blockLimit) {
-        if (!isArray(params)) {
-            params = params ? [params] : [];
+    _checkParameters(func, params) {
+        let name = func.name;
+        let inputs = func.inputs;
+        if (inputs.length !== params.length) {
+            throw new Error(`wrong number of arguments for \`${name}\`, expected ${inputs.length} but got ${params.length}`);
+        }
+    }
+
+    _getWho(who) {
+        if (!who) {
+            who = Object.keys(this.config.accounts)[0];
+        } else {
+            if (!this.config.accounts[who]) {
+                throw new Error(`invalid id of account: ${who}`);
+            }
         }
 
-        let signTx = web3Sync.getSignTx(this.config.groupID, this.config.account, this.config.privateKey, to, func, params, blockLimit);
+        return who;
+    }
+
+    _rawTransaction(to, func, params, blockLimit, who) {
+        let signTx = getSignTx(this.config, to, func, params, blockLimit, who);
         return signTx;
     }
 
     async sendRawTransaction(...args) {
-        let node = utils.selectNode(this.config.nodes);
-        if (args.length !== 3) {
-            check(arguments, Str);
-
-            let requestData = {
-                'jsonrpc': '2.0',
-                'method': 'sendRawTransaction',
-                'params': [this.config.groupID, args[0]],
-                'id': 1
-            };
-            return channelPromise(node, this.config.authentication, requestData, this.config.timeout);
+        if (args.length === 1) {
+            return this._constructRequest('sendRawTransaction', [this.config.groupID, args[0]], TRANSACTION);
         } else {
-            check(arguments, Addr, Str, Any);
+            check(args.slice(0, 3), Addr, Obj, ArrayList);
 
             let to = args[0];
             let func = args[1];
             let params = args[2];
-            let blockNumberResult = await this.getBlockNumber();
-            let blockNumber = parseInt(blockNumberResult.result, '16');
-            let signTx = await this.rawTransaction(to, func, params, blockNumber + 500);
+            let who = this._getWho(args[3]);
+
+            let iface = new ethers.utils.Interface([func]);
+            func = iface.functions[func.name];
+
+            let blockNumber = await getBlockHeight(this.config);
+            let signTx = await this._rawTransaction(to, func, params, blockNumber + 500, who);
             return this.sendRawTransaction(signTx);
         }
     }
 
-    /**
-     * 使用自定义公钥和私钥组装交易数据（签名）。
-     * @param {*} account 自定义公钥
-     * @param {*} privateKey 自定义私钥
-     * @param {*} to 交易对方的公钥
-     * @param {*} func 函数名称
-     * @param {*} params 函数参数
-     * @param {*} blockLimit 块限制
-     */
-    async rawTransactionUsingCustomCredentials(account, privateKey, to, func, params, blockLimit) {
-        if (!isArray(params)) {
-            params = params ? [params] : [];
+    async deploy(abi, bin, parameters, who = null) {
+        check([abi, bin, parameters], Obj, Str, ArrayList);
+        who = this._getWho(who);
+
+        let contractAbi = new ethers.utils.Interface(abi);
+        let inputs = contractAbi.deployFunction.inputs;
+        if (inputs.length !== parameters.length) {
+            throw new Error(`wrong number of parameters for constructor, expected ${inputs.length} but got ${parameters.length}`);
         }
 
-        return web3Sync.getSignTx(this.config.groupID, account, privateKey, to, func, params, blockLimit);
-    }
-
-    /**
-     * 使用自定义公钥和私钥发送交易。
-     * @param {*} account 自定义公钥
-     * @param {*} privateKey 自定义私钥
-     */
-    async sendRawTransactionUsingCustomCredentials(account, privateKey, ...args) {
-        let node = utils.selectNode(this.config.nodes);
-        if (args.length !== 3) {
-            let requestData = {
-                'jsonrpc': '2.0',
-                'method': 'sendRawTransaction',
-                'params': [this.config.groupID, args[0]],
-                'id': 1
-            };
-            return channelPromise(node, this.config.authentication, requestData, this.config.timeout);
-        } else {
-            let to = args[0];
-            let func = args[1];
-            let params = args[2];
-            let blockNumberResult = await this.getBlockNumber();
-            let blockNumber = parseInt(blockNumberResult.result, '16');
-            let signTx = this.rawTransactionUsingCustomCredentials(account, privateKey, to, func, params, blockNumber + 500);
-            return this.sendRawTransaction(account, privateKey, signTx);
-        }
-    }
-
-    async deploy(contractPath, outputDir) {
-        check(arguments, Str, Str);
-
-        if (!fs.existsSync(outputDir)) {
-            fs.mkdirSync(outputDir);
+        let contractBin = deepcopy(bin);
+        if (parameters.length !== 0) {
+            let encodedParams = encodeParams(inputs, parameters);
+            contractBin += encodedParams.toString('hex').substr(2);
         }
 
-        if (!path.isAbsolute(outputDir)) {
-            outputDir = path.join(process.cwd(), outputDir);
-        }
-
-        if (!path.isAbsolute(contractPath)) {
-            contractPath = path.join(process.cwd(), contractPath);
-        }
-
-        await utils.compile(contractPath, outputDir, this.config.solc);
-
-        let contractName = path.basename(contractPath, '.sol');
-        let contractBin = fs.readFileSync(path.join(outputDir, contractName + '.bin'), 'utf-8');
-        let blockNumberResult = await this.getBlockNumber();
-        let blockNumber = parseInt(blockNumberResult.result, '16');
-        let signTx = web3Sync.getSignDeployTx(this.config.groupID, this.config.account, this.config.privateKey, contractBin, blockNumber + 500);
+        let blockNumber = await getBlockHeight(this.config);
+        let signTx = getSignDeployTx(this.config, contractBin, blockNumber + 500, who);
         return this.sendRawTransaction(signTx);
     }
 
-    async call(to, func, params) {
-        check(arguments, Addr, Str, Any);
+    async call(to, func, params, who = null) {
+        check([to, func, params], Addr, Obj, ArrayList);
+        who = this._getWho(who);
 
-        if (!isArray(params)) {
-            params = params ? [params] : [];
-        }
+        let iface = new ethers.utils.Interface([func]);
+        func = iface.functions[func.name];
 
-        let txData = web3Sync.getTxData(func, params);
+        this._checkParameters(func, params);
 
-        let requestData = {
-            'jsonrpc': '2.0',
-            'method': 'call',
-            'params': [this.config.groupID, {
-                'from': this.config.account,
-                'to': to,
-                'value': '0x0',
-                'data': txData
-            }],
-            'id': 1
-        };
-
-        let node = utils.selectNode(this.config.nodes);
-        return channelPromise(node, this.config.authentication, requestData, this.config.timeout, READ_ONLY);
+        let txData = getTxData(func, params, this.config.encryptType);
+        return this._constructRequest('call', [this.config.groupID, {
+            'from': this.config.accounts[who].account,
+            'to': to,
+            'value': '0x0',
+            'data': txData
+        }]);
     }
 }
 

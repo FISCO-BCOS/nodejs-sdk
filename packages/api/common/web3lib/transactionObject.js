@@ -14,15 +14,16 @@
 
 'use strict';
 
-let utils = require('./utils');
+const utils = require('./utils');
 const ethjsUtil = require('ethereumjs-util');
 const BN = ethjsUtil.BN;
+const { ENCRYPT_TYPE } = require('../configuration');
 
 /**
  * Constructor of transaction
  * @param {data} data transaction data
  */
-function Transaction(data) {
+function Transaction(data, encryptType) {
     data = data || {};
     let fields = [{
         name: 'randomid',
@@ -76,9 +77,7 @@ function Transaction(data) {
         default: Buffer.from([])
     }];
 
-    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
-    let encryptType = Configuration.getInstance().encryptType;
-    if (encryptType === SM_CRYPTO) {
+    if (encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
         fields = fields.concat([{
             name: 'pub',
             length: 64,
@@ -95,7 +94,7 @@ function Transaction(data) {
             allowLess: true,
             default: Buffer.from([])
         }]);
-    } else if (encryptType === ECDSA) {
+    } else if (encryptType === ENCRYPT_TYPE.ECDSA) {
         fields = fields.concat([{
             name: 'v',
             length: 1,
@@ -129,7 +128,7 @@ Transaction.prototype.toCreationAddress = function () {
  * @param {Boolean} [includeSignature=true] whether or not to inculde the signature
  * @return {Buffer} a sha3-256 hash of the serialized tx
  */
-Transaction.prototype.hash = function (includeSignature) {
+Transaction.prototype.hash = function (includeSignature, encryptType) {
     if (includeSignature === undefined) {
         includeSignature = true;
     }
@@ -144,7 +143,7 @@ Transaction.prototype.hash = function (includeSignature) {
     this.raw = rawCopy.slice();
 
     // create hash
-    return utils.rlphash(txRawForHash);
+    return utils.rlphash(txRawForHash, encryptType);
 };
 
 /**
@@ -208,9 +207,9 @@ Transaction.prototype.verifySignature = function () {
  * sign a transaction with a given private key
  * @param {Buffer} privateKey private key
  */
-Transaction.prototype.sign = function (privateKey) {
-    const msgHash = this.hash(false);
-    const sig = utils.ecsign(msgHash, privateKey);
+Transaction.prototype.sign = function (privateKey, encryptType) {
+    const msgHash = this.hash(false, encryptType);
+    const sig = utils.ecsign(msgHash, privateKey, encryptType);
     Object.assign(this, sig);
 };
 

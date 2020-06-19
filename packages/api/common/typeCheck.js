@@ -9,6 +9,7 @@ module.exports.StrNeg = 4;
 module.exports.Addr = 5;
 module.exports.ArrayList = 6;
 module.exports.Any = 7;
+module.exports.Num = 8;
 
 _types = {
     [module.exports.Neg]: 'negative integer',
@@ -18,7 +19,8 @@ _types = {
     [module.exports.StrNeg]: 'negative integer',
     [module.exports.Addr]: 'address',
     [module.exports.ArrayList]: 'array',
-    [module.exports.Any]: 'any'
+    [module.exports.Any]: 'any',
+    [module.exports.Num]: 'number'
 };
 
 /**
@@ -39,8 +41,19 @@ module.exports.check = function (args, ...types) {
             assert(types[index] in _types);
 
             switch (types[index]) {
+                case exports.Number: {
+                    if (typeof args[index] !== 'number' || !Number.isInteger(args[index])) {
+                        throw new SyntaxError(`invalid argument at position ${parseInt(index) + 1}, expected instance of ${_types[types[index]]} but got \`${args[index]}\``);
+                    }
+
+                    if (args[index] < Number.MIN_SAFE_INTEGER || args[index] > Number.MAX_SAFE_INTEGER) {
+                        throw new RangeError(`invalid range of argument at position ${parseInt(index) + 1}, the argument should be within the scope of [${Number.MIN_SAFE_INTEGER}, ${Number.MAX_SAFE_INTEGER}]`);
+                    }
+
+                    break;
+                }
                 case exports.Neg: {
-                    if (typeof args[index] != 'number' || Number.isInteger(args[index])) {
+                    if (typeof args[index] !== 'number' || !Number.isInteger(args[index])) {
                         throw new SyntaxError(`invalid argument at position ${parseInt(index) + 1}, expected instance of ${_types[types[index]]} but got \`${args[index]}\``);
                     }
 
@@ -51,7 +64,7 @@ module.exports.check = function (args, ...types) {
                     break;
                 }
                 case exports.StrNeg: {
-                    let intReg = /^(0x)?\d+$/;
+                    let intReg = /^(0x)?(\d|[a-fA-F])+$/;
                     if (!intReg.test(args[index])) {
                         throw new SyntaxError(`invalid argument at position ${parseInt(index) + 1}, expected instance of ${_types[types[index]]} but got \`${args[index]}\``);
                     }

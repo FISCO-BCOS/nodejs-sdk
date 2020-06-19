@@ -1,15 +1,14 @@
 # node_js:
-#   - "8"
+#   - "10"
 branches:
   only:
       - /.*/
 env:
-    - NODEJS_VERSION=8
-    - NODEJS_VERSION=9
     - NODEJS_VERSION=10
+    - NODEJS_VERSION=11
 os:
   - linux
-  - osx
+  # - osx
 git:
     depth: 5
 matrix:
@@ -24,33 +23,31 @@ matrix:
         #   script: |
         #     bash .ci/code_security_audit.sh
 
-        - language: node_js
-          os: linux
+        - os: linux
           dist: xenial
           sudo: required
 
-        - language: node_js
-          os: linux
+        - os: linux
           dist: xenial
           sudo: required
           script: |
             bash .ci/ci_check_gm.sh
 
-        - language: node_js
-          os: osx
-          osx_image: xcode11.3
+        - os: osx
+          osx_image: xcode11.4
 
 addons:
   apt:
     packages:
     - libssl-dev
     - openssl
+    update: true
   homebrew:
     packages:
     - openssl
+    update: true
 before_install:
-  - curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
-  - source ~/.$(basename $SHELL)rc
+  - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
 install: 
   - nvm install $NODEJS_VERSION 
   - nvm use $NODEJS_VERSION

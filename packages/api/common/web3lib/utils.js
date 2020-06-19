@@ -19,9 +19,15 @@ const cryptoJSSha3 = require('crypto-js/sha3');
 const keccak = require('keccak');
 const assert = require('assert');
 const rlp = require('rlp');
-const coder = require('web3-eth-abi');
 const ethjsUtil = require('ethjs-util');
 const smCrypto = require('./sm_crypto/SM2Sign');
+const EC = require('elliptic').ec;
+
+// To prevent circular dependency problem between `configuration` 
+// and `web3lib/utils`, please import `ENCRYPT_TYPE` directly via 
+// `require('../configuration/constant').ENCRYPT_TYPE`,
+// *DO NOT* use `require('../configuration').ENCRYPT_TYPE` or anything similar.
+const ENCRYPT_TYPE = require('../configuration/constant').ENCRYPT_TYPE;
 
 /**
  * Convert data to Buffer
@@ -57,23 +63,21 @@ function toBuffer(data) {
  * @param {int} bits length of hash
  * @return {Buffer} hash of data
  */
-function sha3(data, bits) {
-    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
-    let encryptType = Configuration.getInstance().encryptType;
-    if (encryptType === ECDSA) {
+function sha3(data, bits, encryptType) {
+    if (encryptType === ENCRYPT_TYPE.ECDSA) {
         data = toBuffer(data);
         if (!bits) {
             bits = 256;
         }
         let digestData = keccak('keccak' + bits).update(data).digest();
         return digestData;
-    } else if (encryptType === SM_CRYPTO) {
+    } else if (encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
         data = Buffer.from(data);
         let digestData = smCrypto.sm3Digest(data);
         digestData = Buffer.from(digestData, 'hex');
         return digestData;
     } else {
-        throw new Error('Unsupported type of encryption');
+        throw new Error('unsupported type of encryption');
     }
 }
 
@@ -82,18 +86,16 @@ function sha3(data, bits) {
  * @param {Buffer} privateKey A private key must be 256 bits wide
  * @return {Buffer} public key
  */
-function privateKeyToPublicKey(privateKey) {
-    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
-    let encryptType = Configuration.getInstance().encryptType;
-    if (encryptType === ECDSA) {
+function privateKeyToPublicKey(privateKey, encryptType) {
+    if (encryptType === ENCRYPT_TYPE.ECDSA) {
         privateKey = toBuffer(privateKey);
         let publicKey = secp256k1.publicKeyCreate(privateKey, false).slice(1);
         return publicKey;
-    } else if (encryptType === SM_CRYPTO) {
+    } else if (encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
         let publicKey = smCrypto.priToPub(privateKey);
         return publicKey;
     } else {
-        throw new Error('Unsupported type of encryption');
+        throw new Error('unsupported type of encryption');
     }
 }
 
@@ -103,17 +105,19 @@ function privateKeyToPublicKey(privateKey) {
  * @param {bool} sanitize whether to sanitize publicKey
  * @return {Buffer} address
  */
-function publicKeyToAddress(publicKey, sanitize = false) {
-    const { Configuration, ECDSA } = require('../configuration');
-    let encryptType = Configuration.getInstance().encryptType;
-    if (encryptType === ECDSA) {
+function publicKeyToAddress(publicKey, encryptType, sanitize = false) {
+    if (encryptType === ENCRYPT_TYPE.ECDSA) {
         if (sanitize && (publicKey.length !== 64)) {
             publicKey = secp256k1.publicKeyConvert(publicKey, false).slice(1);
         }
         assert(publicKey.length === 64);
+    } else {
+        if (encryptType !== ENCRYPT_TYPE.SM_CRYPTO) {
+            throw new Error('unsupported type of encryption');
+        }
     }
     // Only take the lower 160bits of the hash as address
-    return sha3(publicKey).slice(-20);
+    return sha3(publicKey, null, encryptType).slice(-20);
 }
 
 /**
@@ -121,8 +125,8 @@ function publicKeyToAddress(publicKey, sanitize = false) {
  * @param {Buffer} privateKey private key
  * @return {Buffer} address
  */
-function privateKeyToAddress(privateKey) {
-    return publicKeyToAddress(privateKeyToPublicKey(privateKey));
+function privateKeyToAddress(privateKey, encryptType) {
+    return publicKeyToAddress(privateKeyToPublicKey(privateKey, encryptType), encryptType);
 }
 
 /**
@@ -176,16 +180,14 @@ function ecrecover(msgHash, v, r, s) {
  * @param {String} privateKey private key
  * @return {Object} returns (v, r, s) for secp256k1
  */
-function ecsign(msgHash, privateKey) {
+function ecsign(msgHash, privateKey, encryptType) {
     let ret = {};
-    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
-    let encryptType = Configuration.getInstance().encryptType;
-    if (encryptType === ECDSA) {
+    if (encryptType === ENCRYPT_TYPE.ECDSA) {
         let sig = secp256k1.sign(msgHash, privateKey);
         ret.r = sig.signature.slice(0, 32);
         ret.s = sig.signature.slice(32, 64);
         ret.v = sig.recovery + 27;
-    } else if (encryptType === SM_CRYPTO) {
+    } else if (encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
         privateKey = privateKey.toString('hex');
         let sign = smCrypto.signRS(privateKey, msgHash);
         ret.r = sign.r;
@@ -196,7 +198,7 @@ function ecsign(msgHash, privateKey) {
         }
         ret.pub = Buffer.from(publicKey, 'hex');
     } else {
-        throw new Error('Unsupported type of encryption');
+        throw new Error('unsupported type of encryption');
     }
     return ret;
 }
@@ -206,30 +208,20 @@ function ecsign(msgHash, privateKey) {
  * @param {rlp} data RLP data
  * @return {String} the hash of data
  */
-function rlphash(data) {
-    return sha3(rlp.encode(data));
+function rlphash(data, encryptType) {
+    return sha3(rlp.encode(data), null, encryptType);
 }
 
-/**
- * encode params
- * @param {Array} types types
- * @param {Array} params params
- * @return {Buffer} params' code
- */
-function encodeParams(types, params) {
-    let ret = coder.encodeParameters(types, params);
-    return ret;
-}
-
-/**
- * decode params
- * @param {Array} types types
- * @param {Buffer} bytes params' code
- * @return {Array} params
- */
-function decodeParams(types, bytes) {
-    let ret = coder.decodeParameters(types, bytes);
-    return ret;
+function hash(str, encryptType) {
+    if (encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
+        return sha3(str, 256, encryptType).toString('hex');
+    } else if (encryptType === ENCRYPT_TYPE.ECDSA) {
+        return cryptoJSSha3(str, {
+            outputLength: 256
+        }).toString();
+    } else {
+        throw new Error('unsupported type of encryption');
+    }
 }
 
 /**
@@ -237,35 +229,39 @@ function decodeParams(types, bytes) {
  * @param {String} fcn function name
  * @return {Buffer} function name's code
  */
-function encodeFunctionName(fcn) {
-    let digest = null;
-    const { Configuration, ECDSA, SM_CRYPTO } = require('../configuration');
-    let encryptType = Configuration.getInstance().encryptType;
-    if (encryptType === SM_CRYPTO) {
-        digest = sha3(fcn, 256).toString('hex');
-    } else if (encryptType === ECDSA) {
-        digest = cryptoJSSha3(fcn, {
-            outputLength: 256
-        }).toString();
-    } else {
-        throw new Error('Unsupported type of encryption');
-    }
+function encodeFunctionName(fcn, encryptType) {
+    let digest = hash(fcn, encryptType);
     let ret = '0x' + digest.slice(0, 8);
     return ret;
 }
 
 /**
- * encode transaction data
- * @param {String} fcn function name
- * @param {Array} types types
- * @param {Array} params params
- * @return {Buffer} tx data's code
+ * encode event name
+ * @param {String} event event ABI
+ * @return {Buffer} event name's code
  */
-function encodeTxData(fcn, types, params) {
-    let txDataCode = encodeFunctionName(fcn);
-    let paramsCode = encodeParams(types, params);
-    txDataCode += ethjsUtil.stripHexPrefix(paramsCode);
-    return txDataCode;
+function encodeEventName(event, encryptType) {
+    let name = event.name;
+    let inputs = event.inputs;
+    let signature = name + '(' + inputs.map((input) => { return input.type; }).join(',') + ')';
+
+    let digest = hash(signature, encryptType);
+    let ret = '0x' + digest;
+    return ret;
+}
+
+function createKeyPair() {
+    const secp256k1EC = new EC('secp256k1');
+    let keyPair = secp256k1EC.genKeyPair();
+    let privateKey = Buffer.from(keyPair.getPrivate('hex'), 'hex');
+    // remove the prefix '04' of the public key
+    let publicKey = Buffer.from(keyPair.getPublic('hex').substr(2), 'hex');
+
+    let keyPairObj = {
+        privateKey,
+        publicKey
+    };
+    return keyPairObj;
 }
 
 module.exports.privateKeyToPublicKey = privateKeyToPublicKey;
@@ -277,6 +273,7 @@ module.exports.ecsign = ecsign;
 module.exports.sha3 = sha3;
 module.exports.toBuffer = toBuffer;
 
-module.exports.encodeTxData = encodeTxData;
-module.exports.decodeParams = decodeParams;
-module.exports.encodeParams = encodeParams;
+module.exports.hash = hash;
+module.exports.encodeFunctionName = encodeFunctionName;
+module.exports.encodeEventName = encodeEventName;
+module.exports.createKeyPair = createKeyPair;
