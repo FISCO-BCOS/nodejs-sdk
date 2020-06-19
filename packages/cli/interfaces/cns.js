@@ -17,11 +17,23 @@
 const decode = require('../../api/decoder');
 const path = require('path');
 const fs = require('fs');
-const compile = require('../../api/').compile;
-const { produceSubCommandInfo, FLAGS } = require('./base');
-const { CNSService, PermissionService, Web3jService, CompileService, Configuration } = require('../../api');
-const { OutputCode } = require('../../api/precompiled/common');
-const { ContractsDir } = require('../constant');
+const {
+    produceSubCommandInfo,
+    FLAGS
+} = require('./base');
+const {
+    CNSService,
+    PermissionService,
+    Web3jService,
+    CompileService,
+    Configuration
+} = require('../../api');
+const {
+    OutputCode
+} = require('../../api/precompiled/common');
+const {
+    ContractsDir
+} = require('../constant');
 
 function checkVersion(version) {
     if (!version.match(/^[A-Za-z0-9.]+$/)) {
@@ -40,12 +52,10 @@ const web3jService = new Web3jService(config);
 const compileService = new CompileService(config);
 
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'deployByCNS',
         describe: 'Deploy a contract on blockchain by CNS',
-        args: [
-            {
+        args: [{
                 name: 'contractName',
                 options: {
                     type: 'string',
@@ -136,12 +146,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'queryCNS',
         describe: 'Query CNS information by contract name and contract version',
-        args: [
-            {
+        args: [{
                 name: 'contractName',
                 options: {
                     type: 'string',
@@ -173,12 +181,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'callByCNS',
         describe: 'Call a contract by a function and parameters by CNS',
-        args: [
-            {
+        args: [{
                 name: 'contractName:contractVersion',
                 options: {
                     type: 'string',

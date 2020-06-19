@@ -17,11 +17,28 @@
 const path = require('path');
 const fs = require('fs');
 const decode = require('../../api/decoder');
-const compile = require('../../api/').compile;
-const { produceSubCommandInfo, FLAGS, getAbi } = require('./base');
-const { Web3jService, ConsensusService, SystemConfigService, CompileService, Configuration } = require('../../api');
-const { ContractsDir, ContractsOutputDir } = require('../constant');
-const { check, Str, Addr, Any } = require('../../api/common/typeCheck');
+const {
+    produceSubCommandInfo,
+    FLAGS,
+    getAbi
+} = require('./base');
+const {
+    Web3jService,
+    ConsensusService,
+    SystemConfigService,
+    CompileService,
+    Configuration
+} = require('../../api');
+const {
+    ContractsDir,
+    ContractsOutputDir
+} = require('../constant');
+const {
+    check,
+    Str,
+    Addr,
+    Any
+} = require('../../api/common/typeCheck');
 
 let interfaces = [];
 const configFile = path.join(process.cwd(), './conf/config.json');
@@ -31,8 +48,7 @@ const consensusService = new ConsensusService(config);
 const systemConfigService = new SystemConfigService(config);
 const compileService = new CompileService(config);
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getBlockNumber',
         describe: 'Query the number of most recent block'
     },
@@ -44,8 +60,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getPbftView',
         describe: 'Query the pbft view of node',
     },
@@ -57,8 +72,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getObserverList',
         describe: 'Query nodeId list for observer nodes'
     },
@@ -67,8 +81,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getSealerList',
         describe: 'Query nodeId list for sealer nodes'
     },
@@ -77,8 +90,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getConsensusStatus',
         describe: 'Query consensus status'
     },
@@ -87,8 +99,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getSyncStatus',
         describe: 'Query sync status'
     },
@@ -97,8 +108,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getClientVersion',
         describe: 'Query the current node version'
     },
@@ -107,8 +117,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getPeers',
         describe: 'Query peers currently connected to the client'
     },
@@ -117,8 +126,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getNodeIDList',
         describe: 'Query nodeId list for all connected nodes'
     },
@@ -127,8 +135,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getGroupPeers',
         describe: 'Query nodeId list for sealer and observer nodes'
     },
@@ -137,8 +144,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getGroupList',
         describe: 'Query group list'
     },
@@ -147,12 +153,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getBlockByHash',
         describe: 'Query information about a block by hash',
-        args: [
-            {
+        args: [{
                 name: 'blockHash',
                 options: {
                     type: 'string',
@@ -176,12 +180,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getBlockByNumber',
         describe: 'Query information about a block by block number',
-        args: [
-            {
+        args: [{
                 name: 'blockNumber',
                 options: {
                     type: 'string',
@@ -205,19 +207,16 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getBlockHashByNumber',
         describe: 'Query block hash by block number',
-        args: [
-            {
-                name: 'blockNumber',
-                options: {
-                    type: 'string',
-                    describe: 'Integer of a block number'
-                }
+        args: [{
+            name: 'blockNumber',
+            options: {
+                type: 'string',
+                describe: 'Integer of a block number'
             }
-        ]
+        }]
     },
     (argv) => {
         let blockNumber = argv.blockNumber;
@@ -225,19 +224,16 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getTransactionByHash',
         describe: 'Query information about a transaction requested by transaction hash',
-        args: [
-            {
-                name: 'transactionHash',
-                options: {
-                    type: 'string',
-                    describe: '32 Bytes - The hash of a transaction'
-                }
+        args: [{
+            name: 'transactionHash',
+            options: {
+                type: 'string',
+                describe: '32 Bytes - The hash of a transaction'
             }
-        ]
+        }]
     },
     (argv) => {
         let transactionHash = argv.transactionHash;
@@ -245,12 +241,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getTransactionByBlockHashAndIndex',
         describe: 'Query information about a transaction by block hash and transaction index position',
-        args: [
-            {
+        args: [{
                 name: 'blockHash',
                 options: {
                     type: 'string',
@@ -274,12 +268,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getTransactionByBlockNumberAndIndex',
         describe: 'Query information about a transaction by block number and transaction index position',
-        args: [
-            {
+        args: [{
                 name: 'blockNumber',
                 options: {
                     type: 'string',
@@ -303,8 +295,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getPendingTransactions',
         describe: 'Query pending transactions'
     },
@@ -313,8 +304,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getPendingTxSize',
         describe: 'Query pending transactions size'
     },
@@ -326,8 +316,7 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getTotalTransactionCount',
         describe: 'Query total transaction count'
     },
@@ -341,19 +330,16 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getTransactionReceipt',
         describe: 'Query the receipt of a transaction by transaction hash',
-        args: [
-            {
-                name: 'transactionHash',
-                options: {
-                    type: 'string',
-                    describe: '32 Bytes - The hash of a transaction'
-                }
+        args: [{
+            name: 'transactionHash',
+            options: {
+                type: 'string',
+                describe: '32 Bytes - The hash of a transaction'
             }
-        ]
+        }]
     },
     (argv) => {
         let txHash = argv.transactionHash;
@@ -361,12 +347,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'deploy',
         describe: 'Deploy a contract on blockchain',
-        args: [
-            {
+        args: [{
                 name: 'contractName',
                 options: {
                     type: 'string',
@@ -409,7 +393,7 @@ interfaces.push(produceSubCommandInfo(
         try {
             fs.writeFileSync(abiPath, JSON.stringify(contractClass.abi));
             fs.writeFileSync(binPath, contractClass.bin);
-        } catch (error) { }
+        } catch (error) {}
 
         return web3jService.deploy(contractClass.abi, contractClass.bin, parameters).then((result) => {
             if (result.status === '0x0') {
@@ -418,7 +402,7 @@ interfaces.push(produceSubCommandInfo(
 
                 try {
                     fs.appendFileSync(addressPath, contractAddress + '\n');
-                } catch (error) { }
+                } catch (error) {}
 
                 return {
                     status: result.status,
@@ -435,12 +419,10 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'call',
         describe: 'Call a contract by a function and parameters',
-        args: [
-            {
+        args: [{
                 name: 'contractName',
                 options: {
                     type: 'string',
@@ -484,7 +466,7 @@ interfaces.push(produceSubCommandInfo(
         if (inputs) {
             inputs = inputs[0];
             inputs = inputs.substring(1, inputs.length - 1).split(',');
-            inputs = inputs.map(input => input.trim());
+            inputs = inputs.map((input) => input.trim());
         }
 
         let pureFunctionName = functionName.replace(inputsReg, '');
@@ -526,19 +508,16 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'addSealer',
         describe: 'Add a sealer node',
-        args: [
-            {
-                name: 'nodeID',
-                options: {
-                    type: 'string',
-                    describe: 'The nodeId of a node. The length of the node hex string is 128'
-                }
+        args: [{
+            name: 'nodeID',
+            options: {
+                type: 'string',
+                describe: 'The nodeId of a node. The length of the node hex string is 128'
             }
-        ]
+        }]
     },
     (argv) => {
         let nodeID = argv.nodeID;
@@ -546,19 +525,16 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'addObserver',
         describe: 'Add an observer node',
-        args: [
-            {
-                name: 'nodeID',
-                options: {
-                    type: 'string',
-                    describe: 'The nodeId of a node. The length of the node hex string is 128'
-                }
+        args: [{
+            name: 'nodeID',
+            options: {
+                type: 'string',
+                describe: 'The nodeId of a node. The length of the node hex string is 128'
             }
-        ]
+        }]
     },
     (argv) => {
         let nodeID = argv.nodeID;
@@ -566,19 +542,16 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'removeNode',
         describe: 'Remove a node',
-        args: [
-            {
-                name: 'nodeID',
-                options: {
-                    type: 'string',
-                    describe: 'The nodeId of a node. The length of the node hex string is 128'
-                }
+        args: [{
+            name: 'nodeID',
+            options: {
+                type: 'string',
+                describe: 'The nodeId of a node. The length of the node hex string is 128'
             }
-        ]
+        }]
     },
     (argv) => {
         let nodeID = argv.nodeID;
@@ -588,12 +561,10 @@ interfaces.push(produceSubCommandInfo(
 
 const systemKeys = ['tx_count_limit', 'tx_gas_limit', 'rpbft_epoch_block_num', 'rpbft_epoch_sealer_num'];
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'setSystemConfigByKey',
         describe: 'Set a system config value by key',
-        args: [
-            {
+        args: [{
                 name: 'key',
                 options: {
                     type: 'string',
@@ -618,20 +589,17 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getSystemConfigByKey',
         describe: 'Query a system config value by key',
-        args: [
-            {
-                name: 'key',
-                options: {
-                    type: 'string',
-                    describe: 'The name of system config',
-                    choices: systemKeys
-                }
+        args: [{
+            name: 'key',
+            options: {
+                type: 'string',
+                describe: 'The name of system config',
+                choices: systemKeys
             }
-        ]
+        }]
     },
     (argv) => {
         let key = argv.key;
@@ -639,19 +607,16 @@ interfaces.push(produceSubCommandInfo(
     }
 ));
 
-interfaces.push(produceSubCommandInfo(
-    {
+interfaces.push(produceSubCommandInfo({
         name: 'getCode',
         describe: 'Query code at a given address',
-        args: [
-            {
-                name: 'address',
-                options: {
-                    type: 'string',
-                    describe: '20 Bytes - The address of a contract',
-                }
+        args: [{
+            name: 'address',
+            options: {
+                type: 'string',
+                describe: '20 Bytes - The address of a contract',
             }
-        ]
+        }]
     },
     (argv) => {
         let address = argv.address;
