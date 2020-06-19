@@ -68,7 +68,7 @@ function createCodeForMutableMethod(index) {
     let code =
         createCodeForAddressCheck() +
         `let abi = this._functionABIMapper.get("${index}").abi;\n` +
-        `let decoder = this._functionABIMapper.get("${index}").decoer;\n` +
+        `let decoder = this._functionABIMapper.get("${index}").decoder;\n` +
         'let user = this._tempUser === null ? this._user: this._tempUser;\n' +
         'return this.web3jService.sendRawTransaction(this.address, abi, Array.from(arguments), user).then((result) => {\n' +
         '    let status = result.status;\n' +
