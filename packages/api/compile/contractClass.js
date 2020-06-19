@@ -217,7 +217,7 @@ function createContractClass(name, abi, bin, encryptType) {
                     }
                     case 'constructor': {
                         hasExplicitConstructor = true;
-                        let parameters = item.inputs.map(input => input.name);
+                        let parameters = item.inputs.map((input) => input.name);
                         contract.$deploy = new Function('web3jService,' + parameters.join(','), createCodeForConstructor());
 
                         let contractAbi = new ethers.utils.Interface(contract.abi);

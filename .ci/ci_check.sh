@@ -10,4 +10,4 @@ cd packages/cli
 
 cd ../..
 cp nodes/127.0.0.1/sdk/* test/conf/authentication
-npm test
+npm test -- --timeout 5000
