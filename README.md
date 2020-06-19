@@ -78,10 +78,10 @@ Node.js SDK为联盟链平台[FISCO BCOS](https://github.com/FISCO-BCOS/FISCO-BC
       # 加载nvm配置
       source ~/.$(basename $SHELL)rc
 
-      # 安装Node.js 8
+      # 安装Node.js 10
       nvm install 10
 
-      # 将Node.js 8设置为默认Node.js版本
+      # 将Node.js 10设置为默认Node.js版本
       nvm use 10
       ```
 
