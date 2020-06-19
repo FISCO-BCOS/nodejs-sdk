@@ -6,14 +6,16 @@ bash nodes/127.0.0.1/start_all.sh
 sed -i.bak 's?ECDSA?SM_CRYPTO?' packages/cli/conf/config.json
 sed -i.bak 's?alice.pem?sm_crypto.pem?' packages/cli/conf/config.json
 sed -i.bak 's?bob.pem?sm_crypto.pem?' packages/cli/conf/config.json
+sed -i.bak 's?cherry.p12?sm_crypto.pem?' packages/cli/conf/config.json
+sed -i.bak 's?p12?pem?' packages/cli/conf/config.json
 rm packages/cli/conf/config.json.bak
-cp nodes/127.0.0.1/sdk/* packages/cli/conf/authentication
+cp nodes/127.0.0.1/sdk/ca.crt nodes/127.0.0.1/sdk/sdk.crt nodes/127.0.0.1/sdk/sdk.key packages/cli/conf/authentication
 cd packages/cli 
 ./cli.js getClientVersion
 ./cli.js deploy HelloWorldV5
 
 cd ../..
-cp nodes/127.0.0.1/sdk/* test/conf/authentication
+cp nodes/127.0.0.1/sdk/ca.crt nodes/127.0.0.1/sdk/sdk.crt nodes/127.0.0.1/sdk/sdk.key test/conf/authentication
 sed -i.bak 's?ECDSA?SM_CRYPTO?' test/conf/config.json
 sed -i.bak 's?alice.pem?sm_crypto.pem?' test/conf/config.json
 sed -i.bak 's?bob.pem?sm_crypto.pem?' test/conf/config.json
