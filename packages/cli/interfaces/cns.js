@@ -81,13 +81,13 @@ interfaces.push(produceSubCommandInfo(
             let id = argv.id;
             let account = null;
 
-            if (cnsManagers.length !== 0) {
-                account = config.accounts[id];
-                if (!account) {
-                    throw new Error(`invalid id of account: ${id}`);
-                }
-                account = account.account;
+            account = config.accounts[id];
+            if (!account) {
+                throw new Error(`invalid id of account: ${id}`);
+            }
+            account = account.account;
 
+            if (cnsManagers.length !== 0) {
                 if (cnsManagers.findIndex((value) => value.address === account) < 0) {
                     throw new Error(OutputCode.getOutputMessage(OutputCode.PermissionDenied));
                 }

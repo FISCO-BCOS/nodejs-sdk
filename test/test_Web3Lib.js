@@ -37,5 +37,8 @@ describe('test for web3 lib', function () {
 
         hash = encodeFunctionName('add(uint32)', ENCRYPT_TYPE.SM_CRYPTO);
         should.equal(hash.toString('hex'), '0x27d82507');
+
+        hash = encodeFunctionName('get()', ENCRYPT_TYPE.SM_CRYPTO);
+        should.equal(hash.toString('hex'), '0x299f7f9d');
     });
 });
