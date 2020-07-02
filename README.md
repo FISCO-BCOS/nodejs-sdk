@@ -1131,12 +1131,17 @@ npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#master -s
   **说明**：合约对象实例会根据用户合约中的方法动态生成相同名字及参数的函数，以[HelloWorld合约](https://github.com/FISCO-BCOS/nodejs-sdk/blob/master/packages/cli/contracts/HelloWorldV4.sol)为例，HelloWorld合约中存在`get`及`set`两个合约方法，则合约对象实例会自动生成同名且同参数的`get`及`set`函数，用户可在应用中直接调用合约对象实例提供的`get`或`set`函数即可调用已部署HelloWorld合约的`get`或`set`方法，而无需调用Web3jService提供的`sendRawTransaction`及`call` API。动态生成函数的存在可极大简化应用开发，以下代码片段展示了如何调用HelloWorld合约对象实例上的动态生成函数：
 
   ```javascript
+  // configPath为配置文件的路径
+  const compileService = new CompileService(configPath);
   // contractPath为HelloWorld合约的路径
-  let contractClass = compile(contractPath, ENCRYPT_TYPE.ECDSA);
+  let contractClass = compileService.compile(contractPath);
   let helloWorld = contractClass.newInstance();
 
+  // 部署HelloWorld合约并调用HelloWorld合约的构造函数
   await helloWorld.$deploy(web3j);
+  // 调用HelloWorld合约中的set方法
   await helloWorld.set('こんにちわ！');
+  // 调用HelloWorld合约中的get方法
   let ret = await helloWorld.get();
   should.equal(ret[0], 'こんにちわ！');
   ```
