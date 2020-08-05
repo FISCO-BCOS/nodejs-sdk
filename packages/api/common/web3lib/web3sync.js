@@ -161,7 +161,7 @@ function getSignTx(config, to, func, params, blockLimit, who) {
  * @param {who} the id of account(private key)
  * @return {String} signed deploy transaction data
  */
-function getSignDeployTx(config, bin, blockLimit, who) {
+function getSignDeployTx(config, bin, parameters, blockLimit, who) {
     let groupID = config.groupID;
     let account = config.accounts[who].account;
     let privateKey = config.accounts[who].privateKey;
@@ -178,8 +178,9 @@ function getSignDeployTx(config, bin, blockLimit, who) {
         blockLimit: blockLimit,
         chainId: chainID,
         groupId: groupID,
-        extraData: '0x0'
+        extraData: parameters
     };
+    console.log(postdata);
 
     return signTransaction(postdata, privateKey, encryptType, null);
 }

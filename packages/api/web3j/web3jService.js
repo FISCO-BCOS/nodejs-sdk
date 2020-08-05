@@ -17,16 +17,35 @@
 const ethers = require('ethers');
 const deepcopy = require('deepcopy');
 
-const { selectNode } = require('../common/utils');
-const { getBlockHeight } = require('../common/blockHeightCache');
-const { ServiceBase } = require('../common/serviceBase');
-const { channelPromise, MESSAGE_TYPE } = require('../common/network');
 const {
-    Str, Bool, StrNeg, Addr, Obj, ArrayList, Neg,
-    check } = require('../common/typeCheck');
+    selectNode
+} = require('../common/utils');
 const {
-    getSignTx, getSignDeployTx,
-    encodeParams, getTxData } = require('../common/web3lib/web3sync');
+    getBlockHeight
+} = require('../common/blockHeightCache');
+const {
+    ServiceBase
+} = require('../common/serviceBase');
+const {
+    channelPromise,
+    MESSAGE_TYPE
+} = require('../common/network');
+const {
+    Str,
+    Bool,
+    StrNeg,
+    Addr,
+    Obj,
+    ArrayList,
+    Neg,
+    check
+} = require('../common/typeCheck');
+const {
+    getSignTx,
+    getSignDeployTx,
+    encodeParams,
+    getTxData
+} = require('../common/web3lib/web3sync');
 
 
 
@@ -215,14 +234,21 @@ class Web3jService extends ServiceBase {
             throw new Error(`wrong number of parameters for constructor, expected ${inputs.length} but got ${parameters.length}`);
         }
 
+        /*
         let contractBin = deepcopy(bin);
         if (parameters.length !== 0) {
             let encodedParams = encodeParams(inputs, parameters);
             contractBin += encodedParams.toString('hex').substr(2);
+        }*/
+
+        if (parameters.length !== 0) {
+            parameters = encodeParams(inputs, parameters);
+        } else {
+            parameters = '0x';
         }
 
         let blockNumber = await getBlockHeight(this.config);
-        let signTx = getSignDeployTx(this.config, contractBin, blockNumber + 500, who);
+        let signTx = getSignDeployTx(this.config, bin, parameters, blockNumber + 500, who);
         return this.sendRawTransaction(signTx);
     }
 
