@@ -361,7 +361,7 @@ interfaces.push(produceSubCommandInfo({
                 name: 'parameters',
                 options: {
                     type: 'string',
-                    describe: 'The parameters(splited by space) of contructor',
+                    describe: 'The parameters(splitted by space) of constructor',
                     flag: FLAGS.VARIADIC
                 }
             }
@@ -420,6 +420,83 @@ interfaces.push(produceSubCommandInfo({
 ));
 
 interfaces.push(produceSubCommandInfo({
+        name: 'deployWasm',
+        describe: 'Deploy a contract written in Wasm',
+        args: [{
+                name: 'bin',
+                options: {
+                    type: 'string',
+                    describe: 'The path of then Wasm contract',
+                }
+            },
+            {
+                name: 'abi',
+                options: {
+                    type: 'string',
+                    describe: 'The path of the corresponding ABI file',
+                }
+            },
+            {
+                name: 'parameters',
+                options: {
+                    type: 'string',
+                    describe: 'The parameters(splitted by space) of constructor',
+                    flag: FLAGS.VARIADIC
+                }
+            }
+        ]
+    },
+    (argv) => {
+        let contractPath = argv.bin;
+        if (!fs.existsSync(contractPath)) {
+            throw new Error(`${contractPath} doesn't exist`);
+        }
+
+        let abiPath = argv.abi;
+        if (!fs.existsSync(abiPath)) {
+            throw new Error(`${abiPath} doesn't exist`);
+        }
+
+        if (!fs.existsSync(ContractsOutputDir)) {
+            fs.mkdirSync(ContractsOutputDir);
+        }
+
+        let contractName = path.basename(contractPath, '.wasm');
+        let copiedAbiPath = path.join(ContractsOutputDir, `${contractName}.abi`);
+
+        try {
+            fs.copyFileSync(abiPath, copiedAbiPath);
+        } catch (error) {}
+
+        let bin = fs.readFileSync(contractPath).toString('hex');
+        let abi = JSON.parse(fs.readFileSync(abiPath).toString());
+        let parameters = argv.parameters;
+
+        return web3jService.deploy(abi, bin, parameters).then((result) => {
+            if (result.status === '0x0') {
+                let contractAddress = result.contractAddress;
+                let addressPath = path.join(ContractsOutputDir, `.${contractName}.address`);
+
+                try {
+                    fs.appendFileSync(addressPath, contractAddress + '\n');
+                } catch (error) {}
+
+                return {
+                    status: result.status,
+                    contractAddress,
+                    transactionHash: result.transactionHash
+                };
+            }
+
+            return {
+                status: result.status,
+                transactionHash: result.transactionHash
+            };
+        });
+    }
+));
+
+interfaces.push(produceSubCommandInfo({
         name: 'call',
         describe: 'Call a contract by a function and parameters',
         args: [{
@@ -447,7 +524,7 @@ interfaces.push(produceSubCommandInfo({
                 name: 'parameters',
                 options: {
                     type: 'string',
-                    describe: 'The parameters(splited by space) of a function',
+                    describe: 'The parameters(splitted by space) of a function',
                     flag: FLAGS.VARIADIC
                 }
             }

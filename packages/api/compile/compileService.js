@@ -51,11 +51,11 @@ class CompileService extends ServiceBase {
     }
 
     /**
-    * Compile a solidity contract with solc docker container
-    * @param {string} contractPath Path of the contract
-    * @param {Object} linkLibraries If you use library in your contract, please provide
-    * this parameter like `{ MyLibrary: '0x123456...' }` to link contract
-    */
+     * Compile a solidity contract with solc docker container
+     * @param {string} contractPath Path of the contract
+     * @param {Object} linkLibraries If you use library in your contract, please provide
+     * this parameter like `{ MyLibrary: '0x123456...' }` to link contract
+     */
     compile(contractPath, linkLibraries = null) {
         if (this.config.solc !== null) {
             return this._compileWithBin(contractPath, linkLibraries);
@@ -221,8 +221,8 @@ class CompileService extends ServiceBase {
         let output = solc.compile(input, 1, readCallback);
         this._checkContractError(output.errors);
 
-        let qulifiedContractName = `${contractName}:${contractName}`;
-        if (!output.contracts[qulifiedContractName]) {
+        let qualifiedContractName = `${contractName}:${contractName}`;
+        if (!output.contracts[qualifiedContractName]) {
             let existKeys = [];
             for (let key in output.contracts) {
                 if (output.contracts.hasOwnProperty(key)) {
