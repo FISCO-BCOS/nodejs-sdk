@@ -180,7 +180,6 @@ function getSignDeployTx(config, bin, parameters, blockLimit, who) {
         groupId: groupID,
         extraData: parameters
     };
-    console.log(postdata);
 
     return signTransaction(postdata, privateKey, encryptType, null);
 }
