@@ -138,7 +138,7 @@ function parseResponse(response) {
             break;
         }
         case MESSAGE_TYPE.CLIENT_REGISTER_EVENT_LOG: {
-            // result of register event 
+            // result of register event
             checkErrorCode(errorCode);
             let emitter = getEmitter(seq);
             if (emitter) {
@@ -330,28 +330,6 @@ function channelPromise(data, type, node, authentication, timeout = null) {
     let port = node.port;
 
     let socketID = `${ip}:${port}`;
-    if (!sockets.has(socketID)) {
-        let newSocket = createNewSocket(ip, port, authentication);
-        newSocket.unref();
-        sockets.set(socketID, newSocket);
-
-        let clear = () => {
-            buffers.delete(socketID);
-            lastBytesRead.delete(socketID);
-            sockets.delete(socketID);
-        };
-
-        newSocket.on('error', function (error) {
-            clear();
-            throw new NetworkError(error);
-        });
-
-        newSocket.on('end', () => {
-            clear();
-            throw new NetworkError('disconnected from remote node');
-        });
-    }
-    let tlsSocket = sockets.get(socketID);
 
     let dataPackage = data;
     if (type) {
@@ -359,16 +337,40 @@ function channelPromise(data, type, node, authentication, timeout = null) {
     }
     let uuid = dataPackage.uuid;
 
-    tlsSocket.socketID = uuid;
     let packagedData = dataPackage.packagedData;
 
-    let channelPromise = new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+        // Singleton Socket instance
+        if (!sockets.has(socketID)) {
+            let newSocket = createNewSocket(ip, port, authentication);
+            newSocket.unref();
+            sockets.set(socketID, newSocket);
+
+            let clear = () => {
+                buffers.delete(socketID);
+                lastBytesRead.delete(socketID);
+                sockets.delete(socketID);
+            };
+
+            newSocket.on('error', function (error) {
+                clear();
+                reject(new NetworkError(error));
+            });
+
+            newSocket.on('end', () => {
+                clear();
+                reject(new NetworkError('disconnected from remote node'));
+            });
+        }
+        let tlsSocket = sockets.get(socketID);
+        tlsSocket.socketID = uuid;
+
         if (timeout) {
             let eventEmitter = new events.EventEmitter();
 
             if (type === MESSAGE_TYPE.QUERY || type === MESSAGE_TYPE.CHANNEL_RPC_REQUEST) {
                 Object.defineProperty(eventEmitter, 'readOnly', {
-                    value: type === MESSAGE_TYPE.QUERY ? true : false,
+                    value: type === MESSAGE_TYPE.QUERY,
                     writable: false,
                     configurable: false,
                     enumerable: false
@@ -408,7 +410,6 @@ function channelPromise(data, type, node, authentication, timeout = null) {
             resolve();
         }
     });
-    return channelPromise;
 }
 
 function registerBlockNotifyCallback(groupID, callback, node, authentication) {
