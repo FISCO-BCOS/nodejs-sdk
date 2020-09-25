@@ -60,6 +60,9 @@ function signTransaction(txData, privKey, encryptType, callback) {
 function formalize(data, type) {
     let arrayTypeReg = /(.+)\[\d*\]$/;
     if (type.type === 'tuple' || arrayTypeReg.exec(type.type)) {
+        if (data instanceof Object) {
+            return data;
+        }
         // whatever in struct case or array case, it must be an object
         return JSON.parse(data);
     }

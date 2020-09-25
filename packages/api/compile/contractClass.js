@@ -86,7 +86,7 @@ function createCodeForMutableMethod(index) {
         '    }\n' +
         '    if (output !== "0x") {\n' +
         '        output = decoder.decodeOutput(output);\n' +
-        '        return output;\n' +
+        '        return output.result;\n' +
         '    }\n' +
         '    return null;\n' +
         '}).finally(() => {\n' +

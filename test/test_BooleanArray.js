@@ -23,35 +23,23 @@ const {
 } = require('../packages/api');
 
 const config = new Configuration(path.join(__dirname, './conf/config.json'));
-const contractPath = path.join(__dirname, './contracts/v4/HelloWorld.sol');
+const contractPath = path.join(__dirname, './contracts/v4/BooleanArray.sol');
 const compileService = new CompileService(config);
 const web3jService = new Web3jService(config);
 let contractClass = compileService.compile(contractPath);
-let helloWorld = contractClass.newInstance();
+let contract = contractClass.newInstance();
 
-describe('test for hello world', function() {
+describe('test for boolean array', function() {
     this.beforeAll(() => {
-        return helloWorld.$deploy(web3jService);
+        return contract.$deploy(web3jService);
     });
 
-    it('duplicate deploy', async () => {
-        try {
-            let _ = await helloWorld.$deploy(web3jService);
-            should.equal(true, false);
-        } catch (_) {}
-    });
-
-    it('get', async () => {
-        let ret = await helloWorld.get();
+    it('test', async () => {
+        let ret = await contract.noop(
+            [false, false],
+            [false, false]
+        );
         should.exist(ret);
-        should.equal(ret[0], 'Hello, World!');
-    });
-
-    it('set', async () => {
-        await helloWorld.set('こんにちわ！');
-
-        let ret = await helloWorld.get();
-        should.exist(ret);
-        should.equal(ret[0], 'こんにちわ！');
+        should.equal(ret[0], false);
     });
 });
