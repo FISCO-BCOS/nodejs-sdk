@@ -17,16 +17,35 @@
 const ethers = require('ethers');
 const deepcopy = require('deepcopy');
 
-const { selectNode } = require('../common/utils');
-const { getBlockHeight } = require('../common/blockHeightCache');
-const { ServiceBase } = require('../common/serviceBase');
-const { channelPromise, MESSAGE_TYPE } = require('../common/network');
 const {
-    Str, Bool, StrNeg, Addr, Obj, ArrayList, Neg,
-    check } = require('../common/typeCheck');
+    selectNode
+} = require('../common/utils');
 const {
-    getSignTx, getSignDeployTx,
-    encodeParams, getTxData } = require('../common/web3lib/web3sync');
+    getBlockHeight
+} = require('../common/blockHeightCache');
+const {
+    ServiceBase
+} = require('../common/serviceBase');
+const {
+    channelPromise,
+    MESSAGE_TYPE
+} = require('../common/network');
+const {
+    Str,
+    Bool,
+    StrNeg,
+    Addr,
+    Obj,
+    ArrayList,
+    Neg,
+    check
+} = require('../common/typeCheck');
+const {
+    getSignTx,
+    getSignDeployTx,
+    encodeParams,
+    getTxData
+} = require('../common/web3lib/web3sync');
 
 
 
