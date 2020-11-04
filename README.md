@@ -1097,7 +1097,7 @@ npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#master -s
   - `Object`，web3j。有效的Web3jService对象实例
   - `String`, contract address。用户合约地址
 
-  **返回值**：`Boolean`，返回true加载成功，可忽略返回值
+  **返回值**：无
 
 - $getAddress
 
