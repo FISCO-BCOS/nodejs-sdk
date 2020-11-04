@@ -12,22 +12,22 @@
  * limitations under the License.
  */
 
-'use strict'
+'use strict';
 
-const createMethodDecoder = require('../decoder').createMethodDecoder
-const ethers = require('ethers')
-const deepcopy = require('deepcopy')
+const createMethodDecoder = require('../decoder').createMethodDecoder;
+const ethers = require('ethers');
+const deepcopy = require('deepcopy');
 const {
     getTxData,
     encodeParams
-} = require('../common/web3lib/web3sync')
+} = require('../common/web3lib/web3sync');
 
 function createCodeForAddressCheck() {
     const code =
         'if (!this.address) {\n' +
-        '    throw new Error(`should call \\`$deploy\\` method to deploy ${this.name} contract first`);\n' +
-        '}\n'
-    return code
+        '    throw new Error(`should call \\`$deploy\\` for \\`$load\\` method to initialize ${this.name} contract first`);\n' +
+        '}\n';
+    return code;
 }
 
 function createCodeForConstantMethod(index) {
@@ -59,9 +59,9 @@ function createCodeForConstantMethod(index) {
         '    if (this._tempUser !== null) {\n' +
         '        this._tempUser = null;\n' +
         '    }\n' +
-        '});\n'
+        '});\n';
 
-    return code
+    return code;
 }
 
 function createCodeForMutableMethod(index) {
@@ -93,9 +93,9 @@ function createCodeForMutableMethod(index) {
         '    if (this._tempUser !== null) {\n' +
         '        this._tempUser = null;\n' +
         '    }\n' +
-        '});\n'
+        '});\n';
 
-    return code
+    return code;
 }
 
 function createCodeForConstructor() {
@@ -112,24 +112,23 @@ function createCodeForConstructor() {
         '    if (this._tempUser !== null) {\n' +
         '        this._tempUser = null;\n' +
         '    }\n' +
-        '});\n'
-    return code
+        '});\n';
+    return code;
 }
 
-function loadCodeForConstructor() {
+function createCodeForLoad() {
     const code =
         'let user = this._tempUser === null ? this._user: this._tempUser;\n' +
         'this.web3jService = web3jService;\n' +
-        'this.address = contractAddress;\n' +
-        'return true;\n'
-    return code
+        'this.address = contractAddress;\n';
+    return code;
 }
 
 function createCodeForGetAddress() {
     const code =
         createCodeForAddressCheck() +
-        'return this.address;'
-    return code
+        'return this.address;';
+    return code;
 }
 
 function createCodeForGetEventABIOf() {
@@ -137,9 +136,9 @@ function createCodeForGetEventABIOf() {
         'if(!this._eventABIMapper.has(name)) {\n' +
         '    throw new Error(`no event named as: ${name}`);\n' +
         '}\n' +
-        'return this._eventABIMapper.get(name);'
+        'return this._eventABIMapper.get(name);';
 
-    return code
+    return code;
 }
 
 function createCodeForGetFunctionABIOf() {
@@ -147,27 +146,27 @@ function createCodeForGetFunctionABIOf() {
         'if(!this._functionABIMapper.has(name)) {\n' +
         '    throw new Error(`no function named as: ${name}`);\n' +
         '}\n' +
-        'return this._functionABIMapper.get(name).abi;'
+        'return this._functionABIMapper.get(name).abi;';
 
-    return code
+    return code;
 }
 
 function createCodeForSetUser() {
-    const code = 'this._user = id;'
-    return code
+    const code = 'this._user = id;';
+    return code;
 }
 
 function createCodeForBy() {
     const code =
         'this._tempUser = id;\n' +
-        'return this;'
+        'return this;';
 
-    return code
+    return code;
 }
 
 function createContractClass(name, abi, bin, encryptType) {
     if (typeof abi === 'string') {
-        abi = JSON.parse(abi)
+        abi = JSON.parse(abi);
     }
 
     const contractClass = {
@@ -183,114 +182,113 @@ function createContractClass(name, abi, bin, encryptType) {
                 _eventABIMapper: new Map(),
                 _user: null,
                 _tempUser: null
-            }
+            };
 
-            let hasExplicitConstructor = false
+            let hasExplicitConstructor = false;
             for (let i = 0; i < contractClass.abi.length; ++i) {
-                const item = contractClass.abi[i]
+                const item = contractClass.abi[i];
 
                 switch (item.type) {
                     case 'function': {
                         if (contract._functionABIMapper.has(contract[item.name])) {
-                            throw new Error('function override is not allowed')
+                            throw new Error('function override is not allowed');
                         }
 
-                        const iface = new ethers.utils.Interface([item])
-                        const func = iface.functions[item.name]
+                        const iface = new ethers.utils.Interface([item]);
+                        const func = iface.functions[item.name];
 
                         contract._functionABIMapper.set(item.name, {
                             abi: item,
                             decoder: createMethodDecoder(item, null),
                             meta: func
-                        })
+                        });
 
-                        let parameters = item.inputs.map((input) => input.name)
-                        parameters = parameters.join(',')
+                        let parameters = item.inputs.map((input) => input.name);
 
                         if (item.constant) {
-                            contract[item.name] = new Function(parameters, createCodeForConstantMethod(item.name))
+                            contract[item.name] = new Function(parameters, createCodeForConstantMethod(item.name));
                         } else {
-                            contract[item.name] = new Function(parameters, createCodeForMutableMethod(item.name))
+                            contract[item.name] = new Function(parameters, createCodeForMutableMethod(item.name));
                         }
 
                         Object.defineProperty(contract[item.name], 'encodeABI', {
                             value: (params = []) => {
-                                return getTxData(func, params, encryptType)
+                                return getTxData(func, params, encryptType);
                             },
                             writable: false,
                             configurable: false,
                             enumerable: false
-                        })
+                        });
 
-                        break
+                        break;
                     }
                     case 'constructor': {
-                        hasExplicitConstructor = true
-                        const parameters = item.inputs.map((input) => input.name)
-                        contract.$deploy = new Function('web3jService,' + parameters.join(','), createCodeForConstructor())
+                        hasExplicitConstructor = true;
+                        const parameters = item.inputs.map((input) => input.name);
+                        contract.$deploy = new Function(['web3jService'].concat(parameters), createCodeForConstructor());
 
-                        const contractAbi = new ethers.utils.Interface(contract.abi)
-                        const inputs = contractAbi.deployFunction.inputs
+                        const contractAbi = new ethers.utils.Interface(contract.abi);
+                        const inputs = contractAbi.deployFunction.inputs;
 
                         Object.defineProperty(contract.$deploy, 'encodeABI', {
                             value: (bin, params = []) => {
                                 if (inputs.length !== params.length) {
-                                    throw new Error(`wrong number of parameters for constructor, expected ${inputs.length} but got ${params.length}`)
+                                    throw new Error(`wrong number of parameters for constructor, expected ${inputs.length} but got ${params.length}`);
                                 }
 
-                                let contractBin = deepcopy(bin)
+                                let contractBin = deepcopy(bin);
                                 if (params.length !== 0) {
-                                    const encodedParams = encodeParams(inputs, params)
-                                    contractBin += encodedParams.toString('hex').substr(2)
+                                    const encodedParams = encodeParams(inputs, params);
+                                    contractBin += encodedParams.toString('hex').substr(2);
                                 }
 
-                                return contractBin.indexOf('0x') === 0 ? contractBin : ('0x' + contractBin)
+                                return contractBin.indexOf('0x') === 0 ? contractBin : ('0x' + contractBin);
                             },
                             writable: false,
                             configurable: false,
                             enumerable: false
-                        })
-                        break
+                        });
+                        break;
                     }
                     case 'event': {
                         if (contract._eventABIMapper.has(item.name)) {
-                            throw new Error('event override is not allowed')
+                            throw new Error('event override is not allowed');
                         }
 
-                        contract._eventABIMapper.set(item.name, item)
-                        break
+                        contract._eventABIMapper.set(item.name, item);
+                        break;
                     }
                 }
             }
 
             if (!hasExplicitConstructor) {
-                contract.$deploy = new Function('web3jService', createCodeForConstructor())
+                contract.$deploy = new Function('web3jService', createCodeForConstructor());
             }
 
             // built-in functions
             // `$load()`, load deployed contract
-            contract.$load = new Function('web3jService', 'contractAddress', loadCodeForConstructor())
+            contract.$load = new Function(['web3jService', 'contractAddress'], createCodeForLoad());
 
             // `$getAddress()`, get address of the deployed contract
-            contract.$getAddress = new Function('', createCodeForGetAddress())
+            contract.$getAddress = new Function('', createCodeForGetAddress());
 
             // `$getEventABIOf(name)`, get event ABI of the specified name, throw if the abi not exists
-            contract.$getEventABIOf = new Function('name', createCodeForGetEventABIOf())
+            contract.$getEventABIOf = new Function('name', createCodeForGetEventABIOf());
 
             // `$getFunctionABIOf(name)`, get function ABI of the specified name, throw if the abi not exists
-            contract.$getFunctionABIOf = new Function('name', createCodeForGetFunctionABIOf())
+            contract.$getFunctionABIOf = new Function('name', createCodeForGetFunctionABIOf());
 
             // `$setUser(id)`, set permanent user of the contract class instance
-            contract.$setUser = new Function('id', createCodeForSetUser())
+            contract.$setUser = new Function('id', createCodeForSetUser());
 
             // `$by(id)`, set temporary user of deploy or call on contract class instance
-            contract.$by = new Function('id', createCodeForBy())
+            contract.$by = new Function('id', createCodeForBy());
 
-            return contract
+            return contract;
         }
     }
 
-    return contractClass
+    return contractClass;
 }
 
-module.exports.createContractClass = createContractClass
+module.exports.createContractClass = createContractClass;

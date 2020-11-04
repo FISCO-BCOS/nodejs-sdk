@@ -14,51 +14,55 @@
 
 'use strict'
 
-const should = require('should')
-const path = require('path')
+const should = require('should');
+const path = require('path');
 const {
     Configuration,
     Web3jService,
     CompileService
-} = require('../packages/api')
+} = require('../packages/api');
 
-const config = new Configuration(path.join(__dirname, './conf/config.json'))
-const contractPath = path.join(__dirname, './contracts/v4/HelloWorld.sol')
-const compileService = new CompileService(config)
-const web3jService = new Web3jService(config)
-const contractClass = compileService.compile(contractPath)
-const helloWorld = contractClass.newInstance()
+const config = new Configuration(path.join(__dirname, './conf/config.json'));
+const contractPath = path.join(__dirname, './contracts/v4/HelloWorld.sol');
+const compileService = new CompileService(config);
+const web3jService = new Web3jService(config);
+const contractClass = compileService.compile(contractPath);
+const helloWorld = contractClass.newInstance();
 
 describe('test for hello world', function () {
     this.beforeAll(() => {
-        return helloWorld.$deploy(web3jService)
-    })
+        return helloWorld.$deploy(web3jService);
+    });
 
     it('duplicate deploy', async () => {
         try {
-            const _ = await helloWorld.$deploy(web3jService)
-            should.equal(true, false)
+            const _ = await helloWorld.$deploy(web3jService);
+            should.equal(true, false);
         } catch (_) { }
-    })
-
-    it('load deployed contract', async () => {
-        try {
-            const _ = await helloWorld.$load(web3jService, '0x1234567890123456789012345678901234567890')
-            should.equal(true, false)
-        } catch (_) { }
-    })
+    });
 
     it('get', async () => {
-        const ret = await helloWorld.get()
-        should.exist(ret)
-        should.equal(ret[0], 'Hello, World!')
-    })
+        const ret = await helloWorld.get();
+        should.exist(ret);
+        should.equal(ret[0], 'Hello, World!');
+    });
 
     it('set', async () => {
-        await helloWorld.set('こんにちわ！')
+        await helloWorld.set('こんにちわ！');
 
-        const ret = await helloWorld.get()
+        const ret = await helloWorld.get();
         should.exist(ret)
-        should.equal(ret[0], 'こんにちわ！')
-    })
+        should.equal(ret[0], 'こんにちわ！');
+    });
+
+    it('load deployed contract', async () => {
+        let address = helloWorld.$getAddress();
+        let anotherHelloWorld = contractClass.newInstance();
+        anotherHelloWorld.$load(web3jService, address);
+
+        await anotherHelloWorld.set('Bonjour');
+        const ret = await anotherHelloWorld.get();
+        should.exist(ret)
+        should.equal(ret[0], 'Bonjour');
+    });
 })
