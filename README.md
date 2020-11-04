@@ -1088,6 +1088,17 @@ npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#master -s
 
   **返回值**：`String`，20字节长度的合约地址
 
+- $load
+
+  **功能**：加载已部署的用户合约
+
+  **参数**：
+  
+  - `Object`，web3j。有效的Web3jService对象实例
+  - `String`, contract address。用户合约地址
+
+  **返回值**：`Boolean`，返回true加载成功，可忽略返回值
+
 - $getAddress
 
   **功能**：获取用户合约地址
