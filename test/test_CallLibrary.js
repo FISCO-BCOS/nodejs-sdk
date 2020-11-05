@@ -61,17 +61,15 @@ describe('test for call library', function () {
     });
 
     it('v5 with linking', async () => {
-        // not supported in SM_CRYPTO mode yet
-        if (config.encryptType === ENCRYPT_TYPE.ECDSA) {
-            const contractPath = path.join(__dirname, './contracts/v5/CallLibrary.sol');
-            let contractClass = compileService.compile(contractPath, {
-                "CallLibrary": {
-                    DelegateCallLibary: '0x1234567890123456789012345678901234567890'
-                }
-            });
-            let callLibrary = contractClass.newInstance();
-            let address = await callLibrary.$deploy(web3jService);
-            should.exist(address);
-        }
+        const contractPath = path.join(__dirname, './contracts/v5/Verifier.sol');
+        let contractClass = compileService.compile(contractPath, {
+            "BN256G2.sol": {
+                BN256G2: '0x1234567890123456789012345678901234567890'
+            }
+        });
+        let callLibrary = contractClass.newInstance();
+        
+        let address = await callLibrary.$deploy(web3jService);
+        should.exist(address);
     });
 });
