@@ -22,12 +22,14 @@ const childProcess = require('child_process');
 const uuid = require('uuid');
 const CompileError = require('../common/exceptions').CompileError;
 const createContractClass = require('./contractClass').createContractClass;
+const linkLibrary = require('./linkLib').linkLibrary;
 const {
     ENCRYPT_TYPE
 } = require('../common/configuration');
 const {
     ServiceBase
 } = require('../common/serviceBase');
+
 
 let solc0$4Ver;
 let solc0$5Ver;
@@ -137,6 +139,7 @@ class CompileService extends ServiceBase {
                     let linker = require('./compilers/solc-0.5/node_modules/solc/linker');
                     bin = linker.linkBytecode(bin, linkLibraries);
                 }
+
                 return createContractClass(contractName, abi, bin, this.config.encryptType);
             } else if (semver.satisfies(solc0$4Ver, requiredSolcVerRange)) {
                 let solc = require('./compilers/solc-0.4');
@@ -156,6 +159,7 @@ class CompileService extends ServiceBase {
                 let solc = wrapper(require('./compilers/gm/soljson-v0.4.25-gm'));
                 let [abi, bin] = this._compileWithSolc0$4(solc, contractName, contractContent, readCallback);
 
+                
                 if (linkLibraries !== null) {
                     throw new CompileError('libraries linking is not supported under `SM_CRYPTO` mode');
                 }
@@ -163,10 +167,20 @@ class CompileService extends ServiceBase {
             } else if (semver.satisfies(solc0$5GmVer, requiredSolcVer)) {
                 let wrapper = require('./compilers/solc-0.5/node_modules/solc/wrapper');
                 let solc = wrapper(require('./compilers/gm/soljson-v0.5.1-gm'));
-                let [abi, bin] = this._compileWithSolc0$5(solc, contractName, contractContent, readCallback);
+                let [abi, bin, linkReferences] = this._compileWithSolc0$5(solc, contractName, contractContent, readCallback);
 
                 if (linkLibraries !== null) {
-                    throw new CompileError('libraries linking is not supported under `SM_CRYPTO` mode');
+                    Object.entries(linkLibraries).forEach((libraryEntry) => {
+                        Object.keys(libraryEntry[1]).forEach((libraryName) => {
+                            bin = linkLibrary(
+                                this.config.encryptType,
+                                bin,
+                                linkReferences,
+                                libraryName,
+                                libraryEntry[1][libraryName]
+                            );
+                        });
+                    });
                 }
                 return createContractClass(contractName, abi, bin, this.config.encryptType);
             } else {
@@ -208,7 +222,8 @@ class CompileService extends ServiceBase {
 
         let abi = output.contracts[contractName][contractName].abi;
         let bin = output.contracts[contractName][contractName].evm.bytecode.object;
-        return [abi, bin];
+        let linkReferences = output.contracts[contractName][contractName].evm.bytecode.linkReferences;
+        return [abi, bin, linkReferences];
     }
 
     _compileWithSolc0$4(solc, contractName, contractContent, readCallback) {
@@ -234,7 +249,7 @@ class CompileService extends ServiceBase {
 
         let abi = output.contracts[`${contractName}:${contractName}`].interface;
         let bin = output.contracts[`${contractName}:${contractName}`].bytecode;
-        return [abi, bin];
+        return [abi, bin, null];
     }
 
     _checkContractError(errors, version = '0.4') {
