@@ -189,3 +189,4 @@ module.exports.signTransaction = signTransaction;
 module.exports.getSignTx = getSignTx;
 module.exports.getTxData = getTxData;
 module.exports.encodeParams = encodeParams;
+module.exports.genRandomID = genRandomID;

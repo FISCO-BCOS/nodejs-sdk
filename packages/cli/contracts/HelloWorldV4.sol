@@ -3,8 +3,8 @@ pragma solidity ^0.4.23;
 contract HelloWorldV4 {
     string name;
 
-    constructor() public {
-        name = "Hello, World!";
+    constructor(string n) public {
+        name = n;
     }
 
     function get() public view returns (string) {

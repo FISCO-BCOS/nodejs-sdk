@@ -426,7 +426,7 @@ interfaces.push(produceSubCommandInfo({
                 name: 'bin',
                 options: {
                     type: 'string',
-                    describe: 'The path of then Wasm contract',
+                    describe: 'The path of the Wasm contract',
                 }
             },
             {

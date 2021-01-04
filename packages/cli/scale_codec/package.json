@@ -1,0 +1,14 @@
+{
+  "name": "scale_codec",
+  "version": "0.1.0",
+  "description": "",
+  "main": "lib/index.js",
+  "author": "vita-dounai <lichenxi.webank@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "neon-cli": "^0.5.3"
+  },
+  "scripts": {
+    "install": "neon build"
+  }
+}

@@ -35,3 +35,5 @@ module.exports.Configuration = require('./common/configuration').Configuration;
 module.exports.ENCRYPT_TYPE = require('./common/configuration').ENCRYPT_TYPE;
 
 module.exports.hash = require('./common/utils').hash;
+module.exports.Web3Sync = require('./common/web3lib/web3sync');
+module.exports.getBlockHeight = require('./common/blockHeightCache').getBlockHeight;

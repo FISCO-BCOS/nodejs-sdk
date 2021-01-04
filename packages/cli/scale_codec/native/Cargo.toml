@@ -1,0 +1,20 @@
+[package]
+name = "scale_codec"
+version = "0.1.0"
+authors = ["vita-dounai <lichenxi.webank@gmail.com>"]
+license = "MIT"
+build = "build.rs"
+edition = "2018"
+exclude = ["artifacts.json", "index.node"]
+
+[lib]
+name = "scale_codec"
+crate-type = ["cdylib"]
+
+[build-dependencies]
+neon-build = "0.5.3"
+
+[dependencies]
+neon = "0.5.3"
+parity-scale-codec = {version = "1.3.1", default-features = false, features = ["derive", "full"] }
+paste = "0.1.17"

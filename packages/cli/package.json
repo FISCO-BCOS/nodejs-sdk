@@ -15,6 +15,7 @@
         "*"
     ],
     "dependencies": {
+        "@assemblyscript/loader": "^0.17.13",
         "chalk": "^2.4.2",
         "is-json": "^2.0.1",
         "node-sql-parser": "^1.7.0",

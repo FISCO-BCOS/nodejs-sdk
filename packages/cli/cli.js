@@ -38,6 +38,7 @@ interfaces = interfaces.concat(require('./interfaces/web3j').interfaces);
 interfaces = interfaces.concat(require('./interfaces/crud').interfaces);
 interfaces = interfaces.concat(require('./interfaces/permission').interfaces);
 interfaces = interfaces.concat(require('./interfaces/cns').interfaces);
+interfaces = interfaces.concat(require('./interfaces/collaboration').interfaces);
 let commands = interfaces.map(value => value.name);
 
 function parseSub(subCommandInfo, argv, originArgv) {

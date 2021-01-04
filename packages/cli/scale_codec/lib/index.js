@@ -1,0 +1,22 @@
+var addon = require('../native');
+
+module.exports.encodeCompact = addon.encode_compact;
+module.exports.decodeCompact = addon.decode_compact;
+module.exports.encodeAddress = addon.encode_address;
+module.exports.decodeAddress = addon.decode_address;
+module.exports.encodeBool = addon.encode_bool;
+module.exports.decodeBool = addon.decode_bool;
+module.exports.encodeString = addon.encode_string;
+module.exports.decodeString = addon.decode_string;
+module.exports.encodeU8 = addon.encode_u8;
+module.exports.decodeU8 = addon.decode_u8;
+module.exports.encodeU16 = addon.encode_u16;
+module.exports.decodeU16 = addon.decode_u16;
+module.exports.encodeU32 = addon.encode_u32;
+module.exports.decodeU32 = addon.decode_u32;
+module.exports.encodeI8 = addon.encode_i8;
+module.exports.decodeI8 = addon.decode_i8;
+module.exports.encodeI16 = addon.encode_i16;
+module.exports.decodeI16 = addon.decode_i16;
+module.exports.encodeI32 = addon.encode_i32;
+module.exports.decodeI32 = addon.decode_i32;
