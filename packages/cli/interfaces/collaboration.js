@@ -129,7 +129,7 @@ function encode(data, abi) {
         let encoded = ScaleCodec.encodeCompact(len);
         data.forEach(item => {
             let encodedItem = encode(item, abi);
-            Buffer.concat([encoded, encodedItem]);
+            encoded = Buffer.concat([encoded, encodedItem]);
         });
         return encoded;
     }
