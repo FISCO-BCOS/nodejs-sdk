@@ -12,15 +12,15 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const uuidv4 = require('uuid/v4');
-const utils = require('./utils');
-const Transaction = require('./transactionObject').Transaction;
-const ethjsUtil = require('ethjs-util');
-const ethers = require('ethers');
-const isArray = require('isarray');
-const assert = require('assert');
+const uuidv4 = require("uuid/v4");
+const utils = require("./utils");
+const Transaction = require("./transactionObject").Transaction;
+const ethjsUtil = require("ethjs-util");
+const ethers = require("ethers");
+const isArray = require("isarray");
+const assert = require("assert");
 
 /**
  * Generate a random number via UUID
@@ -28,9 +28,9 @@ const assert = require('assert');
  */
 function genRandomID() {
     let uuid = uuidv4();
-    uuid = uuid.replace(/-/g, '');
-    if (!uuid.startsWith('0x')) {
-        uuid = '0x' + uuid;
+    uuid = uuid.replace(/-/g, "");
+    if (!uuid.startsWith("0x")) {
+        uuid = "0x" + uuid;
     }
 
     return uuid;
@@ -45,11 +45,11 @@ function genRandomID() {
  */
 function signTransaction(txData, privKey, encryptType, callback) {
     let tx = new Transaction(txData, encryptType);
-    let privateKey = Buffer.from(privKey, 'hex');
+    let privateKey = Buffer.from(privKey, "hex");
     tx.sign(privateKey, encryptType);
 
     // Build a serialized hex version of the tx
-    let serializedTx = '0x' + tx.serialize().toString('hex');
+    let serializedTx = "0x" + tx.serialize().toString("hex");
     if (callback !== null) {
         callback(serializedTx);
     } else {
@@ -59,7 +59,7 @@ function signTransaction(txData, privKey, encryptType, callback) {
 
 function formalize(data, type) {
     let arrayTypeReg = /(.+)\[\d*\]$/;
-    if (type.type === 'tuple' || arrayTypeReg.exec(type.type)) {
+    if (type.type === "tuple" || arrayTypeReg.exec(type.type)) {
         // whatever in struct case or array case, it must be an object
         return JSON.parse(data);
     }
@@ -76,10 +76,10 @@ function formalize(data, type) {
         return result;
     }
 
-    if (type.type === 'bool') {
-        if (data === 'true') {
+    if (type.type === "bool") {
+        if (data === "true") {
             return true;
-        } else if (data === 'false') {
+        } else if (data === "false") {
             return false;
         }
 
@@ -147,7 +147,7 @@ function getSignTx(config, to, func, params, blockLimit, who) {
         blockLimit: blockLimit,
         chainId: chainID,
         groupId: groupID,
-        extraData: '0x0'
+        extraData: "0x0",
     };
 
     return signTransaction(postdata, privateKey, encryptType, null);
@@ -161,27 +161,42 @@ function getSignTx(config, to, func, params, blockLimit, who) {
  * @param {who} the id of account(private key)
  * @return {String} signed deploy transaction data
  */
-function getSignDeployTx(config, bin, parameters, blockLimit, who) {
+function getSignDeployTx(config, bin, parameters, blockLimit, type, who) {
     let groupID = config.groupID;
     let account = config.accounts[who].account;
     let privateKey = config.accounts[who].privateKey;
     let chainID = config.chainID;
     let encryptType = config.encryptType;
-    let txData = bin.indexOf('0x') === 0 ? bin : ('0x' + bin);
+    let txData = bin.indexOf("0x") === 0 ? bin : "0x" + bin;
+    let postData;
+    if (type === 0) {
+        console.log(parameters)
+        postData = {
+            data: txData + parameters.substring(2),
+            from: account,
+            to: null,
+            gas: 1000000,
+            randomid: genRandomID(),
+            blockLimit: blockLimit,
+            chainId: chainID,
+            groupId: groupID,
+            extraData: "0x0",
+        };
+    } else {
+        postData = {
+            data: txData,
+            from: account,
+            to: null,
+            gas: 1000000,
+            randomid: genRandomID(),
+            blockLimit: blockLimit,
+            chainId: chainID,
+            groupId: groupID,
+            extraData: parameters,
+        };
+    }
 
-    let postdata = {
-        data: txData,
-        from: account,
-        to: null,
-        gas: 1000000,
-        randomid: genRandomID(),
-        blockLimit: blockLimit,
-        chainId: chainID,
-        groupId: groupID,
-        extraData: parameters
-    };
-
-    return signTransaction(postdata, privateKey, encryptType, null);
+    return signTransaction(postData, privateKey, encryptType, null);
 }
 
 module.exports.getSignDeployTx = getSignDeployTx;

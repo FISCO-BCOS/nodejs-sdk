@@ -12,20 +12,19 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const ethers = require('ethers');
-const isArray = require('isarray');
-const assert = require('assert');
-const deepcopy = require('deepcopy');
-const hash = require('../common/web3lib/utils').hash;
-const {
-    ENCRYPT_TYPE
-} = require('../common/configuration');
+const ethers = require("ethers");
+const isArray = require("isarray");
+const assert = require("assert");
+const deepcopy = require("deepcopy");
+const hash = require("../common/web3lib/utils").hash;
+const { ENCRYPT_TYPE } = require("../common/configuration");
+const { createFunctionDescription } = require("../common/utils");
 
 function formalize(data, type) {
     // for user-defined struct
-    if (type.type === 'tuple') {
+    if (type.type === "tuple") {
         let result = {};
         let components = type.components;
         components.forEach((component) => {
@@ -68,7 +67,7 @@ function formalize(data, type) {
         return data.hash;
     }
 
-    if (type.type === 'address') {
+    if (type.type === "address") {
         return data.toLowerCase();
     }
 
@@ -83,25 +82,27 @@ class MethodDecoder {
 
     decodeInput(input) {
         let methodID = input.substr(0, 10); // method selector
-        input = '0x' + input.substr(10);
+        input = "0x" + input.substr(10);
 
         let inputTypes = this.method.inputs;
         let data = this.decoder.decode(inputTypes, input);
         let ret = {
             function: this.method.signature,
             methodID,
-            result: formalize(data, inputTypes)
+            result: formalize(data, inputTypes),
         };
         return ret;
     }
 
-    decodeOutput(output) {
-        if (output.startsWith('0x08c379a0')) {
-            output = '0x' + output.substr(10);
-            let error = this.decoder.decode(['string'], output);
+    decodeOutput(output, isRevert) {
+        if (isRevert) {
+            if (output.startsWith("0x08c379a0")) {
+                output = "0x" + output.substr(10);
+            }
+            let error = this.decoder.decode(["string"], output);
             let ret = {
                 function: this.method.signature,
-                error
+                error,
             };
             return ret;
         }
@@ -110,7 +111,7 @@ class MethodDecoder {
         let data = this.decoder.decode(outputTypes, output);
         let ret = {
             function: this.method.signature,
-            result: formalize(data, outputTypes)
+            result: formalize(data, outputTypes),
         };
         return ret;
     }
@@ -127,11 +128,14 @@ class EventDecoder {
             this.topicMapper = new Map();
 
             for (var name in this.iface.events) {
-                if (name.indexOf('(') === -1) {
+                if (name.indexOf("(") === -1) {
                     continue;
                 }
                 let event = this.iface.events[name];
-                this.topicMapper.set('0x' + hash(event.signature, ENCRYPT_TYPE.SM_CRYPTO), event.topic);
+                this.topicMapper.set(
+                    "0x" + hash(event.signature, ENCRYPT_TYPE.SM_CRYPTO),
+                    event.topic
+                );
             }
         }
     }
@@ -150,7 +154,10 @@ class EventDecoder {
 
         inputTypes.forEach((input, index) => {
             let name = input.name;
-            if (typeof logDesc.values[name] !== 'undefined' && logDesc.values[name] !== null) {
+            if (
+                typeof logDesc.values[name] !== "undefined" &&
+                logDesc.values[name] !== null
+            ) {
                 values[name] = formalize(logDesc.values[name], input);
             }
             values[index] = formalize(logDesc.values[index], input);
@@ -160,27 +167,14 @@ class EventDecoder {
 }
 
 module.exports.createMethodDecoder = function (abi, name) {
-    if (name === null) {
-        if (isArray(abi)) {
-            throw new Error('no ABI desription of the method');
-        }
-
-        let iface = new ethers.utils.Interface([abi]);
-        return new MethodDecoder(iface.functions[abi.name]);
-    } else {
-        let iface = new ethers.utils.Interface(abi);
-        if (!iface.functions[name]) {
-            throw new Error(`no method named as ${name}`);
-        }
-
-        return new MethodDecoder(iface.functions[name]);
-    }
+    let desc = createFunctionDescription(abi, name);
+    return new MethodDecoder(desc);
 };
 
 module.exports.createEventDecoder = function (abi, name, encryptType) {
     if (name === null) {
         if (isArray(abi)) {
-            throw new Error('no ABI desription of the event');
+            throw new Error("no ABI description of the event");
         }
 
         return new EventDecoder(abi, encryptType);

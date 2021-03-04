@@ -12,7 +12,10 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
+
+const ethers = require("ethers");
+const isArray = require("isarray");
 
 /**
  * Select a node from node list randomly
@@ -24,7 +27,7 @@ function selectNode(nodes) {
 }
 
 function cleanHexPrefix(input) {
-    if (input.startsWith('0x') || input.startsWith('0X')) {
+    if (input.startsWith("0x") || input.startsWith("0X")) {
         return input.substring(2);
     }
     return input;
@@ -37,7 +40,54 @@ function isValidAddress(address) {
     return addressNoPrefix.length === ADDRESS_LENGTH_IN_HEX;
 }
 
-module.exports.hash = require('./web3lib/utils').hash;
+module.exports.hash = require("./web3lib/utils").hash;
 module.exports.selectNode = selectNode;
 module.exports.cleanHexPrefix = cleanHexPrefix;
 module.exports.isValidAddress = isValidAddress;
+
+class FunctionDescription {
+    constructor(origin) {
+        this.origin = origin;
+        this.type = origin.type;
+        this.name = origin.name;
+        this.signature = origin.signature;
+        this.sighash = origin.sighash;
+        this.inputs = origin.inputs;
+        this.outputs = origin.outputs;
+        this.payable = origin.payable;
+        this.gas = origin.gas;
+    }
+
+    encode(params) {
+        return this.origin.encode(params);
+    }
+
+    decode(params) {
+        return this.origin.decode(params);
+    }
+}
+
+module.exports.createFunctionDescription = (abi, name) => {
+    let desc;
+    if (name === undefined) {
+        if (isArray(abi)) {
+            throw new Error("no ABI description of the event");
+        }
+
+        let iface = new ethers.utils.Interface([abi]);
+        desc = iface.functions[abi.name];
+    } else {
+        let iface = new ethers.utils.Interface(abi);
+        if (!iface.functions[name]) {
+            throw new Error(`no method named as ${name}`);
+        }
+        desc = iface.functions[name];
+    }
+
+    if (desc.name.indexOf("tuple") !== -1) {
+        let leftBracketPos = desc.signature.indexOf("(");
+        desc = new FunctionDescription(desc);
+        desc.signature = abi.name + desc.signature.substr(leftBracketPos);
+    }
+    return desc;
+};
