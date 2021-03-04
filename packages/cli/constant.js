@@ -16,5 +16,5 @@
 
 const path = require('path');
 
-module.exports.ContractsDir = path.join(__dirname, './contracts/');
-module.exports.ContractsOutputDir = path.join(this.ContractsDir, './.output/');
+module.exports.CONTRACTS_DIR = path.join(__dirname, './contracts/');
+module.exports.CONTRACTS_OUTPUT_DIR = path.join(this.CONTRACTS_DIR, './.output/');

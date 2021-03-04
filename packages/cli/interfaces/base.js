@@ -18,7 +18,7 @@ const chalk = require('chalk');
 const isJSON = require('is-json');
 const fs = require('fs');
 const path = require('path');
-const ContractsOutputDir = require('../constant').ContractsOutputDir;
+const CONTRACTS_OUTPUT_DIR = require('../constant').CONTRACTS_OUTPUT_DIR;
 
 module.exports.produceSubCommandInfo = function (subCommand, handler) {
     let subCommandInfo = {
@@ -103,7 +103,7 @@ module.exports.getAbi = function (contractName, functionName, inputs) {
         contractName = path.basename(contractName, '.sol');
     }
 
-    let outputDir = ContractsOutputDir;
+    let outputDir = CONTRACTS_OUTPUT_DIR;
     let abiPath = path.join(outputDir, `${contractName}.abi`);
 
     if (!fs.existsSync(abiPath)) {

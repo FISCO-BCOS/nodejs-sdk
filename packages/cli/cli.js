@@ -14,228 +14,234 @@
  * limitations under the License.
  */
 
-'use strict';
-const chalk = require('chalk');
+"use strict";
 
-let cwd = process.cwd();
-let dirname = __dirname;
-if (cwd !== dirname) {
-    console.error(chalk.red('[ERROR]:cli.js must be run in \`nodejs-sdk/packages/cli/\` directory'));
-    process.exit(-1);
+const { join, parse } = require("path");
+const { CONTRACTS_OUTPUT_DIR } = require("./constant");
+const { getAbi } = require("./interfaces/base");
+const yargs = require("yargs");
+const path = require("path");
+const chalk = require("chalk");
+const { FLAGS } = require("./interfaces/base");
+const { readdirSync, existsSync, readFileSync } = require("fs");
+
+const SUB_CATEGORIES = [
+    "account",
+    "web3j",
+    "crud",
+    "permission",
+    "cns",
+    "collaboration",
+];
+
+var INTERFACES = [];
+for (let subCategory of SUB_CATEGORIES) {
+    INTERFACES = INTERFACES.concat(
+        require(`./interfaces/${subCategory}`).interfaces
+    );
 }
 
-const FLAGS = require('./interfaces/base').FLAGS;
-const yargs = require('yargs/yargs');
-const fs = require('fs');
-const path = require('path');
-const isArray = require('isarray');
-const { ContractsDir, ContractsOutputDir } = require('./constant');
-const { getAbi } = require('./interfaces/base');
+var COMMANDS = INTERFACES.map((value) => value.name);
 
-let interfaces = [];
-interfaces = interfaces.concat(require('./interfaces/account').interfaces);
-interfaces = interfaces.concat(require('./interfaces/web3j').interfaces);
-interfaces = interfaces.concat(require('./interfaces/crud').interfaces);
-interfaces = interfaces.concat(require('./interfaces/permission').interfaces);
-interfaces = interfaces.concat(require('./interfaces/cns').interfaces);
-interfaces = interfaces.concat(require('./interfaces/collaboration').interfaces);
-let commands = interfaces.map(value => value.name);
-
-function parseSub(subCommandInfo, argv, originArgv) {
-    let command = argv.command;
-    argv.arguments.splice(0, 0, command);
-    let stringArgs = {};
-
-    if (subCommandInfo.args) {
-        for (let index in subCommandInfo.args) {
-            let arg = subCommandInfo.args[index];
-            if (arg.options.choices) {
-                arg.options.choices.push('?');
-            }
-
+function addSubCmd(subCmdInfo) {
+    let command = subCmdInfo.name;
+    let positionalArgs = [];
+    if (subCmdInfo.args) {
+        for (let i = 0; i < subCmdInfo.args.length; ++i) {
+            let arg = subCmdInfo.args[i];
             if (arg.options.flag) {
-                if (arg.options.flag === FLAGS.VARIADIC) {
-                    command += ` [${arg.name}...]`;
-                } else if (arg.options.flag === FLAGS.OPTIONAL) {
-                    command += ` [${arg.name}]`;
+                let flag = arg.options.flag;
+                if (flag & FLAGS.VARIADIC) {
+                    if (
+                        i !== subCmdInfo.args.length - 1 ||
+                        flag & FLAGS.OPTIONAL
+                    ) {
+                        throw new Error(
+                            "Variadic parameter should be last positional parameter"
+                        );
+                    }
+                    positionalArgs.push(i);
+                    command += ` [${arg.name}..]`;
+                } else if (flag & FLAGS.OPTIONAL) {
+                    delete arg.options.flag;
+                    yargs.option(
+                        arg.name,
+                        Object.assign(
+                            {
+                                demandOption: false,
+                            },
+                            arg.options
+                        )
+                    );
                 }
-
-                delete arg.options.flag;
             } else {
+                positionalArgs.push(i);
                 command += ` <${arg.name}>`;
             }
-
-            if (arg.options.type === 'string') {
-                stringArgs[arg.name] = parseInt(index);
-            }
         }
     }
 
-    let needHelp = argv.arguments.indexOf('?') >= 0;
-    if (needHelp) {
-        argv.arguments = [argv.arguments[0]];
-        if (subCommandInfo.args) {
-            argv.arguments = argv.arguments.concat(Array(subCommandInfo.args.length).fill('?'));
-        }
+    yargs.command(
+        command,
+        chalk.cyan(subCmdInfo.describe),
+        (yargs) => {
+            for (let i of positionalArgs) {
+                let arg = subCmdInfo.args[i];
+                yargs.positional(arg.name, arg.options);
+            }
+            yargs.help("h").alias("h", "help");
+        },
+        subCmdInfo.handler
+    );
+}
+
+async function completion(current, argv) {
+    if (argv._.length <= 2) {
+        return COMMANDS;
     }
 
-    let parser = yargs(argv.arguments)
-        .command(command, chalk.cyan(subCommandInfo.describe), yargs => {
-            if (subCommandInfo.args) {
-                for (let arg of subCommandInfo.args) {
-                    yargs.positional(arg.name, arg.options);
-                }
-            }
-            return yargs;
-        }, needHelp ? undefined : (argv) => {
-            for (let argName in stringArgs) {
-                if (!isArray(argv[argName])) {
-                    if (argv[argName] !== originArgv[stringArgs[argName]]) {
-                        argv[argName] = originArgv[stringArgs[argName]];
+    switch (arg._[1]) {
+        case "completion": {
+            return [];
+        }
+        case "list": {
+            return [];
+        }
+        case "exec": {
+            function listContracts() {
+                let files = [];
+                for (let file of readdirSync(CONTRACTS_OUTPUT_DIR)) {
+                    if (file.endsWith(".abi")) {
+                        files.push(path.basename(file, ".abi"));
                     }
                 }
-                else {
-                    let startIndex = stringArgs[argName];
-                    for (let argIndex in argv[argName]) {
-                        if (argv[argName][argIndex] !== originArgv[startIndex]) {
-                            argv[argName][argIndex] = originArgv[startIndex];
+                return files;
+            }
+
+            if (argv._[2] === "queryCNS" || argv._[2] === "deployByCNS") {
+                if (argv._.length < 5) {
+                    return listContracts();
+                }
+                return [];
+            }
+
+            if (argv._[2] === "deploy") {
+                if (argv._.length < 4) {
+                    return ["deploy", "deployByCNS"];
+                }
+                return [];
+            }
+
+            if (argv._[2] === "call") {
+                if (argv._.length < 4) {
+                    return ["call", "callByCNS"];
+                }
+
+                if (argv._.length < 5) {
+                    return listContracts();
+                }
+
+                let contractName = argv._[3];
+                if (argv._.length < 6) {
+                    let addressPath = join(
+                        CONTRACTS_OUTPUT_DIR,
+                        `.${contractName}.address`
+                    );
+
+                    if (existsSync(addressPath)) {
+                        try {
+                            let addresses = readFileSync(
+                                addressPath
+                            ).toString();
+                            return addresses.split("\n");
+                        } catch (error) {
+                            return [];
                         }
-                        startIndex += 1;
                     }
+                    return [];
                 }
-            }
-            subCommandInfo.handler(argv);
-        });
 
-    if (needHelp) {
-        parser.showHelp();
-    } else {
-        parser.parse(argv.arguments);
+                if (argv._.length < 7) {
+                    let abi = getAbi(contractName);
+                    if (abi) {
+                        let functions = [];
+                        for (let item of abi) {
+                            if (item.type === "function") {
+                                functions.push(item.value);
+                            }
+                        }
+                        return functions;
+                    }
+                    return [];
+                }
+                return [];
+            }
+        }
     }
+
+    return [];
 }
 
-function completion() {
-    let commandList = commands;
-    let userDefList = ['completion', 'list'];
-
-    return function (current, argv) {
-        let wordList = commandList.concat(userDefList);
-
-        if (argv._.length < 2) {
-            return wordList;
+function listCommands() {
+    for (let subCategory of SUB_CATEGORIES) {
+        let commands = require(`./interfaces/${subCategory}`).interfaces;
+        console.log("┌────────────────┐");
+        console.log(`│${subCategory.toUpperCase().padEnd(16)}│`);
+        console.log("├────────────────┴" + "─".repeat(103) + "┐");
+        for (let i = 0; i < commands.length; ++i) {
+            let command = commands[i];
+            let name = chalk.magenta(command.name.padEnd(36));
+            let info = chalk.cyan(command.describe);
+            console.log(`│${name}${info.padEnd(94)}│`);
         }
-
-        if (argv._[1] === 'completion') {
-            return [];
-        }
-
-        function listContracts() {
-            let files = fs.readdirSync(ContractsDir)
-                .filter(file => file.endsWith('.sol'))
-                .map(file => path.parse(file).name);
-            return files;
-        }
-
-        if (argv._[1] === 'deploy') {
-            if (argv._.length < 3) {
-                return ['deploy', 'deployByCNS'];
-            } else if (argv._.length < 4) {
-                return listContracts();
-            } else {
-                return [];
-            }
-        }
-
-        if (argv._[1] === 'queryCNS' || argv._[1] === 'deployByCNS') {
-            if (argv._.length < 4) {
-                return listContracts();
-            } else {
-                return [];
-            }
-        }
-
-        if (argv._[1] === 'call') {
-            if (argv._.length < 3) {
-                return ['call', 'callByCNS'];
-            } else if (argv._.length < 4) {
-                return listContracts();
-            } else if (argv._.length < 5) {
-                let contractName = path.basename(argv._[2], '.sol');
-                let addressPath = path.join(ContractsOutputDir, `.${contractName}.address`);
-                if (fs.existsSync(addressPath)) {
-                    try {
-                        let addresses = fs.readFileSync(addressPath).toString();
-                        return addresses.split('\n');
-                    } catch (error) {
-                        return [];
-                    }
-                } else {
-                    return [];
-                }
-            } else if (argv._.length < 6) {
-                let abi = getAbi(argv._[2]);
-                if (abi) {
-                    let functions = abi.filter(value => value.type === 'function').map(value => value.name);
-                    return functions;
-                } else {
-                    return [];
-                }
-            } else {
-                return [];
-            }
-        }
-
-        if (argv._.length >= 3) {
-            return [];
-        }
-
-        return wordList;
-    };
-}
-
-function list() {
-    for (let command of interfaces) {
-        let name = chalk.magenta(command.name.padEnd(50));
-        let info = chalk.cyan(command.describe);
-
-        console.log(`${name}${info}`);
+        console.log("└─────────────────" + "─".repeat(103) + "┘");
     }
 }
 
 function main() {
-    let parser = yargs()
-        .completion('completion', chalk.green('generate completion script'), completion())
-        .command('$0 list', chalk.green('list all commands'))
-        .command('$0 <command> [arguments...]', chalk.green('run a specified command'), yargs => {
-            yargs.positional('command', {
-                describe: chalk.green('the command to run'),
-                type: 'string',
-                choices: commands.concat(['completion', 'list'])
-            });
-        })
-        .usage(chalk.bold.green('Node.js CLI tool for FICSO BCOS 2.0'))
-        .help('h')
-        .alias('h', 'help');
+    yargs
+        .completion(
+            "completion",
+            chalk.green("Generate completion script for bash/zsh"),
+            completion
+        )
+        .command(
+            "list",
+            chalk.green("List all sub-commands"),
+            () => {},
+            listCommands
+        )
+        .command(
+            "exec <command> [parameters..]",
+            chalk.green("Execute a specified sub-command"),
+            () => {
+                let index = process.argv.indexOf("exec");
+                let subCmd = process.argv[index + 1];
+                let subCmdInfo = INTERFACES.find(
+                    (item) => item.name === subCmd
+                );
 
-    let originArgv = process.argv.splice(2);
-    let argv = parser.parse(originArgv);
-
-    switch (argv.command) {
-        case 'completion':
-            parser.showCompletionScript();
-            break;
-        case 'list':
-            list();
-            break;
-        default:
-            let command = argv.command;
-            let subCommandInfo = interfaces.find(value => value.name == command);
-            if (subCommandInfo) {
-                parseSub(subCommandInfo, argv, originArgv.splice(1));
-            } else {
-                parser.showHelp();
+                if (subCmdInfo) {
+                    addSubCmd(subCmdInfo);
+                } else {
+                    console.error(
+                        chalk.red(
+                            `Sub-command \`${subCmd}\` is not supported, ` +
+                                "please refer to `./cli.js list`"
+                        )
+                    );
+                    process.exit(-1);
+                }
             }
-    }
+        )
+        .demandCommand(
+            1,
+            chalk.red("You need at least one command before moving on")
+        )
+        .strict()
+        .usage(chalk.green("Node.js CLI tool for FICSO BCOS"))
+        .help("h")
+        .alias("h", "help").argv;
 }
 
 main();

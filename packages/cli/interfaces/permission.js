@@ -19,7 +19,7 @@ const produceSubCommandInfo = require('./base').produceSubCommandInfo;
 const { PermissionService, Configuration } = require('../../api');
 
 let interfaces = [];
-let configFile = path.join(process.cwd(), './conf/config.json');
+let configFile = path.join(__dirname, '../conf/config.json');
 let config = new Configuration(configFile);
 let permissionService = new PermissionService(config);
 

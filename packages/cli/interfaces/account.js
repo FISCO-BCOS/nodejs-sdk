@@ -18,9 +18,8 @@ const path = require('path');
 const produceSubCommandInfo = require('./base').produceSubCommandInfo;
 const { Configuration } = require('../../api');
 
-let configFile = path.join(process.cwd(), './conf/config.json');
+let configFile = path.join(__dirname, '../conf/config.json');
 let config = new Configuration(configFile);
-
 let interfaces = [];
 
 interfaces.push(produceSubCommandInfo(

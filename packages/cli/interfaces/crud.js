@@ -22,7 +22,7 @@ const { CRUDService, Table, Condition, Entry, ConditionOp, Configuration } = req
 const { Parser } = require('node-sql-parser');
 
 let interfaces = [];
-let configFile = path.join(process.cwd(), './conf/config.json');
+let configFile = path.join(__dirname, '../conf/config.json');
 let config = new Configuration(configFile);
 let crudService = new CRUDService(config);
 
