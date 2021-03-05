@@ -41,7 +41,7 @@ for (let subCategory of SUB_CATEGORIES) {
     );
 }
 
-var COMMANDS = INTERFACES.map((value) => value.name);
+const COMMANDS = INTERFACES.map((value) => value.name);
 
 function addSubCmd(subCmdInfo) {
     let command = subCmdInfo.name;
@@ -97,10 +97,12 @@ function addSubCmd(subCmdInfo) {
 
 async function completion(current, argv) {
     if (argv._.length <= 2) {
-        return COMMANDS;
+        console.error(argv._.length);
+        return ["exec", "completion", "list"];
     }
+    console.error("shit");
 
-    switch (arg._[1]) {
+    switch (argv._[1]) {
         case "completion": {
             return [];
         }
@@ -108,6 +110,11 @@ async function completion(current, argv) {
             return [];
         }
         case "exec": {
+            console.log(argv);
+            if (argv._.length < 3) {
+                return COMMANDS;
+            }
+
             function listContracts() {
                 let files = [];
                 for (let file of readdirSync(CONTRACTS_OUTPUT_DIR)) {
@@ -118,7 +125,7 @@ async function completion(current, argv) {
                 return files;
             }
 
-            if (argv._[2] === "queryCNS" || argv._[2] === "deployByCNS") {
+            if (argv._[2] === "queryCNS") {
                 if (argv._.length < 5) {
                     return listContracts();
                 }
@@ -176,6 +183,7 @@ async function completion(current, argv) {
                 }
                 return [];
             }
+            return COMMANDS;
         }
     }
 
@@ -192,7 +200,7 @@ function listCommands() {
             let command = commands[i];
             let name = chalk.magenta(command.name.padEnd(36));
             let info = chalk.cyan(command.describe);
-            console.log(`│${name}${info.padEnd(94)}│`);
+            console.log(`│${name}${info.padEnd(94)}`);
         }
         console.log("└─────────────────" + "─".repeat(103) + "┘");
     }

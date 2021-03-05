@@ -51,24 +51,24 @@ interfaces.push(
             describe: "Deploy a contract on blockchain by CNS",
             args: [
                 {
-                    name: "contractName",
+                    name: "contract",
                     options: {
                         type: "string",
-                        describe: "The name of a contract",
+                        describe: "The path of a contract",
                     },
                 },
                 {
                     name: "contractVersion",
                     options: {
                         type: "string",
-                        describe: "The version of a contract",
+                        describe: "The version of the contract",
                     },
                 },
                 {
-                    name: "id",
+                    name: "who",
                     options: {
                         type: "string",
-                        describe: "The id of a private key",
+                        describe: "Who will do this operation",
                     },
                 },
                 {
@@ -76,7 +76,7 @@ interfaces.push(
                     options: {
                         type: "string",
                         describe:
-                            "The parameters(splited by space) of constructor",
+                            "The parameters(splitted by space) of constructor",
                         flag: FLAGS.VARIADIC,
                     },
                 },
@@ -84,12 +84,12 @@ interfaces.push(
         },
         (argv) => {
             return permissionService.listCNSManager().then((cnsManagers) => {
-                let id = argv.id;
+                let who = argv.who;
 
-                if (!config.accounts.hasOwnProperty(id)) {
-                    throw new Error(`invalid id of account: ${id}`);
+                if (!config.accounts.hasOwnProperty(who)) {
+                    throw new Error(`invalid account: ${who}`);
                 }
-                let account = config.accounts[id].account;
+                let account = config.accounts[who].account;
 
                 if (cnsManagers.length !== 0) {
                     if (
@@ -105,17 +105,23 @@ interfaces.push(
                     }
                 }
 
-                let contractName = path.basename(argv.contractName, ".sol");
-                let contractVersion = argv.contractVersion;
-                if (contractVersion) {
-                    let checkResult = checkVersion(contractVersion);
+                let contract = argv.contract;
+                let contractName = path.basename(contract);
+                let dotPosition = contractName.lastIndexOf(".");
+                let extname = contractName.substr(dotPosition);
+                contractName = contractName.substr(0, dotPosition);
+                let isSol = extname.toLowerCase() === ".sol" ? true : false;
+
+                let version = argv.contractVersion;
+                if (version) {
+                    let checkResult = checkVersion(version);
                     if (checkResult !== "") {
                         throw new Error(checkResult);
                     }
                 }
 
                 return cnsService
-                    .queryCnsByNameAndVersion(contractName, contractVersion)
+                    .queryCnsByNameAndVersion(contractName, version)
                     .then((queryResult) => {
                         if (queryResult.length !== 0) {
                             throw new Error(
@@ -125,17 +131,11 @@ interfaces.push(
                             );
                         }
 
-                        let contractPath = path.join(
-                            CONTRACTS_DIR,
-                            contractName + ".sol"
-                        );
-                        if (!fs.existsSync(contractPath)) {
-                            throw new Error(`${contractName} doesn't exist`);
+                        if (!fs.existsSync(contract)) {
+                            throw new Error(`${contract} doesn't exist`);
                         }
 
-                        let contractClass = compileService.compile(
-                            contractPath
-                        );
+                        let contractClass = compileService.compile(contract);
                         let parameters = argv.parameters;
 
                         return web3jService
@@ -143,7 +143,10 @@ interfaces.push(
                                 contractClass.abi,
                                 contractClass.bin,
                                 parameters,
-                                id
+                                {
+                                    isSol,
+                                    account,
+                                }
                             )
                             .then((result) => {
                                 if (result.status === "0x0") {
@@ -152,7 +155,7 @@ interfaces.push(
                                     return cnsService
                                         .registerCns(
                                             contractName,
-                                            contractVersion,
+                                            version,
                                             contractAddress,
                                             JSON.stringify(contractClass.abi)
                                         )

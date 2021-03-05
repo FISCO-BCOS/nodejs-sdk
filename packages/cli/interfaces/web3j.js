@@ -25,9 +25,8 @@ const {
     CompileService,
     Configuration,
 } = require("../../api");
-const { CONTRACTS_DIR, CONTRACTS_OUTPUT_DIR } = require("../constant");
+const { CONTRACTS_OUTPUT_DIR } = require("../constant");
 const { check, Str, Addr, Any } = require("../../api/common/typeCheck");
-const { CNS_PRECOMPILE_ABI } = require("../../api/precompiled/cns/constant");
 
 let interfaces = [];
 const configFile = path.join(__dirname, "../conf/config.json");
@@ -460,6 +459,15 @@ interfaces.push(
                     },
                 },
                 {
+                    name: "who",
+                    options: {
+                        type: "string",
+                        describe: "Who will do this operation",
+                        alias: "w",
+                        flag: FLAGS.OPTIONAL,
+                    },
+                },
+                {
                     name: "parameters",
                     options: {
                         type: "string",
@@ -476,10 +484,12 @@ interfaces.push(
                 throw new Error(`${contractPath} doesn't exist`);
             }
 
+            let who = argv.who;
             let extname = path.extname(contractPath).toLowerCase();
+
             if (extname === ".sol") {
                 if (argv.abi !== undefined) {
-                    throw new Error("you don't need to provide ABI");
+                    throw new Error("You don't need to provide ABI");
                 }
 
                 let contractClass = compileService.compile(contractPath);
@@ -511,7 +521,10 @@ interfaces.push(
 
                 let parameters = argv.parameters;
                 return web3jService
-                    .deploy(contractClass.abi, contractClass.bin, parameters, 0)
+                    .deploy(contractClass.abi, contractClass.bin, parameters, {
+                        isSol: true,
+                        who,
+                    })
                     .then((result) => {
                         if (result.status === "0x0") {
                             let contractAddress = result.contractAddress;
@@ -545,7 +558,7 @@ interfaces.push(
             } else if (extname === ".wasm") {
                 if (argv.abi === undefined) {
                     throw new Error(
-                        "you need to provide ABI via `--abi` option"
+                        "You need to provide ABI via `--abi` option"
                     );
                 }
 
@@ -573,7 +586,10 @@ interfaces.push(
                 let parameters = argv.parameters;
 
                 return web3jService
-                    .deploy(abi, bin, parameters, 1)
+                    .deploy(abi, bin, parameters, {
+                        isSol: false,
+                        who,
+                    })
                     .then((result) => {
                         if (result.status === "0x0") {
                             let contractAddress = result.contractAddress;
@@ -641,7 +657,7 @@ interfaces.push(
                     name: "who",
                     options: {
                         type: "string",
-                        describe: "who will do this operation",
+                        describe: "Who will do this operation",
                         flag: FLAGS.OPTIONAL,
                         alias: "w",
                     },
