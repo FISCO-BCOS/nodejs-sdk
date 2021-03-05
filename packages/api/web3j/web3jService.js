@@ -251,8 +251,6 @@ class Web3jService extends ServiceBase {
                 TRANSACTION
             );
         } else {
-            check(args.slice(0, 3), Addr, Obj, ArrayList);
-
             let to = args[0];
             let func = args[1];
             let params = args[2];
@@ -271,8 +269,8 @@ class Web3jService extends ServiceBase {
         }
     }
 
-    async deploy(abi, bin, parameters, type, who = null) {
-        check([abi, bin, parameters], Obj, Str, ArrayList);
+    async deploy(abi, bin, parameters, options) {
+        let who = options.who;
         who = this._getWho(who);
 
         let contractAbi = new ethers.utils.Interface(abi);
@@ -295,7 +293,7 @@ class Web3jService extends ServiceBase {
             bin,
             parameters,
             blockNumber + 500,
-            type,
+            options.isSol,
             who
         );
         return this.sendRawTransaction(signTx);

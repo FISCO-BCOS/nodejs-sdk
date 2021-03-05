@@ -161,39 +161,29 @@ function getSignTx(config, to, func, params, blockLimit, who) {
  * @param {who} the id of account(private key)
  * @return {String} signed deploy transaction data
  */
-function getSignDeployTx(config, bin, parameters, blockLimit, type, who) {
+function getSignDeployTx(config, bin, parameters, blockLimit, isSol, who) {
     let groupID = config.groupID;
     let account = config.accounts[who].account;
     let privateKey = config.accounts[who].privateKey;
     let chainID = config.chainID;
     let encryptType = config.encryptType;
     let txData = bin.indexOf("0x") === 0 ? bin : "0x" + bin;
-    let postData;
-    if (type === 0) {
-        console.log(parameters)
-        postData = {
-            data: txData + parameters.substring(2),
-            from: account,
-            to: null,
-            gas: 1000000,
-            randomid: genRandomID(),
-            blockLimit: blockLimit,
-            chainId: chainID,
-            groupId: groupID,
-            extraData: "0x0",
-        };
+
+    let postData = {
+        from: account,
+        to: null,
+        gas: 1000000,
+        randomid: genRandomID(),
+        blockLimit: blockLimit,
+        chainId: chainID,
+        groupId: groupID,
+    };
+    if (isSol) {
+        postData.data = txData + parameters.substring(2);
+        postData.extraData = "0x0";
     } else {
-        postData = {
-            data: txData,
-            from: account,
-            to: null,
-            gas: 1000000,
-            randomid: genRandomID(),
-            blockLimit: blockLimit,
-            chainId: chainID,
-            groupId: groupID,
-            extraData: parameters,
-        };
+        postData.data = txData;
+        postData.extraData = parameters;
     }
 
     return signTransaction(postData, privateKey, encryptType, null);

@@ -103,7 +103,7 @@ function createCodeForConstructor() {
         "}\n" +
         "let user = this._tempUser === null ? this._user: this._tempUser;\n" +
         "this.web3jService = web3jService;\n" +
-        "return this.web3jService.deploy(this.abi, this.bin, Array.from(arguments).slice(1), 0, user).then((result) => {\n" +
+        "return this.web3jService.deploy(this.abi, this.bin, Array.from(arguments).slice(1), {isSol: false, who: user}).then((result) => {\n" +
         "    this.address = result.contractAddress;\n" +
         "    return this.address;\n" +
         "}).finally(() => {\n" +
