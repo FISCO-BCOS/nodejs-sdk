@@ -16,14 +16,9 @@
 
 "use strict";
 
-const { join, parse } = require("path");
-const { CONTRACTS_OUTPUT_DIR } = require("./constant");
-const { getAbi } = require("./interfaces/base");
 const yargs = require("yargs");
-const path = require("path");
 const chalk = require("chalk");
 const { FLAGS } = require("./interfaces/base");
-const { readdirSync, existsSync, readFileSync } = require("fs");
 
 const SUB_CATEGORIES = [
     "account",
@@ -43,7 +38,7 @@ for (let subCategory of SUB_CATEGORIES) {
 
 const COMMANDS = INTERFACES.map((value) => value.name);
 
-function addSubCmd(subCmdInfo) {
+function addSubCmd(yargs, subCmdInfo) {
     let command = subCmdInfo.name;
     let positionalArgs = [];
     if (subCmdInfo.args) {
@@ -95,100 +90,6 @@ function addSubCmd(subCmdInfo) {
     );
 }
 
-async function completion(current, argv) {
-    if (argv._.length <= 2) {
-        console.error(argv._.length);
-        return ["exec", "completion", "list"];
-    }
-    console.error("shit");
-
-    switch (argv._[1]) {
-        case "completion": {
-            return [];
-        }
-        case "list": {
-            return [];
-        }
-        case "exec": {
-            console.log(argv);
-            if (argv._.length < 3) {
-                return COMMANDS;
-            }
-
-            function listContracts() {
-                let files = [];
-                for (let file of readdirSync(CONTRACTS_OUTPUT_DIR)) {
-                    if (file.endsWith(".abi")) {
-                        files.push(path.basename(file, ".abi"));
-                    }
-                }
-                return files;
-            }
-
-            if (argv._[2] === "queryCNS") {
-                if (argv._.length < 5) {
-                    return listContracts();
-                }
-                return [];
-            }
-
-            if (argv._[2] === "deploy") {
-                if (argv._.length < 4) {
-                    return ["deploy", "deployByCNS"];
-                }
-                return [];
-            }
-
-            if (argv._[2] === "call") {
-                if (argv._.length < 4) {
-                    return ["call", "callByCNS"];
-                }
-
-                if (argv._.length < 5) {
-                    return listContracts();
-                }
-
-                let contractName = argv._[3];
-                if (argv._.length < 6) {
-                    let addressPath = join(
-                        CONTRACTS_OUTPUT_DIR,
-                        `.${contractName}.address`
-                    );
-
-                    if (existsSync(addressPath)) {
-                        try {
-                            let addresses = readFileSync(
-                                addressPath
-                            ).toString();
-                            return addresses.split("\n");
-                        } catch (error) {
-                            return [];
-                        }
-                    }
-                    return [];
-                }
-
-                if (argv._.length < 7) {
-                    let abi = getAbi(contractName);
-                    if (abi) {
-                        let functions = [];
-                        for (let item of abi) {
-                            if (item.type === "function") {
-                                functions.push(item.value);
-                            }
-                        }
-                        return functions;
-                    }
-                    return [];
-                }
-                return [];
-            }
-            return COMMANDS;
-        }
-    }
-
-    return [];
-}
 
 function listCommands() {
     for (let subCategory of SUB_CATEGORIES) {
@@ -208,39 +109,38 @@ function listCommands() {
 
 function main() {
     yargs
-        .completion(
-            "completion",
-            chalk.green("Generate completion script for bash/zsh"),
-            completion
-        )
         .command(
             "list",
             chalk.green("List all sub-commands"),
-            () => {},
+            () => { },
             listCommands
         )
         .command(
             "exec <command> [parameters..]",
             chalk.green("Execute a specified sub-command"),
-            () => {
+            (yargs) => {
                 let index = process.argv.indexOf("exec");
                 let subCmd = process.argv[index + 1];
+                if (subCmd == undefined) {
+                    return;
+                }
+
                 let subCmdInfo = INTERFACES.find(
                     (item) => item.name === subCmd
                 );
 
                 if (subCmdInfo) {
-                    addSubCmd(subCmdInfo);
+                    addSubCmd(yargs, subCmdInfo);
                 } else {
                     console.error(
                         chalk.red(
                             `Sub-command \`${subCmd}\` is not supported, ` +
-                                "please refer to `./cli.js list`"
+                            "please refer to `./cli.js list`"
                         )
                     );
                     process.exit(-1);
                 }
-            }
+            },
         )
         .demandCommand(
             1,
