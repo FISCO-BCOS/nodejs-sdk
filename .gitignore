@@ -1,5 +1,4 @@
 node_modules/
-conf/
 contracts/
 .vscode/
 package-lock.json
