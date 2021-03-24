@@ -9,9 +9,9 @@
             "type": "pem",
             "value": "./accounts/bob.pem"
         },
-        "cherry": {
+        "charlie": {
             "type": "p12",
-            "value": "./accounts/cherry.p12",
+            "value": "./accounts/charlie.p12",
             "password": "123456"
         }
     },

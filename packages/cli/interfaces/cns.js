@@ -76,7 +76,7 @@ interfaces.push(
                     options: {
                         type: "string",
                         describe:
-                            "The parameters(splitted by space) of constructor",
+                            "The parameters(split by space) of constructor",
                         flag: FLAGS.VARIADIC,
                     },
                 },

@@ -229,6 +229,15 @@ interfaces.push(
                         describe: "the path of corresponding ABI",
                     },
                 },
+                {
+                    name: "who",
+                    options: {
+                        type: "string",
+                        describe: "Who will do this operation",
+                        alias: "w",
+                        flag: FLAGS.OPTIONAL,
+                    },
+                },
             ],
         },
         (argv) => {
@@ -254,11 +263,19 @@ interfaces.push(
             }
             params = "0x" + params.toString("hex");
 
+            let who = argv.who;
+            let accountKey = who;
+            if (!who) {
+                accountKey = Object.keys(config.accounts)[0];
+            } else {
+                if (!config.accounts[accountKey]) {
+                    throw new Error(`invalid id of account: ${who}`);
+                }
+            }
+
             let groupID = config.groupID;
-            let account_key = Object.keys(config.accounts)[0];
-            let account = config.accounts[account_key].account;
-            let privateKey = config.accounts[account_key].privateKey;
-            account = account.account;
+            let privateKey = config.accounts[accountKey].privateKey;
+            let account = config.accounts[accountKey].account;
             let chainID = config.chainID;
             let encryptType = config.encryptType;
 
@@ -321,13 +338,6 @@ interfaces.push(
             describe: "Sign a contract",
             args: [
                 {
-                    name: "who",
-                    options: {
-                        type: "string",
-                        describe: "the account who execute this operation",
-                    },
-                },
-                {
                     name: "contractName",
                     options: {
                         type: "string",
@@ -335,11 +345,20 @@ interfaces.push(
                     },
                 },
                 {
+                    name: "who",
+                    options: {
+                        type: "string",
+                        describe: "Who will do this operation",
+                        alias: "w",
+                        flag: FLAGS.OPTIONAL,
+                    },
+                },
+                {
                     name: "parameters",
                     options: {
                         type: "string",
                         describe:
-                            "The parameters(splitted by space) of the contracct",
+                            "The parameters(split by space) of the contract",
                         flag: FLAGS.VARIADIC,
                     },
                 },
@@ -347,8 +366,13 @@ interfaces.push(
         },
         (argv) => {
             let who = argv.who;
-            if (!config.accounts[who]) {
-                throw new Error(`the account is not exist: ${who}`);
+            let accountKey = who;
+            if (!who) {
+                accountKey = Object.keys(config.accounts)[0];
+            } else {
+                if (!config.accounts[accountKey]) {
+                    throw new Error(`invalid id of account: ${who}`);
+                }
             }
 
             let contractName = argv.contractName;
@@ -389,8 +413,8 @@ interfaces.push(
                     encodedParams = "0x" + encodedParams.toString("hex");
 
                     let groupID = config.groupID;
-                    let account = config.accounts[who].account;
-                    let privateKey = config.accounts[who].privateKey;
+                    let account = config.accounts[accountKey].account;
+                    let privateKey = config.accounts[accountKey].privateKey;
                     let chainID = config.chainID;
                     let encryptType = config.encryptType;
 
@@ -463,18 +487,11 @@ interfaces.push(
             describe: "Exercise an right of a contract",
             args: [
                 {
-                    name: "who",
-                    options: {
-                        type: "string",
-                        describe: "the account who execute this operation",
-                    },
-                },
-                {
                     name: "contract",
                     options: {
                         type: "string",
                         describe:
-                            "The name and ID(splitted by `#`) of the exercised contract",
+                            "The name and ID(split by `#`) of the exercised contract",
                     },
                 },
                 {
@@ -485,11 +502,20 @@ interfaces.push(
                     },
                 },
                 {
+                    name: "who",
+                    options: {
+                        type: "string",
+                        describe: "Who will do this operation",
+                        alias: "w",
+                        flag: FLAGS.OPTIONAL,
+                    },
+                },
+                {
                     name: "parameters",
                     options: {
                         type: "string",
                         describe:
-                            "The parameters(splitted by space) of the contracct",
+                            "The parameters(split by space) of the contract",
                         flag: FLAGS.VARIADIC,
                     },
                 },
@@ -497,8 +523,13 @@ interfaces.push(
         },
         (argv) => {
             let who = argv.who;
-            if (!config.accounts[who]) {
-                throw new Error(`the account is not exist: ${who}`);
+            let accountKey = who;
+            if (!who) {
+                accountKey = Object.keys(config.accounts)[0];
+            } else {
+                if (!config.accounts[accountKey]) {
+                    throw new Error(`invalid id of account: ${who}`);
+                }
             }
 
             let items = argv.contract.split("#");
@@ -561,8 +592,8 @@ interfaces.push(
                     encodedParams = "0x" + encodedParams.toString("hex");
 
                     let groupID = config.groupID;
-                    let account = config.accounts[who].account;
-                    let privateKey = config.accounts[who].privateKey;
+                    let account = config.accounts[accountKey].account;
+                    let privateKey = config.accounts[accountKey].privateKey;
                     let chainID = config.chainID;
                     let encryptType = config.encryptType;
 
@@ -646,7 +677,7 @@ interfaces.push(
                     options: {
                         type: "string",
                         describe:
-                            "The name and ID(splitted by `#`) of the exercised contract",
+                            "The name and ID(split by `#`) of the exercised contract",
                     },
                 },
             ],

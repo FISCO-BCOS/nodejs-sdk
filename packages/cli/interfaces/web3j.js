@@ -472,7 +472,7 @@ interfaces.push(
                     options: {
                         type: "string",
                         describe:
-                            "The parameters(splitted by space) of constructor",
+                            "The parameters(split by space) of constructor",
                         flag: FLAGS.VARIADIC,
                     },
                 },
@@ -667,7 +667,7 @@ interfaces.push(
                     options: {
                         type: "string",
                         describe:
-                            "The parameters(splitted by space) of a function",
+                            "The parameters(split by space) of a function",
                         flag: FLAGS.VARIADIC,
                     },
                 },
