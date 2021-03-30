@@ -326,7 +326,7 @@ interfaces.push(
                                 if (output !== "0x") {
                                     ret.output = decoder.decodeOutput(
                                         output,
-                                        status !== "0x16"
+                                        status === "0x16"
                                     );
                                 }
                                 return ret;
@@ -346,7 +346,7 @@ interfaces.push(
                                 if (output !== "0x") {
                                     ret.output = decoder.decodeOutput(
                                         output,
-                                        status !== "0x16"
+                                        status === "0x16"
                                     );
                                 }
                                 return ret;
