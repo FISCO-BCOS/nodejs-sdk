@@ -632,7 +632,7 @@ npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#master -s
 
   *重载形式2：*
   - `String`，to。20字节长度的目标合约地址
-  - `String`，func。调用的合约方法名
+  - `Object`，func。调用的合约方法对应的 ABI 描述，该描述可直接从编译合约时所生成的 ABI 文件中获取。
   - `[Object]`，params。实参列表，若无则置为`[]`
   - `String`，who，可选。用于签署交易的账户名
 
@@ -658,7 +658,7 @@ npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#master -s
   **参数**：
 
   - `String`，to。20字节长度的目标合约地址
-  - `String`，func。调用的合约方法名
+  - `Object`，func。调用的合约方法对应的 ABI 描述，该描述可直接从编译合约时所生成的 ABI 文件中获取。
   - `[Object]`，params。实参列表，若无则置为`[]`
   - `String`，who，可选。用于发送请求的账户名
 
