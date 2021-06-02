@@ -443,8 +443,10 @@ Call a contract by a function and parameters
 在使用Node.js SDK进行应用开发前请先导入Node.js SDK项目依赖：
 
 ```bash
-# 导入过程中请确保能够访问外网以能够安装第三方依赖包
-npm install git+https://github.com:FISCO-BCOS/nodejs-sdk.git\#master -s
+npm install https://github.com/FISCO-BCOS/nodejs-sdk#master -s
+
+# 如果无法访问 GitHub，请使用如下方式安装
+npm install https://gitee.com/FISCO-BCOS/nodejs-sdk.git#master -s
 ```
 
 ### 3.1 API调用约定
