@@ -24,8 +24,8 @@ const ConfigurationError = require('../exceptions').ConfigurationError;
 const ENCRYPT_TYPE = require('./constant').ENCRYPT_TYPE;
 
 const EC_PRIVATE_KEY_PREFIX = '30740201010420';
-const PRIVATE_KEY_PREFIX = '308184020100301006072a8648ce3d020106052b8104000a046d306b0201010420';
 const PRIVATE_KEY_PREFIX_SM = '308187020100301306072a8648ce3d020106082a811ccf5501822d046d306b0201010420';
+const PRIVATE_KEY_PREFIX_LEN = 66;
 
 function decodePem(pem, encryptType) {
     let privateKey = null;
@@ -33,12 +33,10 @@ function decodePem(pem, encryptType) {
         if (pem.startsWith(EC_PRIVATE_KEY_PREFIX)) {
             // -----BEGIN EC PRIVATE KEY-----
             privateKey = pem.substring(EC_PRIVATE_KEY_PREFIX.length, EC_PRIVATE_KEY_PREFIX.length + 64);
-        } else if (pem.startsWith(PRIVATE_KEY_PREFIX)) {
-            // -----BEGIN PRIVATE KEY-----
-            privateKey = pem.substring(PRIVATE_KEY_PREFIX.length, PRIVATE_KEY_PREFIX.length + 64);
         } else {
-            throw new ConfigurationError('expected `EC PRIVATE KEY` or `PRIVATE KEY`');
+            privateKey = pem.substring(PRIVATE_KEY_PREFIX_LEN, PRIVATE_KEY_PREFIX_LEN + 64);
         }
+        return privateKey;
     } else if (encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
         if (pem.startsWith(PRIVATE_KEY_PREFIX_SM)) {
             // -----BEGIN PRIVATE KEY-----
